@@ -24,7 +24,7 @@ class RedditAuthHelper(context: Context) {
             // specify the credentials you can find on your reddit app console
             .setApplicationCredentials("T_694T2EB6g7UQ", "http://testapp.com/calback")
             // the api enpoints scopes this client will need
-            .setScopes(arrayOf("submit"))
+            .setScopes(arrayOf("submit", "read"))
             // to manage tokens info in memory
             .setStorageManager(SharedPrefsStorageManager(context))
             // if you set this flag to 'true' it will add to the OkHttp Client a listener to log the
