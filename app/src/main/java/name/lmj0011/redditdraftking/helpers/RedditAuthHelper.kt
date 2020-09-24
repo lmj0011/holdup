@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import name.lmj0011.redditdraftking.BuildConfig
+import name.lmj0011.redditdraftking.helpers.util.launchIO
 import timber.log.Timber
 import java.lang.Exception
 
@@ -20,51 +22,47 @@ class RedditAuthHelper(context: Context) {
      private set
 
     init {
-        authClient = RedditAuth.Builder()
+        val builder = RedditAuth.Builder()
             // specify the credentials you can find on your reddit app console
             .setApplicationCredentials("T_694T2EB6g7UQ", "http://testapp.com/calback")
             // the api enpoints scopes this client will need
             .setScopes(arrayOf("submit", "read"))
             // to manage tokens info in memory
             .setStorageManager(SharedPrefsStorageManager(context))
-            // if you set this flag to 'true' it will add to the OkHttp Client a listener to log the
-            // Request and Response object, to make it easy to debug.
-            .setLogging(true)
-            .build()
+
+        if (BuildConfig.DEBUG) builder.setLogging(true)
+        else builder.setLogging(false)
+
+        authClient = builder.build()
     }
 
     /**
      * let's us know if we need the User to grant app access to their reddit account
      */
     val isAuthorized = flow {
-        while (true) {
-            if (authClient.hasSavedBearer()) {
-                when {
-                    authClient.getSavedBearer().isAuthed() -> {
-                        emit(true)
-                    }
+        if (authClient.hasSavedBearer()) {
+            when {
+                authClient.getSavedBearer().isAuthed() -> {
+                    emit(true)
+                }
 
-                    authClient.getSavedBearer().isRevoked() -> {
+                authClient.getSavedBearer().isRevoked() -> {
+                    emit(false)
+                }
+
+                else -> {
+                    try {
+                        authClient.getSavedBearer().renewToken()
+                        emit(true)
+                    } catch (ex: Exception) {
+                        Timber.e(ex)
                         emit(false)
                     }
-
-                    else -> {
-                        try {
-                            authClient.getSavedBearer().renewToken()
-                            emit(true)
-                        } catch (ex: Exception) {
-                            Timber.e(ex)
-                            emit(false)
-                        }
-                    }
                 }
-            } else {
-                emit(false)
             }
-
-            delay(DELAY_MILLIS)
+        } else {
+            emit(false)
         }
-
     }.flowOn(Dispatchers.IO)
 
 

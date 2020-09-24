@@ -3,4 +3,15 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+
+    <string name="empty_subreddit_list_text">No Drafts found, start a new one in your favorite reddit app or reddit.com and they will show up here</string>
+    <string name="go_to_reddit_btn">Go to reddit.com</string>
+    <string name="no_auth_text">Draft King requires access to your Reddit account in order to fetch drafts and allow you to schedule when they should be posted</string>
+    <string name="connect_reddit_btn">Connect Reddit</string>
+    <string name="notification_battery_optimization_info_content_text">This System feature will cause unexpected behavior such as scheduled Drafts not posting on time. Consider turning off Battery Optimization for this app in Settings.</string>
+
+    <plurals name="draftsAvailable">
+        <item quantity="one">%d Draft</item>
+        <item quantity="other">%d Drafts</item>
+    </plurals>
 </resources>

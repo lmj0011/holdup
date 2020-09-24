@@ -9,7 +9,11 @@
         android:id="@+id/navigation_home"
         android:name="name.lmj0011.redditdraftking.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_navigation_home_to_subredditDraftsFragment"
+            app:destination="@id/subredditDraftsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_dashboard"
@@ -25,5 +29,13 @@
     <fragment
         android:id="@+id/redditAuthWebviewFragment"
         android:name="name.lmj0011.redditdraftking.ui.redditauthwebview.RedditAuthWebviewFragment"
-        android:label="Authorize API Access" />
+        android:label="Authorize Account Access" />
+    <fragment
+        android:id="@+id/subredditDraftsFragment"
+        android:name="name.lmj0011.redditdraftking.ui.subredditdrafts.SubredditDraftsFragment"
+        android:label="Drafts" >
+        <argument
+            android:name="subredditUuid"
+            app:argType="string" />
+    </fragment>
 </navigation>

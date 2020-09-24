@@ -63,16 +63,10 @@ class RedditAuthWebviewFragment : Fragment() {
             }
         }
 
-        requireActivity().nav_view.visibility = View.GONE
         browser.settings.javaScriptEnabled = true
         browser.loadUrl(redditAuthHelper.authClient.provideAuthorizeUrl())
 
         return root
-    }
-
-    override fun onDestroy() {
-        requireActivity().nav_view.visibility = View.VISIBLE
-        super.onDestroy()
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {

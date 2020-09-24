@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable name="subreddit" type="name.lmj0011.redditdraftking.database.Subreddit"/>
+        <variable name="clickListener" type="name.lmj0011.redditdraftking.helpers.adapters.SubredditListAdapter.SubredditClickListener"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/listItemSubredditConstraintLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="@{() -> clickListener.onClick(subreddit)}"
+        android:padding="5dp">
+
+        <ImageView
+            android:id="@+id/subredditIconImageView"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_baseline_image_24" />
+
+        <TextView
+            android:id="@+id/subredditDisplayNameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:singleLine="true"
+            android:textAlignment="center"
+            app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="r/doordash" />
+
+        <TextView
+            android:id="@+id/draftScheduledTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
+            app:layout_constraintBottom_toBottomOf="@+id/draftAlarmIconImageView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/draftAlarmIconImageView"
+            app:layout_constraintTop_toBottomOf="@+id/subredditDisplayNameTextView"
+            tools:text="11/05/20 8:00am - How to become the Top Dasher" />
+
+        <ImageView
+            android:id="@+id/draftAlarmIconImageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
+            app:layout_constraintTop_toBottomOf="@+id/subredditDisplayNameTextView"
+            app:srcCompat="@drawable/ic_baseline_access_alarm_24"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/subredditTotalTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
+            app:layout_constraintTop_toBottomOf="@+id/draftScheduledTextView"
+            tools:text="5 Drafts" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
