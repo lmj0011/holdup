@@ -89,10 +89,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun refreshRecyclerView() {
         launchIO {
-            redditAuthHelper.isAuthorized.collectLatest {
-                if (it) getDrafts()
-                else Timber.d("redditAuthHelper.isAuthorized: $it")
-            }
+            getDrafts()
         }
     }
 
@@ -112,9 +109,15 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         val draftsJsonAdapter = moshi.adapter(DraftsJsonResponse::class.java)
 
+
+        if(redditAuthHelper.authClient().hasSavedBearer()) {
+            //refresh token
+            redditAuthHelper.authClient().getSavedBearer().renewToken()
+        } else return
+
         val request = Request.Builder()
             .url("https://oauth.reddit.com/api/v1/drafts.json?raw_json=1")
-            .header("Authorization", "Bearer ${redditAuthHelper.authClient.getSavedBearer().getAccessToken()}")
+            .header("Authorization", "Bearer ${redditAuthHelper.authClient().getSavedBearer().getAccessToken()}")
             .build()
 
         client.newCall(request).execute().use { response ->

@@ -43,15 +43,15 @@ class RedditAuthWebviewFragment : Fragment() {
 
         browser.webViewClient = object : WebViewClient(){
             override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
-                if (redditAuthHelper.authClient.isRedirectedUrl(url)) {
+                if (redditAuthHelper.authClient().isRedirectedUrl(url)) {
                     browser.stopLoading()
 
                     // We will retrieve the bearer on the background thread.
                     GlobalScope.launch{
                         try {
-                          redditAuthHelper.authClient.getTokenBearer(url)
+                          redditAuthHelper.authClient().getTokenBearer(url)
                         } catch (ex: AccessDeniedException) {
-                            redditAuthHelper.authClient.getSavedBearer().revokeToken()
+                            redditAuthHelper.authClient().getSavedBearer().revokeToken()
                             Timber.e(ex)
                         }
 
@@ -64,7 +64,7 @@ class RedditAuthWebviewFragment : Fragment() {
         }
 
         browser.settings.javaScriptEnabled = true
-        browser.loadUrl(redditAuthHelper.authClient.provideAuthorizeUrl())
+        browser.loadUrl(redditAuthHelper.authClient().provideAuthorizeUrl())
 
         return root
     }

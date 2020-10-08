@@ -37,18 +37,15 @@ class PublishScheduledDraftWorker (private val appContext: Context, private val 
     private val redditAuthHelper: RedditAuthHelper = (appContext.applicationContext as App).kodein.instance()
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val isAuthorized =  redditAuthHelper.isAuthorized.first()
-        Timber.d("redditAuthHelper.isAuthorized: $isAuthorized")
-
         val draftUuid = parameters.inputData.getString("draftUuid")
 
-        if (isAuthorized && !draftUuid.isNullOrBlank()) {
+        if (!draftUuid.isNullOrBlank()) {
             val draft = dao.getDraft(draftUuid)
             Timber.d("draft: $draft")
 
             draft?.let {d ->
-                //refresh
-                redditAuthHelper.authClient.getSavedBearer().renewToken()
+                //refresh token
+                redditAuthHelper.authClient().getSavedBearer().renewToken()
 
                 // post draft
                 val isSuccess = postDraft(d)
@@ -111,7 +108,7 @@ class PublishScheduledDraftWorker (private val appContext: Context, private val 
 
         val request = Request.Builder()
             .url("https://oauth.reddit.com/api/submit?resubmit=true")
-            .header("Authorization", "Bearer ${redditAuthHelper.authClient.getSavedBearer().getAccessToken()}")
+            .header("Authorization", "Bearer ${redditAuthHelper.authClient().getSavedBearer().getAccessToken()}")
             .post(formBodyBuilder.build())
             .build()
 
