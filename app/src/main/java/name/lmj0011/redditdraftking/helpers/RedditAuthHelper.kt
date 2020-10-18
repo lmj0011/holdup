@@ -4,6 +4,7 @@ import android.content.Context
 import com.kirkbushman.auth.RedditAuth
 import com.kirkbushman.auth.managers.SharedPrefsStorageManager
 import name.lmj0011.redditdraftking.BuildConfig
+import name.lmj0011.redditdraftking.database.Account
 
 class RedditAuthHelper(val context: Context) {
 
@@ -24,13 +25,16 @@ class RedditAuthHelper(val context: Context) {
         else baseBuilder.setLogging(false)
     }
 
-    /**
-     * TODO - pass `Account` as param and use the id as the tag for `SharedPrefsStorageManager`
-     */
-    fun authClient(): RedditAuth {
-        return baseBuilder
-            .setStorageManager(SharedPrefsStorageManager(context))
-            .build()
+    fun authClient(account: Account? = null): RedditAuth {
+        return if(account != null) {
+            baseBuilder
+                .setStorageManager(SharedPrefsStorageManager(context, account.id.toString()))
+                .build()
+        } else {
+            baseBuilder
+                .setStorageManager(SharedPrefsStorageManager(context))
+                .build()
+        }
     }
 
     /**

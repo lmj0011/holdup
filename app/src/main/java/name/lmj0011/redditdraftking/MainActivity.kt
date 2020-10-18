@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.webkit.CookieManager
+import android.webkit.ValueCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
@@ -18,6 +20,8 @@ import name.lmj0011.redditdraftking.databinding.ActivityMainBinding
 import name.lmj0011.redditdraftking.helpers.NotificationHelper
 import name.lmj0011.redditdraftking.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.redditdraftking.helpers.workers.ScheduledDraftServiceCallerWorker
+import timber.log.Timber
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,6 +40,7 @@ class MainActivity : AppCompatActivity() {
         binding.navView.setupWithNavController(navController)
         binding.navView.visibility = View.GONE
         setupNavigationListener()
+        hideFab()
     }
 
     override fun onPause() {
@@ -50,7 +55,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupNavigationListener(){
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
-            when(destination.id){ }
+            when(destination.id){
+                R.id.accountsFragment -> {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                        CookieManager.getInstance().removeAllCookies{
+                            if(it) Timber.d("webview Cookies were successfully cleared!")
+                            else Timber.d("webview Cookies COULD NOT be cleared!")
+                        }
+                    } else CookieManager.getInstance().removeAllCookie()
+                    showFabAndSetListener({ navController.navigate(R.id.redditAuthWebviewFragment) }, R.drawable.ic_baseline_add_24)
+                }
+                else -> hideFab()
+            }
         }
     }
 
@@ -70,11 +86,27 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
 
         return when (item.itemId) {
-            R.id.action_auth_app -> {
-                navController.navigate(R.id.redditAuthWebviewFragment)
+            R.id.action_manage_accounts -> {
+                navController.navigate(R.id.accountsFragment)
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    fun showFabAndSetListener(cb: () -> Unit, imgSrcId: Int) {
+        binding.fab.let {
+            it.setOnClickListener(null) // should remove all attached listeners
+            it.setOnClickListener { cb() }
+
+            // hide and show to repaint the img src
+            it.hide()
+            it.setImageResource(imgSrcId)
+            it.show()
+        }
+    }
+
+    fun hideFab() {
+        binding.fab.hide()
     }
 }

@@ -24,5 +24,7 @@ data class DraftJsonObject(
     val flair: FlairJsonObject?,
     val id: String, // uuid
     val kind: String,
-    val title: String
+    val title: String,
+    val created: Long,
+    val modified: Long
 )

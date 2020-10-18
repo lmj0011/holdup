@@ -41,4 +41,10 @@ data class Draft(
     @ColumnInfo(name = "request_code")
     var requestCode: Int = 0, // needed to in order to cancel the right Alarm for this Draft
 
+    @ColumnInfo(name = "date_created")
+    var dateCreated: String = "", // comes from DraftsJsonResponse
+
+    @ColumnInfo(name = "date_modified")
+    var dateModified: String = "" // comes from DraftsJsonResponse
+
 ) : BaseEntity()

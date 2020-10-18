@@ -27,6 +27,7 @@ import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getLocalDateFromUtcMi
 import name.lmj0011.redditdraftking.helpers.adapters.DraftListAdapter
 import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
 import name.lmj0011.redditdraftking.helpers.receivers.PublishScheduledDraftReceiver
+import name.lmj0011.redditdraftking.helpers.util.launchIO
 import org.kodein.di.instance
 import timber.log.Timber
 import java.util.*
@@ -57,7 +58,7 @@ class SubredditDraftsFragment : Fragment(R.layout.fragment_subreddit_drafts) {
         setupSwipeToRefresh()
         refreshRecyclerView()
 
-        GlobalScope.launch(Dispatchers.IO) {
+        launchIO {
             val subreddit = subredditDraftsViewModel.getSubreddit(args.subredditUuid)
             withContext(Dispatchers.Main) {
                 subreddit?.let { (requireActivity() as MainActivity).supportActionBar?.subtitle = it.displayNamePrefixed }
@@ -155,7 +156,7 @@ class SubredditDraftsFragment : Fragment(R.layout.fragment_subreddit_drafts) {
     }
 
     private fun refreshRecyclerView() {
-        GlobalScope.launch(Dispatchers.IO) {
+        launchIO {
             val drafts = subredditDraftsViewModel.getDrafts(args.subredditUuid)
 
             withContext(Dispatchers.Main) {

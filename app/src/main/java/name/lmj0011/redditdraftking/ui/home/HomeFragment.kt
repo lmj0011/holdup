@@ -5,6 +5,7 @@ import android.util.JsonToken
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import com.squareup.moshi.*
@@ -94,10 +95,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupObservers() {
-        homeViewModel.subredditsWithDrafts.observe(viewLifecycleOwner, {
+        homeViewModel.subredditsWithDrafts.observe(viewLifecycleOwner) {
             listAdapter.submitList(it)
             listAdapter.notifyDataSetChanged()
-        })
+        }
     }
 
     fun getDrafts() {
@@ -109,30 +110,30 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         val draftsJsonAdapter = moshi.adapter(DraftsJsonResponse::class.java)
 
+        homeViewModel.database.getAllAccounts().forEach { acct ->
+            if(redditAuthHelper.authClient(acct).hasSavedBearer()) {
+                //refresh token
+                redditAuthHelper.authClient(acct).getSavedBearer().renewToken()
+            } else return
 
-        if(redditAuthHelper.authClient().hasSavedBearer()) {
-            //refresh token
-            redditAuthHelper.authClient().getSavedBearer().renewToken()
-        } else return
+            val request = Request.Builder()
+                .url("https://oauth.reddit.com/api/v1/drafts.json?raw_json=1")
+                .header("Authorization", "Bearer ${redditAuthHelper.authClient(acct).getSavedBearer().getAccessToken()}")
+                .build()
 
-        val request = Request.Builder()
-            .url("https://oauth.reddit.com/api/v1/drafts.json?raw_json=1")
-            .header("Authorization", "Bearer ${redditAuthHelper.authClient().getSavedBearer().getAccessToken()}")
-            .build()
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                val res = draftsJsonAdapter.fromJson(response.body!!.source())
 
-            val res = draftsJsonAdapter.fromJson(response.body!!.source())
+                res!!.subreddits.forEach {
+                    homeViewModel.insertSubreddit(it)
+                }
 
-            res!!.subreddits.forEach {
-                homeViewModel.insertSubreddit(it)
-            }
-
-            res!!.drafts.forEach {
-                homeViewModel.insertDraft(it)
+                res!!.drafts.forEach {
+                    homeViewModel.insertDraft(it)
+                }
             }
         }
-
     }
 }

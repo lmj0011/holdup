@@ -38,4 +38,8 @@
             android:name="subredditUuid"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/accountsFragment"
+        android:name="name.lmj0011.redditdraftking.ui.accounts.AccountsFragment"
+        android:label="Accounts" />
 </navigation>

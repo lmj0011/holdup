@@ -1,5 +1,6 @@
 package name.lmj0011.redditdraftking.ui.home
 
+import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -10,8 +11,10 @@ import kotlinx.coroutines.launch
 import name.lmj0011.redditdraftking.database.Draft
 import name.lmj0011.redditdraftking.database.SharedDao
 import name.lmj0011.redditdraftking.database.Subreddit
+import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getLocalDateFormatFromUtcMillis
 import name.lmj0011.redditdraftking.helpers.data.DraftJsonObject
 import name.lmj0011.redditdraftking.helpers.data.SubredditJsonObject
+import java.time.ZoneOffset
 
 class HomeViewModel(
     val database: SharedDao,
@@ -31,6 +34,7 @@ class HomeViewModel(
         viewModelJob.cancel()
     }
 
+    @SuppressLint("NewApi")
     fun insertDraft(draftJsonObject: DraftJsonObject) {
         coroutineScope.launch {
             val subreddit = database.getSubreddit(draftJsonObject.subreddit)
@@ -40,6 +44,7 @@ class HomeViewModel(
                 draft.apply {
                     kind = draftJsonObject.kind
                     title = draftJsonObject.title
+                    dateModified = java.time.Instant.ofEpochMilli(draftJsonObject.modified).toString()
                     draftJsonObject.body?.let { body = it.toString() }
 
                     subreddit?.let {
@@ -66,6 +71,8 @@ class HomeViewModel(
                     uuid = draftJsonObject.id,
                     kind = draftJsonObject.kind,
                     title = draftJsonObject.title,
+                    dateCreated = java.time.Instant.ofEpochMilli(draftJsonObject.created).toString(),
+                    dateModified = java.time.Instant.ofEpochMilli(draftJsonObject.modified).toString()
                 ).apply {
                     subreddit?.let {
                         subredditUuid = it.uuid

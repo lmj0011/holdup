@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Draft::class, Subreddit::class], version = 1,  exportSchema = true)
+@Database(entities = [Draft::class, Subreddit::class, Account::class], version = 1,  exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
     abstract val sharedDao : SharedDao
 
