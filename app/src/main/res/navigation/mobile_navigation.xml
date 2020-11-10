@@ -3,16 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@+id/homeFragment">
 
     <fragment
-        android:id="@+id/navigation_home"
+        android:id="@+id/homeFragment"
         android:name="name.lmj0011.redditdraftking.ui.home.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home" >
         <action
             android:id="@+id/action_navigation_home_to_subredditDraftsFragment"
             app:destination="@id/subredditDraftsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_submissionFragment"
+            app:destination="@id/submissionFragment" />
     </fragment>
 
     <fragment
@@ -42,4 +45,12 @@
         android:id="@+id/accountsFragment"
         android:name="name.lmj0011.redditdraftking.ui.accounts.AccountsFragment"
         android:label="Accounts" />
+    <fragment
+        android:id="@+id/testingFragment"
+        android:name="name.lmj0011.redditdraftking.ui.testing.TestingFragment"
+        android:label="Testing" />
+    <fragment
+        android:id="@+id/submissionFragment"
+        android:name="name.lmj0011.redditdraftking.ui.submission.SubmissionFragment"
+        android:label="Submission" />
 </navigation>

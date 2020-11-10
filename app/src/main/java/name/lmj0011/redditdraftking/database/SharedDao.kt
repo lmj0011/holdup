@@ -2,6 +2,10 @@ package name.lmj0011.redditdraftking.database
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
+import name.lmj0011.redditdraftking.database.models.Account
+import name.lmj0011.redditdraftking.database.models.Draft
+import name.lmj0011.redditdraftking.database.models.Subreddit
+import name.lmj0011.redditdraftking.database.models.SubredditWithDrafts
 
 @Dao
 interface SharedDao: BaseDao {

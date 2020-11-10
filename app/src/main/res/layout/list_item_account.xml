@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <variable name="account" type="name.lmj0011.redditdraftking.database.Account"/>
+        <variable name="account" type="name.lmj0011.redditdraftking.database.models.Account"/>
         <variable name="logOutClickListener" type="name.lmj0011.redditdraftking.helpers.adapters.AccountListAdapter.LogOutClickListener"/>
-        <variable name="reauthenticationClickListener" type="name.lmj0011.redditdraftking.helpers.adapters.AccountListAdapter.ReauthenticationClickListener"/>
+        <variable name="accountNameClickListener" type="name.lmj0011.redditdraftking.helpers.adapters.AccountListAdapter.AccountNameClickListener"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/listItemSubredditDraftConstraintLayout"
+        android:id="@+id/listItemAccountConstraintLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="5dp">
@@ -19,17 +19,19 @@
             android:id="@+id/accountConstraintLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:onClick="@{() -> accountNameClickListener.onClick(account)}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/LogoutIconImageView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.constraintlayout.widget.Group
-                android:id="@+id/reauthenticationGroup"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone"
-                app:constraint_referenced_ids="reauthenticationTextView,reauthenticationImageView" />
+            <ImageView
+                android:id="@+id/iconImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_baseline_image_24" />
 
             <TextView
                 android:id="@+id/nameTextView"
@@ -40,32 +42,11 @@
                 android:singleLine="true"
                 android:text="@{account.name}"
                 android:textAlignment="center"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/iconImageView"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="u/happyPants5274" />
 
-            <TextView
-                android:id="@+id/reauthenticationTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:singleLine="true"
-                android:text="needs re-authentication"
-                android:onClick="@{() -> reauthenticationClickListener.onClick(account)}"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/nameTextView" />
-
-            <ImageView
-                android:id="@+id/reauthenticationImageView"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:onClick="@{() -> reauthenticationClickListener.onClick(account)}"
-                app:layout_constraintBottom_toBottomOf="@+id/reauthenticationTextView"
-                app:layout_constraintStart_toEndOf="@+id/reauthenticationTextView"
-                app:layout_constraintTop_toTopOf="@+id/reauthenticationTextView"
-                app:layout_constraintVertical_bias="0.0"
-                app:srcCompat="@drawable/ic_baseline_sync_problem_24" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ImageView

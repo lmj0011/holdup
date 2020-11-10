@@ -8,13 +8,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import name.lmj0011.redditdraftking.database.Draft
+import name.lmj0011.redditdraftking.database.models.Draft
 import name.lmj0011.redditdraftking.database.SharedDao
-import name.lmj0011.redditdraftking.database.Subreddit
-import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getLocalDateFormatFromUtcMillis
-import name.lmj0011.redditdraftking.helpers.data.DraftJsonObject
-import name.lmj0011.redditdraftking.helpers.data.SubredditJsonObject
-import java.time.ZoneOffset
+import name.lmj0011.redditdraftking.database.models.Subreddit
+import name.lmj0011.redditdraftking.helpers.models.DraftJsonObject
+import name.lmj0011.redditdraftking.helpers.models.SubredditJsonObject
+import java.time.Instant
 
 class HomeViewModel(
     val database: SharedDao,
@@ -71,8 +70,8 @@ class HomeViewModel(
                     uuid = draftJsonObject.id,
                     kind = draftJsonObject.kind,
                     title = draftJsonObject.title,
-                    dateCreated = java.time.Instant.ofEpochMilli(draftJsonObject.created).toString(),
-                    dateModified = java.time.Instant.ofEpochMilli(draftJsonObject.modified).toString()
+                    dateCreated = Instant.ofEpochMilli(draftJsonObject.created).toString(),
+                    dateModified = Instant.ofEpochMilli(draftJsonObject.modified).toString()
                 ).apply {
                     subreddit?.let {
                         subredditUuid = it.uuid

@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import name.lmj0011.redditdraftking.database.models.Account
+import name.lmj0011.redditdraftking.database.models.Draft
+import name.lmj0011.redditdraftking.database.models.Subreddit
 
 @Database(entities = [Draft::class, Subreddit::class, Account::class], version = 1,  exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {

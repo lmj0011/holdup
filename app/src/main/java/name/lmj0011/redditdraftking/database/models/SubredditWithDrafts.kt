@@ -1,4 +1,4 @@
-package name.lmj0011.redditdraftking.database
+package name.lmj0011.redditdraftking.database.models
 
 import androidx.room.Embedded
 import androidx.room.Relation

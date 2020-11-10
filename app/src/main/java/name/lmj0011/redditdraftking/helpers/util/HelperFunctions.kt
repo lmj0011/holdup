@@ -3,6 +3,12 @@ package name.lmj0011.redditdraftking.helpers.util
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.children
+import com.google.android.material.tabs.TabItem
+import com.google.android.material.tabs.TabLayout
+import timber.log.Timber
 
 /**
  * return true if in App's Battery settings "Not optimized" and false if "Optimizing battery use"
@@ -15,4 +21,23 @@ fun isIgnoringBatteryOptimizations(context: Context): Boolean {
         return pwrm.isIgnoringBatteryOptimizations(name)
     }
     return true
+}
+
+
+fun disableTabItemAt(tabLayout: TabLayout?, tabText: String) {
+    (tabLayout?.getChildAt(0) as? ViewGroup)?.children?.iterator()?.forEach {
+            if((it as TabLayout.TabView).tab?.text == tabText) {
+                it.isEnabled = false
+                it.alpha = 0.5f
+            }
+    }
+}
+
+fun enableTabItemAt(tabLayout: TabLayout?, tabText: String) {
+    (tabLayout?.getChildAt(0) as? ViewGroup)?.children?.iterator()?.forEach {
+        if((it as TabLayout.TabView).tab?.text == tabText) {
+            it.isEnabled = true
+            it.alpha = 1f
+        }
+    }
 }

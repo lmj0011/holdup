@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2ba035e4405272ae09841dfbd5e14e8b",
+    "identityHash": "8a27d05b7de95904735d60bc16ca1efb",
     "entities": [
       {
         "tableName": "drafts_table",
@@ -154,7 +154,7 @@
       },
       {
         "tableName": "accounts_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `name` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_at` TEXT NOT NULL, `updated_at` TEXT NOT NULL, `name` TEXT NOT NULL, `icon_image` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -179,6 +179,12 @@
             "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "iconImage",
+            "columnName": "icon_image",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -194,7 +200,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2ba035e4405272ae09841dfbd5e14e8b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8a27d05b7de95904735d60bc16ca1efb')"
     ]
   }
 }

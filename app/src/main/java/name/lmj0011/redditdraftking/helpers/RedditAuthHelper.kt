@@ -4,7 +4,7 @@ import android.content.Context
 import com.kirkbushman.auth.RedditAuth
 import com.kirkbushman.auth.managers.SharedPrefsStorageManager
 import name.lmj0011.redditdraftking.BuildConfig
-import name.lmj0011.redditdraftking.database.Account
+import name.lmj0011.redditdraftking.database.models.Account
 
 class RedditAuthHelper(val context: Context) {
 
@@ -17,7 +17,7 @@ class RedditAuthHelper(val context: Context) {
         // specify the credentials you can find on your reddit app console
         .setApplicationCredentials("T_694T2EB6g7UQ", "http://testapp.com/calback")
         // the api enpoints scopes this client will need
-        .setScopes(arrayOf("submit", "read"))
+        .setScopes(arrayOf("submit", "read", "mysubreddits", "history"))
 
     init {
 

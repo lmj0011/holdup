@@ -6,13 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import name.lmj0011.redditdraftking.database.Account
-import name.lmj0011.redditdraftking.database.Draft
+import name.lmj0011.redditdraftking.database.models.Account
 import name.lmj0011.redditdraftking.database.SharedDao
-import name.lmj0011.redditdraftking.database.Subreddit
-import name.lmj0011.redditdraftking.helpers.data.DraftJsonObject
-import name.lmj0011.redditdraftking.helpers.data.SubredditJsonObject
 
 class RedditAuthWebviewViewModel(
     val database: SharedDao,
@@ -28,12 +23,16 @@ class RedditAuthWebviewViewModel(
         viewModelJob.cancel()
     }
 
-    fun createNewAccount(name: String? = ""): Account? {
-        if(name.isNullOrBlank()) return null
+    fun createNewAccount(name: String = "", iconImage: String = ""): Account? {
+        if(name.isBlank()) return null
 
-        val newAcct = Account(name = name)
+        val newAcct = Account(name = name, iconImage = iconImage)
         database.upsert(newAcct)
         return database.getAccountByName(name)
+    }
+
+    fun updateAccount(acct: Account) {
+        database.update(acct)
     }
 
     fun deleteAccount(account: Account): Int {

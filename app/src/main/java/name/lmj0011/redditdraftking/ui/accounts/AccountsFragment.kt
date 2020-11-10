@@ -73,9 +73,7 @@ class AccountsFragment: Fragment(R.layout.fragment_accounts)  {
                     .setNegativeButton("Cancel") {_, _ -> }
                     .show()
             },
-            AccountListAdapter.ReauthenticationClickListener {
-                findNavController().navigate(R.id.redditAuthWebviewFragment)
-            }
+            AccountListAdapter.AccountNameClickListener {_ -> }
         )
 
         val decor = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)

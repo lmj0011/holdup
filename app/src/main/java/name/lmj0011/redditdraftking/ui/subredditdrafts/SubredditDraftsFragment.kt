@@ -98,15 +98,15 @@ class SubredditDraftsFragment : Fragment(R.layout.fragment_subreddit_drafts) {
                     else -> TimeFormat.CLOCK_12H
                 }
 
-                val timePicker = MaterialTimePicker.newInstance()
-                timePicker.setTimeFormat(clockFormat)
+                val timePicker = MaterialTimePicker.Builder()
+                    .setTimeFormat(clockFormat)
+                    .build()
 
                 datePicker.addOnPositiveButtonClickListener { millis ->
                     cal.timeInMillis = millis
-
-                    timePicker.setListener { picker ->
-                        cal.set(Calendar.HOUR_OF_DAY, picker.hour)
-                        cal.set(Calendar.MINUTE, picker.minute)
+                    timePicker.addOnPositiveButtonClickListener {
+                        cal.set(Calendar.HOUR_OF_DAY, timePicker.hour)
+                        cal.set(Calendar.MINUTE, timePicker.minute)
 
                         draft.requestCode = requestCodeHelper.nextInt()
                         val alarmIntent = Intent(context, PublishScheduledDraftReceiver::class.java).let { intent ->

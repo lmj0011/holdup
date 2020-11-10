@@ -10,10 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import name.lmj0011.redditdraftking.Keys
 import name.lmj0011.redditdraftking.R
-import name.lmj0011.redditdraftking.database.Subreddit
-import name.lmj0011.redditdraftking.database.SubredditWithDrafts
+import name.lmj0011.redditdraftking.database.models.Subreddit
+import name.lmj0011.redditdraftking.database.models.SubredditWithDrafts
 import name.lmj0011.redditdraftking.databinding.ListItemSubredditBinding
-import name.lmj0011.redditdraftking.helpers.DateTimeHelper
 import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getPostAtDateForListLayout
 
 class SubredditListAdapter(private val clickListener: SubredditClickListener): ListAdapter<SubredditWithDrafts, SubredditListAdapter.ViewHolder>(SubredditWithDraftsDiffCallback()) {

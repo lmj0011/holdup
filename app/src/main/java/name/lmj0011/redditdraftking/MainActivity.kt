@@ -5,7 +5,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.CookieManager
-import android.webkit.ValueCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
@@ -21,7 +20,6 @@ import name.lmj0011.redditdraftking.helpers.NotificationHelper
 import name.lmj0011.redditdraftking.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.redditdraftking.helpers.workers.ScheduledDraftServiceCallerWorker
 import timber.log.Timber
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,12 +33,15 @@ class MainActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         navController = findNavController(R.id.nav_host_fragment)
         appBarConfiguration = AppBarConfiguration(setOf(
-            R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications))
+            R.id.homeFragment, R.id.navigation_dashboard, R.id.navigation_notifications))
         setupActionBarWithNavController(navController, appBarConfiguration)
         binding.navView.setupWithNavController(navController)
         binding.navView.visibility = View.GONE
         setupNavigationListener()
-        hideFab()
+        showFabAndSetListener(
+            { navController.navigate(R.id.action_homeFragment_to_submissionFragment) },
+            R.drawable.ic_baseline_edit_24
+        )
     }
 
     override fun onPause() {
@@ -56,6 +57,12 @@ class MainActivity : AppCompatActivity() {
     private fun setupNavigationListener(){
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
             when(destination.id){
+                R.id.homeFragment -> {
+                    showFabAndSetListener(
+                        { navController.navigate(R.id.action_homeFragment_to_submissionFragment) },
+                        R.drawable.ic_baseline_edit_24
+                    )
+                }
                 R.id.accountsFragment -> {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                         CookieManager.getInstance().removeAllCookies{
@@ -88,6 +95,10 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_manage_accounts -> {
                 navController.navigate(R.id.accountsFragment)
+                true
+            }
+            R.id.action_testing -> {
+                navController.navigate(R.id.testingFragment)
                 true
             }
             else -> super.onOptionsItemSelected(item)

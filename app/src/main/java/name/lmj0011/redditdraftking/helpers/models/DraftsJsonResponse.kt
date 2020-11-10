@@ -1,7 +1,10 @@
-package name.lmj0011.redditdraftking.helpers.data
+package name.lmj0011.redditdraftking.helpers.models
 
 import org.json.JSONObject
 
+/**
+ * For moshi.adapter
+ */
 data class DraftsJsonResponse(val subreddits: List<SubredditJsonObject>, val drafts: List<DraftJsonObject>)
 
 data class SubredditJsonObject(

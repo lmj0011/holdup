@@ -6,11 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import name.lmj0011.redditdraftking.database.Draft
+import name.lmj0011.redditdraftking.database.models.Draft
 import name.lmj0011.redditdraftking.database.SharedDao
-import name.lmj0011.redditdraftking.database.Subreddit
-import timber.log.Timber
+import name.lmj0011.redditdraftking.database.models.Subreddit
 
 class SubredditDraftsViewModel(
     private val database: SharedDao,

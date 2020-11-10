@@ -26,16 +26,20 @@ import kotlinx.coroutines.withContext
 import name.lmj0011.redditdraftking.App
 import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.database.AppDatabase
+import name.lmj0011.redditdraftking.helpers.RedditApiHelper
 import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
 import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
+import name.lmj0011.redditdraftking.helpers.util.apiPath
 import name.lmj0011.redditdraftking.helpers.util.launchIO
 import name.lmj0011.redditdraftking.ui.home.HomeViewModel
+import org.json.JSONObject
 import org.kodein.di.instance
 import timber.log.Timber
 
 class RedditAuthWebviewFragment : Fragment() {
 
     private lateinit var redditAuthHelper: RedditAuthHelper
+    private lateinit var redditApiHelper: RedditApiHelper
     private val  viewModel by viewModels<RedditAuthWebviewViewModel> {
         ViewModelFactory(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
@@ -50,8 +54,9 @@ class RedditAuthWebviewFragment : Fragment() {
     ): View? {
         val root = inflater.inflate(R.layout.fragment_reddit_auth_webview, container, false)
         val browser: WebView = root.findViewById(R.id.reddit_auth_webview)
-        var username: String? = null
+        var username = ""
         redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
+        redditApiHelper = (requireContext().applicationContext as App).kodein.instance()
         setHasOptionsMenu(true)
 
         browser.settings.javaScriptEnabled = true
@@ -69,6 +74,27 @@ class RedditAuthWebviewFragment : Fragment() {
                         try {
                           account?.let {
                              redditAuthHelper.authClient(it).getTokenBearer(url)
+                              val res = redditApiHelper.get("user/${username.substring(2)}/about", redditAuthHelper.authClient(it).getSavedBearer().getAccessToken()!!)
+                              val json = JSONObject(res.body!!.source().readUtf8())
+
+                              try {
+                                  val iconImg = json.getJSONObject("data").getString("icon_img")
+                                  if (!iconImg.isNullOrBlank()) account.iconImage = iconImg.split("?")[0]
+
+                                  try {
+                                      val snooImg = json.getJSONObject("data").getString("snoovatar_img")
+                                      if (!snooImg.isNullOrBlank()) account.iconImage = snooImg.split("?")[0]
+                                  }
+                                  catch (ex: org.json.JSONException) {
+                                      Timber.i("No snoovatar for this Account: $account")
+                                  }
+                              }
+                              catch (ex: org.json.JSONException) {
+                                  Timber.w("Unable to set icon_img on this Account: $account")
+                              }
+                              finally {
+                                  viewModel.updateAccount(account)
+                              }
                           }
                         } catch (ex: AccessDeniedException) {
                             account?.let {
@@ -108,3 +134,4 @@ class RedditAuthWebviewFragment : Fragment() {
     }
 
 }
+

@@ -12,8 +12,8 @@ import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import name.lmj0011.redditdraftking.MainActivity
 import name.lmj0011.redditdraftking.R
-import name.lmj0011.redditdraftking.database.Draft
-import name.lmj0011.redditdraftking.database.Subreddit
+import name.lmj0011.redditdraftking.database.models.Draft
+import name.lmj0011.redditdraftking.database.models.Subreddit
 
 object NotificationHelper {
     const val SCHEDULED_DRAFT_SERVICE_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#scheduledDraftService"

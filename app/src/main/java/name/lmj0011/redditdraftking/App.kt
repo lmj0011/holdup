@@ -9,10 +9,7 @@ import com.facebook.flipper.plugins.inspector.DescriptorMapping
 import com.facebook.flipper.plugins.inspector.InspectorFlipperPlugin
 import com.facebook.soloader.SoLoader
 import com.jakewharton.threetenabp.AndroidThreeTen
-import name.lmj0011.redditdraftking.helpers.UniqueRuntimeNumberHelper
-import name.lmj0011.redditdraftking.helpers.NotificationHelper
-import name.lmj0011.redditdraftking.helpers.PreferencesHelper
-import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
+import name.lmj0011.redditdraftking.helpers.*
 import name.lmj0011.redditdraftking.helpers.services.ResetAlarmsForegroundService
 import name.lmj0011.redditdraftking.helpers.workers.ScheduledDraftServiceCallerWorker
 import org.kodein.di.*
@@ -25,6 +22,7 @@ class App: Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         kodein = DI.direct {
+            bind<RedditApiHelper>() with singleton { RedditApiHelper(this@App) }
             bind<RedditAuthHelper>() with singleton { RedditAuthHelper(this@App) }
             bind<PreferencesHelper>() with singleton { PreferencesHelper(this@App) }
             bind<UniqueRuntimeNumberHelper>() with singleton { UniqueRuntimeNumberHelper(this@App) }

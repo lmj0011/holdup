@@ -1,34 +1,40 @@
 package name.lmj0011.redditdraftking.helpers.adapters
 
 import android.content.Context
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import name.lmj0011.redditdraftking.Keys
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import name.lmj0011.redditdraftking.R
-import name.lmj0011.redditdraftking.database.Account
-import name.lmj0011.redditdraftking.database.Draft
+import name.lmj0011.redditdraftking.database.models.Account
 import name.lmj0011.redditdraftking.databinding.ListItemAccountBinding
 import name.lmj0011.redditdraftking.databinding.ListItemSubredditDraftBinding
-import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getLocalDateFormatFromUtcMillis
-import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getPostAtDateForListLayout
-import java.util.*
 
 class AccountListAdapter(
     private val logOutClickListener: LogOutClickListener,
-    private val reauthenticationClickListener: ReauthenticationClickListener
+    private val accountNameClickListener: AccountNameClickListener
 ): ListAdapter<Account, AccountListAdapter.ViewHolder>(DiffCallback()) {
     class ViewHolder private constructor(val binding: ListItemAccountBinding, val context: Context) :
         RecyclerView.ViewHolder(binding.root){
         fun bind(
             account: Account,
             logOutClickListener: LogOutClickListener,
-            reauthenticationClickListener: ReauthenticationClickListener){
+            accountNameClickListener: AccountNameClickListener){
             binding.account = account
             binding.logOutClickListener = logOutClickListener
-            binding.reauthenticationClickListener = reauthenticationClickListener
+            binding.accountNameClickListener = accountNameClickListener
+            Glide
+                .with(context)
+                .load(account.iconImage)
+                .apply(RequestOptions().override(100))
+                .circleCrop()
+                .error(R.drawable.ic_baseline_image_24)
+                .into(binding.iconImageView)
+
             binding.executePendingBindings()
         }
 
@@ -51,18 +57,19 @@ class AccountListAdapter(
         }
     }
 
-    class LogOutClickListener(val clickListener: (account: Account) -> Unit) {
+    // click listener for when a user clicks on the account's username
+    class AccountNameClickListener(val clickListener: (account: Account) -> Unit) {
         fun onClick(account: Account) = clickListener(account)
     }
 
-    class ReauthenticationClickListener(val clickListener: (account: Account) -> Unit) {
+    class LogOutClickListener(val clickListener: (account: Account) -> Unit) {
         fun onClick(account: Account) = clickListener(account)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val account = getItem(position)
 
-        holder.bind(account, logOutClickListener, reauthenticationClickListener)
+        holder.bind(account, logOutClickListener, accountNameClickListener)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

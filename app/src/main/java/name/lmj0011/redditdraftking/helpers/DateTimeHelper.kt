@@ -1,6 +1,6 @@
 package name.lmj0011.redditdraftking.helpers
 
-import name.lmj0011.redditdraftking.database.Draft
+import name.lmj0011.redditdraftking.database.models.Draft
 import java.text.SimpleDateFormat
 import java.util.*
 

@@ -8,9 +8,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import name.lmj0011.redditdraftking.Keys
 import name.lmj0011.redditdraftking.R
-import name.lmj0011.redditdraftking.database.Draft
+import name.lmj0011.redditdraftking.database.models.Draft
 import name.lmj0011.redditdraftking.databinding.ListItemSubredditDraftBinding
-import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getLocalDateFormatFromUtcMillis
 import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getPostAtDateForListLayout
 import java.util.*
 
