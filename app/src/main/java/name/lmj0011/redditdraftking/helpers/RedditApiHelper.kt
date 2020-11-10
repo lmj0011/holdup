@@ -85,7 +85,12 @@ class RedditApiHelper(val context: Context) {
                         displayName = obj.getJSONObject("data").getString("display_name"),
                         displayNamePrefixed = obj.getJSONObject("data").getString("display_name_prefixed"),
                         iconImgUrl = iconImgUrl,
-                        subscribers = obj.getJSONObject("data").getInt("subscribers")
+                        subscribers = obj.getJSONObject("data").getInt("subscribers"),
+                        allowGalleries = obj.getJSONObject("data").getBoolean("allow_galleries"),
+                        allowImages = obj.getJSONObject("data").getBoolean("allow_images"),
+                        allowVideos = obj.getJSONObject("data").getBoolean("allow_videos"),
+                        allowVideoGifs = obj.getJSONObject("data").getBoolean("allow_videogifs"),
+                        allowPolls = obj.getJSONObject("data").getBoolean("allow_polls")
                     )
                     subredditSet.add(sub)
                 } catch(ex: JSONException) {

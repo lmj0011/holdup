@@ -1,6 +1,7 @@
 package name.lmj0011.redditdraftking.ui.submission
 
 import android.annotation.SuppressLint
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -30,6 +31,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
     private lateinit var binding: FragmentSubmissionBinding
     private lateinit var redditAuthHelper: RedditAuthHelper
     private lateinit var redditApiHelper: RedditApiHelper
+    private lateinit var tabLayoutMediator: TabLayoutMediator
 
     private var recentAndJoinedSubredditPair: Pair<SharedFlow<List<Subreddit>>, SharedFlow<List<Subreddit>>>? = null
     private val  viewModel by viewModels<SubmissionViewModel> {
@@ -64,6 +66,8 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 .circleCrop()
                 .error(R.mipmap.ic_default_subreddit_icon_round)
                 .into(binding.chooseSubredditImageView)
+
+            reattachTabLayoutMediator(it)
         })
 
         viewModel.getAccount().observe(viewLifecycleOwner, {
@@ -82,9 +86,9 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
     private fun setupBinding(view: View) {
         binding = FragmentSubmissionBinding.bind(view)
         binding.lifecycleOwner = this
-        binding.submissionPager.adapter = TabCollectionAdapter(this)
+        binding.submissionPager.adapter = TabCollectionAdapterDefault(this)
         binding.submissionPager.isUserInputEnabled = false // prevent swiping navigation ref: https://stackoverflow.com/a/55193815/2445763
-        TabLayoutMediator(binding.submissionTabLayout, binding.submissionPager) { tab, position ->
+        tabLayoutMediator = TabLayoutMediator(binding.submissionTabLayout, binding.submissionPager) { tab, position ->
             when(position) {
                 0 -> {
                     tab.text = "Link"
@@ -107,7 +111,9 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_poll_24)
                 }
             }
-        }.attach()
+        }
+
+        tabLayoutMediator.attach()
 
         binding.chooseAccountLinearLayout.setOnClickListener {
             bottomSheetAccountsFragment = BottomSheetAccountsFragment { acct ->
@@ -137,7 +143,77 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
         }
     }
 
-    inner class TabCollectionAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
+    /**
+     * Reconfigures the TabLayout based on this Subreddit allowed Post types
+     */
+    private fun reattachTabLayoutMediator(subreddit: Subreddit) {
+        val tabCollection = getTabCollectionTriples(subreddit)
+
+        tabLayoutMediator.detach()
+        binding.submissionPager.adapter = TabCollectionAdapterDynamic(this, tabCollection)
+
+        tabLayoutMediator = TabLayoutMediator(binding.submissionTabLayout, binding.submissionPager) { tab, position ->
+            tab.text = tabCollection[position].first
+            tab.icon = tabCollection[position].second
+        }
+
+        tabLayoutMediator.attach()
+    }
+
+    private fun getTabCollectionTriples(subreddit: Subreddit): List<Triple<String, Drawable, Fragment>> {
+        var listOfTriples = mutableListOf<Triple<String, Drawable, Fragment>>()
+
+        listOfTriples.add(
+            Triple(
+            "Link",
+            requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
+            LinkSubmissionFragment()
+            ),
+        )
+
+        if (subreddit.allowImages) {
+            listOfTriples.add(
+                Triple(
+                    "Image",
+                    requireContext().getDrawable(R.drawable.ic_baseline_image_24)!!,
+                    ImageSubmissionFragment()
+                ),
+            )
+
+        }
+
+        if (subreddit.allowVideos || subreddit.allowVideoGifs) {
+            listOfTriples.add(
+                Triple(
+                    "Video",
+                    requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)!!,
+                    VideoSubmissionFragment()
+                ),
+            )
+        }
+
+        listOfTriples.add(
+            Triple(
+                "Text",
+                requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)!!,
+                TextSubmissionFragment()
+            ),
+        )
+
+        if (subreddit.allowPolls) {
+            listOfTriples.add(
+                Triple(
+                    "Poll",
+                    requireContext().getDrawable(R.drawable.ic_baseline_poll_24)!!,
+                    PollSubmissionFragment()
+                ),
+            )
+        }
+
+        return listOfTriples.toList()
+    }
+
+    inner class TabCollectionAdapterDefault(fragment: Fragment) : FragmentStateAdapter(fragment) {
         override fun getItemCount(): Int = 5
 
         override fun createFragment(position: Int): Fragment {
@@ -150,6 +226,16 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 4 -> PollSubmissionFragment()
                 else -> throw Exception("Unknown Tab Position!")
             }
+        }
+    }
+
+    inner class TabCollectionAdapterDynamic(fragment: Fragment, val tabCollection: List<Triple<String, Drawable, Fragment>>) : FragmentStateAdapter(fragment) {
+
+        override fun getItemCount(): Int = tabCollection.size
+
+        override fun createFragment(position: Int): Fragment {
+            // Return a NEW fragment instance
+            return tabCollection[position].third
         }
     }
 }
