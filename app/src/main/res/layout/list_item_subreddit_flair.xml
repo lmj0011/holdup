@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable name="flair" type="name.lmj0011.redditdraftking.helpers.models.SubredditFlair"/>
+        <variable name="clickListener" type="name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter.FlairItemClickListener"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/listItemAccountConstraintLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:onClick="@{() -> clickListener.onClick(flair)}"
+        android:padding="5dp">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/selectableFlairChip"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:checkable="false"
+            android:textSize="14sp"
+            android:clickable="true"
+            android:onClick="@{() -> clickListener.onClick(flair)}"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Flair Title" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

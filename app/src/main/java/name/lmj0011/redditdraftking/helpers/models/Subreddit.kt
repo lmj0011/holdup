@@ -10,5 +10,6 @@ data class Subreddit (
     val allowImages: Boolean,
     val allowVideos: Boolean,
     val allowVideoGifs: Boolean,
-    val allowPolls: Boolean
+    val allowPolls: Boolean,
+    val linkFlairEnabled: Boolean
 )

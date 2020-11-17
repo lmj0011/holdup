@@ -18,6 +18,7 @@ import name.lmj0011.redditdraftking.helpers.models.Subreddit
 import name.lmj0011.redditdraftking.databinding.FragmentSubmissionBinding
 import name.lmj0011.redditdraftking.helpers.RedditApiHelper
 import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
+import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetAccountsFragment
@@ -54,6 +55,8 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
+
+        // TODO - select last Account or first in db and then call viewModel.setAccount()
     }
 
     private fun setupObservers() {
@@ -138,7 +141,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                     bottomSheetSubredditSearchFragment.show(childFragmentManager, "BottomSheetSubredditSearchFragment")
                 }
             } else {
-                // TODO show toast asking user to select an account first
+                // nothing
             }
         }
     }
@@ -167,7 +170,12 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             Triple(
             "Link",
             requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
-            LinkSubmissionFragment()
+            LinkSubmissionFragment(
+                SubredditFlairListAdapter.FlairItemClickListener { flair -> viewModel.setSubredditFlair(flair)},
+                {
+                    viewModel.setSubredditFlair(null)
+                },
+                viewModel.getSubredditAccountPair())
             ),
         )
 
@@ -219,7 +227,17 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
         override fun createFragment(position: Int): Fragment {
             // Return a NEW fragment instance
             return when(position) {
-                0 -> LinkSubmissionFragment()
+                0 -> {
+                    LinkSubmissionFragment(
+                        SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                            viewModel.setSubredditFlair(flair)
+                        },
+                        {
+                            viewModel.setSubredditFlair(null)
+                        },
+                        viewModel.getSubredditAccountPair()
+                    )
+                }
                 1 -> ImageSubmissionFragment()
                 2 -> VideoSubmissionFragment()
                 3 -> TextSubmissionFragment()

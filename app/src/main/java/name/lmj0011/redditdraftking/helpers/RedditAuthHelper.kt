@@ -17,7 +17,7 @@ class RedditAuthHelper(val context: Context) {
         // specify the credentials you can find on your reddit app console
         .setApplicationCredentials("T_694T2EB6g7UQ", "http://testapp.com/calback")
         // the api enpoints scopes this client will need
-        .setScopes(arrayOf("submit", "read", "mysubreddits", "history"))
+        .setScopes(arrayOf("submit", "read", "mysubreddits", "history", "flair"))
 
     init {
 

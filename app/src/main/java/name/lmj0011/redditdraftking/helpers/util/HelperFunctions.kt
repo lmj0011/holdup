@@ -1,14 +1,15 @@
 package name.lmj0011.redditdraftking.helpers.util
 
+import android.R
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.PowerManager
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
-import com.google.android.material.tabs.TabItem
 import com.google.android.material.tabs.TabLayout
-import timber.log.Timber
+import java.lang.Exception
+
 
 /**
  * return true if in App's Battery settings "Not optimized" and false if "Optimizing battery use"
@@ -40,4 +41,17 @@ fun enableTabItemAt(tabLayout: TabLayout?, tabText: String) {
             it.alpha = 1f
         }
     }
+}
+
+
+/**
+ * returns a ColorStateList that uses only 1 Color
+ */
+fun buildOneColorStateList(color: Int /* Color.parseColor("#FFFF") */): ColorStateList? {
+    return ColorStateList(
+        arrayOf(intArrayOf(R.attr.state_checked), intArrayOf()), intArrayOf(
+            color,
+            color
+        )
+    )
 }

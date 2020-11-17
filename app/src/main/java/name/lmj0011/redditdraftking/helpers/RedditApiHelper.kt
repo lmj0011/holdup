@@ -11,11 +11,13 @@ import name.lmj0011.redditdraftking.helpers.adapters.JSONObjectAdapter
 import name.lmj0011.redditdraftking.helpers.models.ImageSubmission
 import name.lmj0011.redditdraftking.helpers.models.MediaAssetUploadResponse
 import name.lmj0011.redditdraftking.helpers.models.Subreddit
+import name.lmj0011.redditdraftking.helpers.models.SubredditFlair
 import name.lmj0011.redditdraftking.helpers.util.InputStreamRequestBody
 import name.lmj0011.redditdraftking.helpers.util.apiPath
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okio.IOException
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
@@ -42,7 +44,7 @@ class RedditApiHelper(val context: Context) {
 
         val response = client.newCall(request).execute()
 
-        return if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        return if (!response.isSuccessful) throw IOException("$response")
         else response
     }
 
@@ -60,7 +62,7 @@ class RedditApiHelper(val context: Context) {
     }
 
 
-    fun parseSubredditListingResponse(json: JSONObject): List<Subreddit> {
+    private fun parseSubredditListingResponse(json: JSONObject): List<Subreddit> {
         var subredditSet = mutableSetOf<Subreddit>()
 
         val redditMixedEntityArray =
@@ -90,7 +92,8 @@ class RedditApiHelper(val context: Context) {
                         allowImages = obj.getJSONObject("data").getBoolean("allow_images"),
                         allowVideos = obj.getJSONObject("data").getBoolean("allow_videos"),
                         allowVideoGifs = obj.getJSONObject("data").getBoolean("allow_videogifs"),
-                        allowPolls = obj.getJSONObject("data").getBoolean("allow_polls")
+                        allowPolls = obj.getJSONObject("data").getBoolean("allow_polls"),
+                        linkFlairEnabled = obj.getJSONObject("data").getBoolean("link_flair_enabled")
                     )
                     subredditSet.add(sub)
                 } catch(ex: JSONException) {
@@ -101,6 +104,40 @@ class RedditApiHelper(val context: Context) {
         }
 
         return subredditSet.toList()
+    }
+
+    /**
+     * Fetches a JSONArray of flairs belonging to the given Subreddit
+     *
+     * notes:
+     * - if the Subreddit doesn't allow flairs (ie. r/funny), a 403 response is returned by the server.
+     */
+    fun getSubredditFlairList(subreddit: Subreddit, oauthToken: String): List<SubredditFlair> {
+        val apiPath = "${subreddit.displayNamePrefixed}/api/link_flair_v2"
+        var flairList = mutableListOf<SubredditFlair>()
+
+        try {
+            val res = get(apiPath, oauthToken)
+
+            val flairArray = JSONArray(res.body!!.source().readUtf8())
+
+            for (i in 0 until flairArray.length()) {
+                val flairObj = flairArray.getJSONObject(i)
+
+                flairList.add(
+                    SubredditFlair(
+                        id = flairObj.getString("id"),
+                        text = flairObj.getString("text"),
+                        textColor = flairObj.getString("text_color"),
+                        backGroundColor = flairObj.getString("background_color"),
+                    )
+                )
+            }
+        } catch (ex: Exception) {
+            Timber.e(ex)
+        } finally {
+            return flairList.toList()
+        }
     }
 
     /**
