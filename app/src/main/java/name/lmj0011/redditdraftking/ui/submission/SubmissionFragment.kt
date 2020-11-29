@@ -3,7 +3,8 @@ package name.lmj0011.redditdraftking.ui.submission
 import android.annotation.SuppressLint
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.view.View
+import android.view.*
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -18,37 +19,36 @@ import name.lmj0011.redditdraftking.helpers.models.Subreddit
 import name.lmj0011.redditdraftking.databinding.FragmentSubmissionBinding
 import name.lmj0011.redditdraftking.helpers.RedditApiHelper
 import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
+import name.lmj0011.redditdraftking.helpers.SubmissionValidatorHelper
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditSearchListAdapter
+import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
 import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetAccountsFragment
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
 import org.kodein.di.instance
+import timber.log.Timber
 
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
  */
 class SubmissionFragment: Fragment(R.layout.fragment_submission) {
     private lateinit var binding: FragmentSubmissionBinding
-    private lateinit var redditAuthHelper: RedditAuthHelper
-    private lateinit var redditApiHelper: RedditApiHelper
     private lateinit var tabLayoutMediator: TabLayoutMediator
-
-    private var recentAndJoinedSubredditPair: Pair<SharedFlow<List<Subreddit>>, SharedFlow<List<Subreddit>>>? = null
-    private val  viewModel by viewModels<SubmissionViewModel> {
-        ViewModelFactory(
-            AppDatabase.getInstance(requireActivity().application).sharedDao,
-            requireActivity().application
-        )
-    }
+    private lateinit var viewModel: SubmissionViewModel
+    private lateinit var optionsMenu: Menu
 
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
-        redditApiHelper = (requireContext().applicationContext as App).kodein.instance()
+        viewModel = SubmissionViewModel.getInstance(
+            AppDatabase.getInstance(requireActivity().application).sharedDao,
+            requireActivity().application
+        )
+
+        setHasOptionsMenu(true)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -57,6 +57,54 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
         setupObservers()
 
         // TODO - select last Account or first in db and then call viewModel.setAccount()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        optionsMenu = menu
+        optionsMenu.clear()
+        inflater.inflate(R.menu.submission, optionsMenu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        super.onPrepareOptionsMenu(menu)
+        viewModel.readyToPost().value!!.let {
+            menu.getItem(0).isEnabled = it
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        return when (item.itemId) {
+            R.id.action_post_submission -> {
+                val layout = binding.submissionTabLayout
+                optionsMenu.getItem(0).isEnabled = false
+
+                layout.getTabAt(layout.selectedTabPosition)?.let {
+                    when(it.text) {
+                        "Link" -> {
+                            viewModel.postSubmission(SubmissionKind.Link)
+                        }
+                        "Image" -> {
+
+                        }
+                        "Video" -> {
+
+                        }
+                        "Text" -> {
+
+                        }
+                        "Poll" -> {
+                        }
+                        else -> { optionsMenu.getItem(0).isEnabled = true }
+                    }
+                }
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun setupObservers() {
@@ -71,7 +119,10 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 .into(binding.chooseSubredditImageView)
 
             reattachTabLayoutMediator(it)
+
+            viewModel.setSubredditPostRequirements(it)
         })
+
 
         viewModel.getAccount().observe(viewLifecycleOwner, {
             binding.chooseAccountTextView.text = it.name
@@ -82,7 +133,34 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 .circleCrop()
                 .error(R.drawable.ic_baseline_image_24)
                 .into(binding.chooseAccountImageView)
+
+            binding.chooseSubredditLinearLayout.visibility = View.VISIBLE
+
+            viewModel.recentAndJoinedSubredditPair.postValue(Pair(viewModel.getRecentSubredditListFlow(), viewModel.getJoinedSubredditListFlow()))
         })
+
+        viewModel.getSubmissionLinkTitle().observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Link)
+        })
+
+        viewModel.getSubmissionLinkText().observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Link)
+        })
+
+        viewModel.readyToPost().observe(viewLifecycleOwner, {
+            requireActivity().invalidateOptionsMenu()
+        })
+
+        viewModel.isLinkSubmissionSuccessful.observe(viewLifecycleOwner, {
+            if (it) {
+                resetFlagsState()
+            }
+        })
+    }
+
+    private fun resetFlagsState() {
+        binding.nsfwChip.isChecked = false
+        binding.spoilerChip.isChecked = false
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
@@ -121,7 +199,6 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
         binding.chooseAccountLinearLayout.setOnClickListener {
             bottomSheetAccountsFragment = BottomSheetAccountsFragment { acct ->
                 viewModel.setAccount(acct)
-                recentAndJoinedSubredditPair = Pair(viewModel.getRecentSubredditListFlow(acct), viewModel.getJoinedSubredditListFlow(acct))
                 bottomSheetAccountsFragment.dismiss()
             }
 
@@ -129,22 +206,31 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
         }
 
         binding.chooseSubredditLinearLayout.setOnClickListener {_ ->
-            if(viewModel.getAccount().value != null && recentAndJoinedSubredditPair != null) {
-                viewModel.getAccount().value?.let {acct ->
-                    bottomSheetSubredditSearchFragment = BottomSheetSubredditSearchFragment(
-                        SubredditSearchListAdapter.SubredditSearchClickListener { sub ->
-                            viewModel.setSubreddit(sub)
-                            bottomSheetSubredditSearchFragment.dismiss()
-                        },
-                        recentAndJoinedSubredditPair!!
-                    )
-                    bottomSheetSubredditSearchFragment.show(childFragmentManager, "BottomSheetSubredditSearchFragment")
-                }
-            } else {
-                // nothing
+            viewModel.getAccount().value?.let {
+                bottomSheetSubredditSearchFragment = BottomSheetSubredditSearchFragment(
+                    SubredditSearchListAdapter.SubredditSearchClickListener { sub ->
+                        viewModel.setSubreddit(sub)
+                        bottomSheetSubredditSearchFragment.dismiss()
+                    },
+                    viewModel.recentAndJoinedSubredditPair.value!!
+                )
+                bottomSheetSubredditSearchFragment.show(childFragmentManager, "BottomSheetSubredditSearchFragment")
             }
         }
+
+        binding.toggleFlagsImageView.setOnClickListener {
+            if(!binding.flagsChipGroup.isVisible) {
+                resetFlagsState()
+            }
+
+            binding.flagsChipGroup.isVisible = !binding.flagsChipGroup.isVisible
+        }
+        
+        binding.nsfwChip.setOnCheckedChangeListener { _, isChecked -> viewModel.setNsfwFlag(isChecked) }
+
+        binding.spoilerChip.setOnCheckedChangeListener { _, isChecked ->  viewModel.setSpoilerFlag(isChecked) }
     }
+
 
     /**
      * Reconfigures the TabLayout based on this Subreddit allowed Post types
@@ -171,12 +257,10 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             "Link",
             requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
             LinkSubmissionFragment(
-                SubredditFlairListAdapter.FlairItemClickListener { flair -> viewModel.setSubredditFlair(flair)},
-                {
-                    viewModel.setSubredditFlair(null)
-                },
-                viewModel.getSubredditAccountPair())
-            ),
+                SubredditFlairListAdapter.FlairItemClickListener { flair -> viewModel.setSubredditFlair(flair)}
+            ) {
+                viewModel.setSubredditFlair(null)
+            })
         )
 
         if (subreddit.allowImages) {
@@ -231,12 +315,10 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                     LinkSubmissionFragment(
                         SubredditFlairListAdapter.FlairItemClickListener { flair ->
                             viewModel.setSubredditFlair(flair)
-                        },
-                        {
-                            viewModel.setSubredditFlair(null)
-                        },
-                        viewModel.getSubredditAccountPair()
-                    )
+                        }
+                    ) {
+                        viewModel.setSubredditFlair(null)
+                    }
                 }
                 1 -> ImageSubmissionFragment()
                 2 -> VideoSubmissionFragment()

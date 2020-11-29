@@ -16,7 +16,7 @@ import name.lmj0011.redditdraftking.database.models.Draft
 import name.lmj0011.redditdraftking.helpers.NotificationHelper
 import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
 import name.lmj0011.redditdraftking.helpers.enums.DraftKind
-import name.lmj0011.redditdraftking.helpers.enums.SubmitKind
+import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
 import name.lmj0011.redditdraftking.helpers.receivers.PublishScheduledDraftReceiver
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
@@ -88,18 +88,18 @@ class PublishScheduledDraftWorker (private val appContext: Context, private val 
         when(DraftKind.from(draft.kind)) {
             DraftKind.MarkDown -> {
                 formBodyBuilder
-                    .add("kind", SubmitKind.Self.kind)
+                    .add("kind", SubmissionKind.Self.kind)
                     .add("text", draft.body)
             }
             DraftKind.RichText -> {
-                Timber.d("JSONObject(draft.body).toString(): ${JSONObject(draft.body).toString()}")
+                Timber.d("JSONObject(draft.body).toString(): ${JSONObject(draft.body)}")
                 formBodyBuilder
-                    .add("kind", SubmitKind.Self.kind)
+                    .add("kind", SubmissionKind.Self.kind)
                     .add("richtext_json", JSONObject(draft.body).toString())
             }
             DraftKind.Link -> {
                 formBodyBuilder
-                    .add("kind", SubmitKind.Link.kind)
+                    .add("kind", SubmissionKind.Link.kind)
                     .add("url", draft.body)
             }
         }

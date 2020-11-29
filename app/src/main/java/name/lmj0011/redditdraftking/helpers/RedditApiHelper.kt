@@ -8,10 +8,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import name.lmj0011.redditdraftking.database.models.Account
 import name.lmj0011.redditdraftking.helpers.adapters.JSONObjectAdapter
-import name.lmj0011.redditdraftking.helpers.models.ImageSubmission
-import name.lmj0011.redditdraftking.helpers.models.MediaAssetUploadResponse
-import name.lmj0011.redditdraftking.helpers.models.Subreddit
-import name.lmj0011.redditdraftking.helpers.models.SubredditFlair
+import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
+import name.lmj0011.redditdraftking.helpers.models.*
 import name.lmj0011.redditdraftking.helpers.util.InputStreamRequestBody
 import name.lmj0011.redditdraftking.helpers.util.apiPath
 import okhttp3.*
@@ -106,6 +104,26 @@ class RedditApiHelper(val context: Context) {
         return subredditSet.toList()
     }
 
+    fun getPostRequirements(subreddit: Subreddit, oauthToken: String): PostRequirements? {
+        val apiPath = "api/v1/${subreddit.displayName}/post_requirements"
+        val res = get(apiPath, oauthToken)
+
+        val moshi = Moshi.Builder()
+            .add(JSONObjectAdapter)
+            .add(KotlinJsonAdapterFactory())
+            .build()
+
+        val postRequirementsJsonAdapter = moshi.adapter(PostRequirements::class.java)
+
+        return try {
+            val postRequirements = postRequirementsJsonAdapter.fromJson(res.body!!.source())
+            postRequirements
+        } catch(ex: Exception) {
+            Timber.e(ex)
+            null
+        }
+    }
+
     /**
      * Fetches a JSONArray of flairs belonging to the given Subreddit
      *
@@ -133,8 +151,8 @@ class RedditApiHelper(val context: Context) {
                     )
                 )
             }
-        } catch (ex: Exception) {
-            Timber.e(ex)
+        } catch (ex: java.io.IOException) {
+            Timber.w("${subreddit.displayNamePrefixed} has no flairs?")
         } finally {
             return flairList.toList()
         }
@@ -180,7 +198,28 @@ class RedditApiHelper(val context: Context) {
     /**
      * Add a selftext or Link submission to the subreddit.
      */
-    fun submit() {}
+    fun submit(form: SubmissionValidatorHelper.SubmissionForm, oauthToken: String): Response {
+        val url = "api/submit?resubmit=true"
+        val builder = FormBody.Builder()
+
+        when(form.kind) {
+            SubmissionKind.Link.kind -> {
+                builder.add("kind", form.kind)
+                builder.add("url", form.url)
+            }
+            else -> { /** TODO - throw custom Exception */}
+        }
+
+        builder.add("sr", form.sr)
+        builder.add("api_type", form.api_type)
+        builder.add("title", form.title)
+        builder.add("nsfw", form.nsfw.toString())
+        builder.add("spoiler", form.spoiler.toString())
+
+        val formBody = builder.build()
+
+        return post(url, oauthToken, formBody)
+    }
 
     /**
      * Add an image submission to the subreddit.

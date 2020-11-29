@@ -19,6 +19,7 @@ import name.lmj0011.redditdraftking.databinding.ActivityMainBinding
 import name.lmj0011.redditdraftking.helpers.NotificationHelper
 import name.lmj0011.redditdraftking.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.redditdraftking.helpers.workers.ScheduledDraftServiceCallerWorker
+import name.lmj0011.redditdraftking.ui.home.HomeFragmentDirections
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
@@ -59,7 +60,9 @@ class MainActivity : AppCompatActivity() {
             when(destination.id){
                 R.id.homeFragment -> {
                     showFabAndSetListener(
-                        { navController.navigate(R.id.action_homeFragment_to_submissionFragment) },
+                        {
+                            navController.navigate(R.id.submissionFragment)
+                        },
                         R.drawable.ic_baseline_edit_24
                     )
                 }

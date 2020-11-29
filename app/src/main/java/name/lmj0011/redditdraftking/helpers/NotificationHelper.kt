@@ -18,6 +18,7 @@ import name.lmj0011.redditdraftking.database.models.Subreddit
 object NotificationHelper {
     const val SCHEDULED_DRAFT_SERVICE_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#scheduledDraftService"
     const val SCHEDULED_DRAFT_SERVICE_NOTIFICATION_ID = 100
+    const val SUBMISSION_PUBLISHED_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#submissionPublished"
     const val DRAFT_PUBLISHED_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#draftPublished"
     const val BATTERY_OPTIMIZATION_INFO_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#batteryOptimizationInfo"
     const val BATTERY_OPTIMIZATION_INFO_NOTIFICATION_ID = 101
@@ -29,16 +30,35 @@ object NotificationHelper {
     fun init(application: Application) {
         this.application = application
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceChannel1 = NotificationChannel(DRAFT_PUBLISHED_CHANNEL_ID, "Draft Published", NotificationManager.IMPORTANCE_HIGH)
+            val list = mutableListOf(
+                NotificationChannel(DRAFT_PUBLISHED_CHANNEL_ID, "Draft Published", NotificationManager.IMPORTANCE_HIGH),
+                NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_HIGH),
+                NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH)
+            )
 
-            val serviceChannel2 = NotificationChannel(SCHEDULED_DRAFT_SERVICE_CHANNEL_ID, "Scheduled Draft Service", NotificationManager.IMPORTANCE_MIN)
-            serviceChannel2.setSound(null, null)
+            val serviceChannel = NotificationChannel(SCHEDULED_DRAFT_SERVICE_CHANNEL_ID, "Scheduled Draft Service", NotificationManager.IMPORTANCE_MIN)
+            serviceChannel.setSound(null, null)
 
-            val serviceChannel3 = NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_HIGH)
-
-            NotificationManagerCompat.from(application)
-                .createNotificationChannels(mutableListOf(serviceChannel1, serviceChannel2, serviceChannel3))
+            list.add(serviceChannel)
+            NotificationManagerCompat.from(application).createNotificationChannels(list)
         }
+    }
+
+    fun showPostPublishedNotification(form: SubmissionValidatorHelper.SubmissionForm, postUrl: String) {
+        val viewUrlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(postUrl))
+        val pendingIntent = PendingIntent.getActivity(application, 0, viewUrlIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+
+        val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setAutoCancel(true)
+            .setContentTitle("Submission published to r/${form.sr}")
+            .setContentText(form.title)
+            .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
+            .addAction(0, "View", pendingIntent)
+            .build()
+
+        NotificationManagerCompat.from(application)
+            .notify(SystemClock.uptimeMillis().toInt(), notification)
     }
 
     fun showDraftPublishedNotification(draftAndSub: Pair<Draft, Subreddit>, postUrl: String) {

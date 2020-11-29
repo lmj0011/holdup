@@ -14,6 +14,9 @@ fun launchUI(block: suspend CoroutineScope.() -> Unit): Job =
 fun launchIO(block: suspend CoroutineScope.() -> Unit): Job =
     GlobalScope.launch(Dispatchers.IO, CoroutineStart.DEFAULT, block)
 
+fun launchDefault(block: suspend CoroutineScope.() -> Unit): Job =
+    GlobalScope.launch(Dispatchers.Default, CoroutineStart.DEFAULT, block)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 fun launchNow(block: suspend CoroutineScope.() -> Unit): Job =
     GlobalScope.launch(Dispatchers.Main, CoroutineStart.UNDISPATCHED, block)
