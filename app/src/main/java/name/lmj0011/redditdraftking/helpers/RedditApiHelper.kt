@@ -202,10 +202,14 @@ class RedditApiHelper(val context: Context) {
         val url = "api/submit?resubmit=true"
         val builder = FormBody.Builder()
 
+        builder.add("kind", form.kind)
+
         when(form.kind) {
             SubmissionKind.Link.kind -> {
-                builder.add("kind", form.kind)
                 builder.add("url", form.url)
+            }
+            SubmissionKind.Self.kind -> {
+                builder.add("text", form.text)
             }
             else -> { /** TODO - throw custom Exception */}
         }
@@ -213,6 +217,9 @@ class RedditApiHelper(val context: Context) {
         builder.add("sr", form.sr)
         builder.add("api_type", form.api_type)
         builder.add("title", form.title)
+        builder.add("flair_id", form.flair_id)
+        builder.add("flair_text", form.flair_text)
+        builder.add("sendreplies", true.toString())
         builder.add("nsfw", form.nsfw.toString())
         builder.add("spoiler", form.spoiler.toString())
 

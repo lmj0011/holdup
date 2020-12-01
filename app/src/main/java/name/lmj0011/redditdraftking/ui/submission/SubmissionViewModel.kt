@@ -5,10 +5,8 @@ import androidx.annotation.MainThread
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import name.lmj0011.redditdraftking.App
 import name.lmj0011.redditdraftking.database.SharedDao
@@ -23,7 +21,6 @@ import name.lmj0011.redditdraftking.helpers.models.Subreddit
 import name.lmj0011.redditdraftking.helpers.models.SubredditFlair
 import name.lmj0011.redditdraftking.helpers.util.launchDefault
 import name.lmj0011.redditdraftking.helpers.util.launchIO
-import name.lmj0011.redditdraftking.helpers.util.launchNow
 import org.json.JSONException
 import org.json.JSONObject
 import org.kodein.di.instance
@@ -54,18 +51,27 @@ class SubmissionViewModel(
     private var account = MutableLiveData<Account>()
     private var subreddit = MutableLiveData<Subreddit>()
     private var subredditPostRequirements = MutableLiveData<PostRequirements?>()
-    private var subredditFlair = MutableLiveData<SubredditFlair?>()
+
+    var subredditFlair = MutableLiveData<SubredditFlair?>()
+        private set
+
     private var submissionLinkText = MutableLiveData<String?>()
     private var submissionLinkTitle = MutableLiveData<String?>()
+
+    var submissionSelfText = MutableLiveData<String?>()
+        private set
+    var submissionSelfTitle = MutableLiveData<String?>()
+        private set
+
     private var isNsfw = MutableLiveData(false)
     private var isSpoiler = MutableLiveData(false)
     private var readyToPost = MutableLiveData(false)
 
-    var isLinkSubmissionSuccessful = MutableLiveData(false)
-     private set
+    var isSubmissionSuccessful = MutableLiveData(false)
+        private set
 
     var recentAndJoinedSubredditPair = MutableLiveData(Pair(getRecentSubredditListFlow(), getJoinedSubredditListFlow()))
-     private set
+        private set
 
     fun setAccount(acct: Account) {
         account.postValue(acct)
@@ -73,10 +79,6 @@ class SubmissionViewModel(
 
     fun setSubreddit(sub: Subreddit) {
         subreddit.postValue(sub)
-    }
-
-    fun setSubredditFlair(flair: SubredditFlair?){
-        subredditFlair.postValue(flair)
     }
 
     fun setSubmissionLinkTitle(s: String) {
@@ -151,26 +153,10 @@ class SubmissionViewModel(
         return subreddit
     }
 
-    fun getSubredditPostRequirements(): LiveData<PostRequirements?> {
-        return subredditPostRequirements
-    }
-
-    fun getSubredditFlair(): LiveData<SubredditFlair?>{
-        return subredditFlair
-    }
-
     fun readyToPost(): LiveData<Boolean>{
         return readyToPost
     }
 
-    fun getSubredditAccountPair(): Pair<Subreddit, Account>? {
-        val sub = subreddit.value
-        val acct = account.value
-
-        return if (sub != null && acct != null) {
-            Pair(sub, acct)
-        } else null
-    }
 
     fun getSubmissionLinkTitle(): LiveData<String?> {
         return submissionLinkTitle
@@ -204,7 +190,8 @@ class SubmissionViewModel(
                         readyToPost.postValue(submissionValidatorHelper.validate(form, reqs))
                     }
                     SubmissionKind.Self -> {
-                        readyToPost.postValue(false)
+                        val form = getSubmissionForm(kind)
+                        readyToPost.postValue(submissionValidatorHelper.validate(form, reqs))
                     }
                     SubmissionKind.Image -> {
                         readyToPost.postValue(false)
@@ -231,17 +218,15 @@ class SubmissionViewModel(
                 redditAuthHelper.authClient(account.value!!).getSavedBearer().getAccessToken()!!
             )
 
+            val json = JSONObject(res.body!!.string())
+            Timber.d("$json")
             try {
-                val json = JSONObject(res.body!!.string())
                 val url = json.getJSONObject("json").getJSONObject("data").getString("url")
-                isLinkSubmissionSuccessful.postValue(true)
+                isSubmissionSuccessful.postValue(true)
                 NotificationHelper.showPostPublishedNotification(form, url)
             } catch(ex: JSONException) {
-                isLinkSubmissionSuccessful.postValue(false)
-                val json = JSONObject(res.body!!.string())
-
                 Timber.e(ex)
-                Timber.d("$json")
+                isSubmissionSuccessful.postValue(false)
 
                 val errors = json.getJSONObject("json").getJSONArray("errors")
 
@@ -267,7 +252,8 @@ class SubmissionViewModel(
             }
             SubmissionKind.Self -> {
                 form.kind = SubmissionKind.Self.kind
-                readyToPost.postValue(false)
+                submissionSelfTitle.value?.let { form.title = it }
+                submissionSelfText.value?.let { form.text = it }
             }
             SubmissionKind.Image -> {
                 form.kind = SubmissionKind.Image.kind

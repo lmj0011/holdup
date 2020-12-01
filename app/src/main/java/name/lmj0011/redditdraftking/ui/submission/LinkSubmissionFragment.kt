@@ -19,11 +19,10 @@ import name.lmj0011.redditdraftking.helpers.util.buildOneColorStateList
 import name.lmj0011.redditdraftking.helpers.util.launchUI
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import org.kodein.di.instance
-import timber.log.Timber
 import java.lang.Exception
 
 
-class LinkSubmissionFragment(
+class LinkSubmissionFragment(// TODO - can be refactored since callbacks are not needed because viewModel is a singleton
     val setFlairItemForSubmission: SubredditFlairListAdapter.FlairItemClickListener,
     val removeFlairClickListener: (v: View) -> Unit,
 ): Fragment(R.layout.fragment_link_submission) {
@@ -127,7 +126,7 @@ class LinkSubmissionFragment(
         })
 
 
-        viewModel.isLinkSubmissionSuccessful.observe(viewLifecycleOwner, {
+        viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
             if (it) {
                 clearUserInputViews()
                 resetFlairToDefaultState()
@@ -149,5 +148,7 @@ class LinkSubmissionFragment(
             binding.addFlairChip.setTextColor(Color.BLACK)
         }
         catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
+
+        viewModel.subredditFlair.postValue(null)
     }
 }

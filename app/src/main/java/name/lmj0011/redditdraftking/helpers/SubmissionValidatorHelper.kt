@@ -68,7 +68,7 @@ class SubmissionValidatorHelper(val context: Context) {
                 linkValidate(form, reqs)
             }
             SubmissionKind.Self.kind -> {
-                true
+                selfValidate(form, reqs)
             }
             SubmissionKind.Image.kind -> {
                 true
@@ -88,5 +88,10 @@ class SubmissionValidatorHelper(val context: Context) {
 
     private fun linkValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
         return Patterns.WEB_URL.matcher(form.url).matches()
+    }
+
+    private fun selfValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
+        // TODO - needs completing
+        return true
     }
 }

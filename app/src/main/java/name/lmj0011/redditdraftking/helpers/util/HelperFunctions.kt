@@ -5,7 +5,10 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.PowerManager
+import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.children
 import com.google.android.material.tabs.TabLayout
 import java.lang.Exception

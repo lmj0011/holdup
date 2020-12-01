@@ -1,6 +1,7 @@
 package name.lmj0011.redditdraftking.helpers.adapters
 
 import android.content.Context
+import android.icu.text.CompactDecimalFormat
 import android.icu.text.NumberFormat
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -12,6 +13,7 @@ import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.databinding.ListItemSearchResultSubredditBinding
 import name.lmj0011.redditdraftking.helpers.models.Subreddit
 import timber.log.Timber
+import java.util.*
 
 class SubredditSearchListAdapter(val clickListener: SubredditSearchClickListener): ListAdapter<Subreddit, SubredditSearchListAdapter.ViewHolder>(DiffCallback()) {
     class ViewHolder private constructor(val binding: ListItemSearchResultSubredditBinding, val context: Context) :
@@ -27,8 +29,10 @@ class SubredditSearchListAdapter(val clickListener: SubredditSearchClickListener
                 .into(binding.iconImageView)
 
             binding.subredditNameTextView.text = subreddit.displayNamePrefixed
-            val subCount = NumberFormat.getInstance().format(subreddit.subscribers)
-            binding.subscribersCountTextView.text = "$subCount members"
+            val subCount = CompactDecimalFormat
+                .getInstance(Locale.getDefault(), CompactDecimalFormat.CompactStyle.SHORT)
+                .format(subreddit.subscribers)
+            binding.subscribersCountTextView.text = "${subCount.toLowerCase()} members"
 
             binding.executePendingBindings()
         }

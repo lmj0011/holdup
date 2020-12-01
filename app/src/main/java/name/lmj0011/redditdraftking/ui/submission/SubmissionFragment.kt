@@ -6,28 +6,19 @@ import android.os.Bundle
 import android.view.*
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlinx.coroutines.flow.SharedFlow
-import name.lmj0011.redditdraftking.App
 import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.database.AppDatabase
 import name.lmj0011.redditdraftking.helpers.models.Subreddit
 import name.lmj0011.redditdraftking.databinding.FragmentSubmissionBinding
-import name.lmj0011.redditdraftking.helpers.RedditApiHelper
-import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
-import name.lmj0011.redditdraftking.helpers.SubmissionValidatorHelper
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
-import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetAccountsFragment
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
-import org.kodein.di.instance
-import timber.log.Timber
 
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
@@ -94,7 +85,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
 
                         }
                         "Text" -> {
-
+                            viewModel.postSubmission(SubmissionKind.Self)
                         }
                         "Poll" -> {
                         }
@@ -147,11 +138,19 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             viewModel.validateSubmission(SubmissionKind.Link)
         })
 
+        viewModel.submissionSelfTitle.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Self)
+        })
+
+        viewModel.submissionSelfText.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Self)
+        })
+
         viewModel.readyToPost().observe(viewLifecycleOwner, {
             requireActivity().invalidateOptionsMenu()
         })
 
-        viewModel.isLinkSubmissionSuccessful.observe(viewLifecycleOwner, {
+        viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
             if (it) {
                 resetFlagsState()
             }
@@ -257,9 +256,9 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             "Link",
             requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
             LinkSubmissionFragment(
-                SubredditFlairListAdapter.FlairItemClickListener { flair -> viewModel.setSubredditFlair(flair)}
+                SubredditFlairListAdapter.FlairItemClickListener { flair -> viewModel.subredditFlair.postValue(flair)}
             ) {
-                viewModel.setSubredditFlair(null)
+                viewModel.subredditFlair.postValue(null)
             })
         )
 
@@ -288,7 +287,13 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             Triple(
                 "Text",
                 requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)!!,
-                TextSubmissionFragment()
+                TextSubmissionFragment(
+                    SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                        viewModel.subredditFlair.postValue(flair)
+                    }
+                ) {
+                    viewModel.subredditFlair.postValue(null)
+                }
             ),
         )
 
@@ -314,15 +319,21 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 0 -> {
                     LinkSubmissionFragment(
                         SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                            viewModel.setSubredditFlair(flair)
+                            viewModel.subredditFlair.postValue(flair)
                         }
                     ) {
-                        viewModel.setSubredditFlair(null)
+                        viewModel.subredditFlair.postValue(null)
                     }
                 }
                 1 -> ImageSubmissionFragment()
                 2 -> VideoSubmissionFragment()
-                3 -> TextSubmissionFragment()
+                3 -> TextSubmissionFragment(
+                    SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                        viewModel.subredditFlair.postValue(flair)
+                    }
+                ) {
+                    viewModel.subredditFlair.postValue(null)
+                }
                 4 -> PollSubmissionFragment()
                 else -> throw Exception("Unknown Tab Position!")
             }
