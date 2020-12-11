@@ -53,11 +53,7 @@ class FullscreenTextEntryActivity : AppCompatActivity() {
         binding.textEditTextTextMultiLine.setText(startText)
         binding.textEditTextTextMultiLine.setSelection(startPosition)
 
-        if (startText.isNullOrEmpty()) {
-            binding.textEditTextTextMultiLine.requestFocus()
-        } else {
-            showKeyBoard(binding.textEditTextTextMultiLine)
-        }
+        showKeyBoard(binding.textEditTextTextMultiLine)
 
         binding.saveButton.setOnClickListener {
             val text = binding.textEditTextTextMultiLine.text.toString()

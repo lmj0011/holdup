@@ -34,14 +34,10 @@ class TextSubmissionFragment( // TODO - can be refactored since callbacks are no
     FragmentBaseInit, SubmissionFragmentChild {
     private lateinit var binding: FragmentTextSubmissionBinding
     private lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
-    private lateinit var redditAuthHelper: RedditAuthHelper
-    private lateinit var redditApiHelper: RedditApiHelper
     private lateinit var  viewModel: SubmissionViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
-        redditApiHelper = (requireContext().applicationContext as App).kodein.instance()
         viewModel = SubmissionViewModel.getInstance(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
             requireActivity().application

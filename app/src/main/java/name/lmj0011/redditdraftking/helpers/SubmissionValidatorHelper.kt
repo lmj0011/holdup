@@ -3,7 +3,9 @@ package name.lmj0011.redditdraftking.helpers
 import android.content.Context
 import android.util.Patterns
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
+import name.lmj0011.redditdraftking.helpers.models.Image
 import name.lmj0011.redditdraftking.helpers.models.PostRequirements
+import org.json.JSONArray
 import timber.log.Timber
 
 class SubmissionValidatorHelper(val context: Context) {
@@ -11,8 +13,14 @@ class SubmissionValidatorHelper(val context: Context) {
         const val MAX_TITLE_LENGTH = 300
         const val MAX_FLAIR_ID_LENGTH = 36
         const val MAX_FLAIR_TEXT_LENGTH = 64
+        const val MAX_IMAGE_CAPTION_LENGTH = 180
+        const val MIN_GALLERY_LENGTH = 1
     }
 
+    /**
+     * NOTE: this data class does not correspond 1:1 to the "api/submit" json payload
+     * some property value(s) are exclusive to SubmissionViewModel (ie. [images])
+     */
     data class SubmissionForm (
         var api_type: String = "json",
         var extension: String = "json",
@@ -27,6 +35,9 @@ class SubmissionValidatorHelper(val context: Context) {
         var title: String = "",
         var url: String = "",
         var video_poster_url: String = "",
+        var images: List<Image> = listOf(),
+        var submit_type: String = "subreddit",
+        var items: JSONArray = JSONArray()
     )
 
     /** TODO - return error message when validation is false
@@ -71,7 +82,7 @@ class SubmissionValidatorHelper(val context: Context) {
                 selfValidate(form, reqs)
             }
             SubmissionKind.Image.kind -> {
-                true
+                imageValidate(form, reqs)
             }
             SubmissionKind.Video.kind -> {
                 true
@@ -93,5 +104,23 @@ class SubmissionValidatorHelper(val context: Context) {
     private fun selfValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
         // TODO - needs completing
         return true
+    }
+
+    private fun imageValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
+        /**
+         * TODO - needs completing
+         *
+         * check all gallery* rules in [PostRequirements]
+         */
+
+        val reqMinItems = reqs.gallery_min_items
+        val reqMaxItems = reqs.gallery_max_items
+
+        return when {
+            form.images.size < MIN_GALLERY_LENGTH -> false
+            reqMinItems != null && form.images.size < reqMinItems -> false
+            reqMaxItems != null && form.images.size > reqMaxItems -> false
+            else -> true
+        }
     }
 }

@@ -14,6 +14,7 @@ import name.lmj0011.redditdraftking.helpers.util.InputStreamRequestBody
 import name.lmj0011.redditdraftking.helpers.util.apiPath
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
 import org.json.JSONArray
 import org.json.JSONException
@@ -51,6 +52,19 @@ class RedditApiHelper(val context: Context) {
             .url("${BASE_URL}${apiPath}")
             .header("Authorization", "Bearer $oauthToken")
             .post(formBody)
+            .build()
+
+        val response = client.newCall(request).execute()
+
+        return if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        else response
+    }
+
+    fun post(apiPath: String, oauthToken: String, requestBody: RequestBody): Response {
+        val request = Request.Builder()
+            .url("${BASE_URL}${apiPath}")
+            .header("Authorization", "Bearer $oauthToken")
+            .post(requestBody)
             .build()
 
         val response = client.newCall(request).execute()
@@ -199,10 +213,20 @@ class RedditApiHelper(val context: Context) {
      * Add a selftext or Link submission to the subreddit.
      */
     fun submit(form: SubmissionValidatorHelper.SubmissionForm, oauthToken: String): Response {
-        val url = "api/submit?resubmit=true"
+        var url = "api/submit?resubmit=true&raw_json=1&gilding_detail=1"
         val builder = FormBody.Builder()
 
         builder.add("kind", form.kind)
+        builder.add("sr", form.sr)
+        builder.add("api_type", form.api_type)
+        builder.add("title", form.title)
+        builder.add("flair_id", form.flair_id)
+        builder.add("flair_text", form.flair_text)
+        builder.add("sendreplies", true.toString())
+        builder.add("show_error_list", true.toString())
+        builder.add("validate_on_submit", true.toString())
+        builder.add("nsfw", form.nsfw.toString())
+        builder.add("spoiler", form.spoiler.toString())
 
         when(form.kind) {
             SubmissionKind.Link.kind -> {
@@ -211,17 +235,39 @@ class RedditApiHelper(val context: Context) {
             SubmissionKind.Self.kind -> {
                 builder.add("text", form.text)
             }
-            else -> { /** TODO - throw custom Exception */}
-        }
+            SubmissionKind.Image.kind -> {
+                builder.add("url", form.url)
 
-        builder.add("sr", form.sr)
-        builder.add("api_type", form.api_type)
-        builder.add("title", form.title)
-        builder.add("flair_id", form.flair_id)
-        builder.add("flair_text", form.flair_text)
-        builder.add("sendreplies", true.toString())
-        builder.add("nsfw", form.nsfw.toString())
-        builder.add("spoiler", form.spoiler.toString())
+                if (form.images.size > 1) { // is a Gallery submission
+                    url = "api/submit_gallery_post.json?resubmit=true&raw_json=1&gilding_detail=1"
+
+                    val payload = JSONObject()
+
+                    payload.put("sr", form.sr)
+                    payload.put("api_type", form.api_type)
+                    payload.put("title", form.title)
+                    payload.put("flair_id", form.flair_id)
+                    payload.put("flair_text", form.flair_text)
+                    payload.put("sendreplies", true.toString())
+                    payload.put("show_error_list", true.toString())
+                    payload.put("validate_on_submit", true.toString())
+                    payload.put("nsfw", form.nsfw.toString())
+                    payload.put("spoiler", form.spoiler.toString())
+                    payload.put("kind", "self")
+                    payload.put("submit_type", "subreddit")
+                    payload.put("items", form.items)
+
+                    val mediaType = String.format("application/json; charset=utf-8").toMediaType()
+                    return post(url, oauthToken, payload.toString().toRequestBody(mediaType))
+                }
+            }
+            else -> {
+            /**
+             * TODO - throw custom Exception
+             */
+                Timber.w("Submission Not Implemented!")
+            }
+        }
 
         val formBody = builder.build()
 
@@ -229,46 +275,11 @@ class RedditApiHelper(val context: Context) {
     }
 
     /**
-     * Add an image submission to the subreddit.
-     */
-    fun submitImage(submission: ImageSubmission, oauthToken: String) {
-        val formBodyBuilder = FormBody.Builder()
-
-        formBodyBuilder.add("sr", submission.subreddit)
-        formBodyBuilder.add("api_type", submission.apiType)
-        formBodyBuilder.add("show_error_list", submission.showErrorList.toString())
-        formBodyBuilder.add("title", submission.title)
-        formBodyBuilder.add("spoiler", submission.spoiler.toString())
-        formBodyBuilder.add("nsfw", submission.nsfw.toString())
-        formBodyBuilder.add("kind", submission.kind)
-        formBodyBuilder.add("original_content", submission.originalContent.toString())
-        formBodyBuilder.add("submit_type", submission.submitType)
-        formBodyBuilder.add("post_to_twitter", submission.postToTwitter.toString())
-        formBodyBuilder.add("sendreplies", submission.sendReplies.toString())
-        formBodyBuilder.add("url", uploadMedia(submission.image, oauthToken))
-        formBodyBuilder.add("validate_on_submit", submission.validateOnSubmit.toString())
-
-        submitMedia(formBodyBuilder.build(), oauthToken)
-    }
-
-    /**
-     * for submitting posts that are not link posts or self
-     * posts.
-     */
-    private fun submitMedia(formBody: FormBody, oauthToken: String, withWebsockets: Boolean = false) {
-        if (withWebsockets) {
-
-        } else {
-            val url = apiPath["submit"] ?: error("api path not found!")
-            post("${url}?resubmit=true&raw_json=1&gilding_detail=1", oauthToken, formBody)
-        }
-    }
-
-    /**
      * uploads a media file to Reddit and returns the url link
      */
-    private fun uploadMedia(uri: Uri, oauthToken: String): String {
+   fun uploadMedia(uri: Uri, oauthToken: String): Pair<String, String> {
         var mediaUrl = ""
+        var mediaId = ""
         val contentResolver = context.contentResolver
 
         val mimeType = contentResolver.getType(uri).toString()
@@ -309,6 +320,7 @@ class RedditApiHelper(val context: Context) {
             val requestBodyBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
             var uploadFileKey = ""
 
+            Timber.d("mediaAssetUploadResponse: $mediaAssetUploadResponse")
             mediaAssetUploadResponse?.args?.fields?.onEach { pair ->
                 if(pair.name == "key") uploadFileKey = pair.value
                 requestBodyBuilder.addFormDataPart(pair.name, pair.value)
@@ -327,11 +339,17 @@ class RedditApiHelper(val context: Context) {
             val uploadResponse = client.newCall(request).execute()
 
             when {
-                uploadResponse.isSuccessful -> mediaUrl = "${uploadUrl}/${uploadFileKey}"
+                uploadResponse.isSuccessful -> {
+                    mediaUrl = "${uploadUrl}/${uploadFileKey}"
+                    mediaAssetUploadResponse?.asset?.asset_id?.let { id ->  mediaId = id}
+
+                    Timber.d("mediaUrl: $mediaUrl")
+                    Timber.d("mediaId: $mediaId")
+                }
                 else -> throw IOException("Unexpected code: $uploadResponse")
             }
 
         }
-        return mediaUrl
+        return Pair(mediaId, mediaUrl)
     }
 }

@@ -30,7 +30,6 @@ class InputStreamRequestBody (
         val progressListener = object : ProgressListener {
             override fun onBytesSent(contentLength: Long, totalBytesSent: Long) {
                 val totalProgress = totalBytesSent.toFloat().div(contentLength().toFloat())
-                Timber.d("file upload progress: $totalProgress")
             }
         }
 
@@ -45,6 +44,8 @@ class InputStreamRequestBody (
                         sink.flush()
                         progressListener.onBytesSent(contentLength(), total)
                     }
+
+                    Timber.d("file: $uri has finished uploading.")
                 } catch (ex: Exception) {
                     Timber.e(ex)
                 }

@@ -14,4 +14,7 @@
         <item quantity="one">%d Draft</item>
         <item quantity="other">%d Drafts</item>
     </plurals>
+
+    <string name="file_provider" translatable="false">name.lmj0011.redditdraftking.fileprovider</string>
+    <string name="image_picker_pick_single">Select an Image</string>
 </resources>

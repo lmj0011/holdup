@@ -1,6 +1,7 @@
 package name.lmj0011.redditdraftking.ui.submission
 
 import android.app.Application
+import android.net.Uri
 import androidx.annotation.MainThread
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -16,11 +17,13 @@ import name.lmj0011.redditdraftking.helpers.RedditApiHelper
 import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
 import name.lmj0011.redditdraftking.helpers.SubmissionValidatorHelper
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
+import name.lmj0011.redditdraftking.helpers.models.Image
 import name.lmj0011.redditdraftking.helpers.models.PostRequirements
 import name.lmj0011.redditdraftking.helpers.models.Subreddit
 import name.lmj0011.redditdraftking.helpers.models.SubredditFlair
 import name.lmj0011.redditdraftking.helpers.util.launchDefault
 import name.lmj0011.redditdraftking.helpers.util.launchIO
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import org.kodein.di.instance
@@ -58,9 +61,14 @@ class SubmissionViewModel(
     private var submissionLinkText = MutableLiveData<String?>()
     private var submissionLinkTitle = MutableLiveData<String?>()
 
+    var submissionSelfTitle = MutableLiveData<String?>()
+        private set
     var submissionSelfText = MutableLiveData<String?>()
         private set
-    var submissionSelfTitle = MutableLiveData<String?>()
+
+    var submissionImageTitle = MutableLiveData<String?>()
+        private set
+    var submissionImageGallery = MutableLiveData<MutableList<Image>?>()
         private set
 
     private var isNsfw = MutableLiveData(false)
@@ -171,6 +179,16 @@ class SubmissionViewModel(
     }
 
     /**
+     * uploads a media file to Reddit and returns the url link
+     */
+    fun uploadMedia(uri: Uri): Pair<String, String>  {
+        return redditApiHelper.uploadMedia(
+            uri,
+            redditAuthHelper.authClient(account.value!!).getSavedBearer().getAccessToken()!!
+        )
+    }
+
+    /**
      * validates the data (determined by [kind]) currently stored in this viewModel
      *
      * updates [readyToPost]
@@ -194,7 +212,8 @@ class SubmissionViewModel(
                         readyToPost.postValue(submissionValidatorHelper.validate(form, reqs))
                     }
                     SubmissionKind.Image -> {
-                        readyToPost.postValue(false)
+                        val form = getSubmissionForm(kind)
+                        readyToPost.postValue(submissionValidatorHelper.validate(form, reqs))
                     }
                     SubmissionKind.Video -> {
                         readyToPost.postValue(false)
@@ -221,9 +240,33 @@ class SubmissionViewModel(
             val json = JSONObject(res.body!!.string())
             Timber.d("$json")
             try {
-                val url = json.getJSONObject("json").getJSONObject("data").getString("url")
-                isSubmissionSuccessful.postValue(true)
-                NotificationHelper.showPostPublishedNotification(form, url)
+                var url: String? = null
+
+                when (kind) {
+                    SubmissionKind.Link -> {
+                        url = json.getJSONObject("json").getJSONObject("data").getString("url")
+                        isSubmissionSuccessful.postValue(true)
+                    }
+                    SubmissionKind.Self -> {
+                        url = json.getJSONObject("json").getJSONObject("data").getString("url")
+                        isSubmissionSuccessful.postValue(true)
+                    }
+                    SubmissionKind.Image -> {
+                        isSubmissionSuccessful.postValue(true)
+
+                        if(form.images.size > 1) {
+                            url = json.getJSONObject("json").getJSONObject("data").getString("url")
+                        }
+                    }
+                    SubmissionKind.Video -> {
+                        isSubmissionSuccessful.postValue(false)
+                    }
+                    SubmissionKind.Poll -> {
+                        isSubmissionSuccessful.postValue(false)
+                    }
+                }
+
+                NotificationHelper.showPostPublishedNotification(form, account.value!!.name, url)
             } catch(ex: JSONException) {
                 Timber.e(ex)
                 isSubmissionSuccessful.postValue(false)
@@ -257,7 +300,21 @@ class SubmissionViewModel(
             }
             SubmissionKind.Image -> {
                 form.kind = SubmissionKind.Image.kind
-                readyToPost.postValue(false)
+                submissionImageTitle.value?.let { form.title = it }
+                submissionImageGallery.value?.let { list ->
+                    form.images = list.toList()
+
+                    when {
+                        (list.size == 1) -> {
+                            form.url = list.first().url
+                        }
+                        (list.size > 1) -> {
+                            form.items = getJsonArrayOfImages(form.images)
+                        }
+                    }
+
+
+                }
             }
             SubmissionKind.Video -> {
                 form.kind = SubmissionKind.Video.kind
@@ -280,6 +337,22 @@ class SubmissionViewModel(
         isSpoiler.value?.let { form.spoiler = it}
 
         return form
+    }
+
+    private fun getJsonArrayOfImages(images: List<Image>): JSONArray {
+        val rootArray = JSONArray()
+
+        images.forEach { image ->
+            val jsonObj = JSONObject()
+            jsonObj.put("media_id", image.mediaId)
+            jsonObj.put("outbound_url", image.outboundUrl)
+            jsonObj.put("caption", image.caption)
+
+            rootArray.put(jsonObj)
+        }
+
+        Timber.d("${rootArray.toString(2)}")
+        return rootArray
     }
 
 

@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.PowerManager
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.children
 import com.google.android.material.tabs.TabLayout
@@ -57,4 +59,9 @@ fun buildOneColorStateList(color: Int /* Color.parseColor("#FFFF") */): ColorSta
             color
         )
     )
+}
+
+fun showToastMessage(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
+    val toast = Toast.makeText(context, message, duration)
+    toast.show()
 }

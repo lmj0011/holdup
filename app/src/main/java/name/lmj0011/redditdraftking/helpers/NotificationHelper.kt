@@ -44,9 +44,9 @@ object NotificationHelper {
         }
     }
 
-    fun showPostPublishedNotification(form: SubmissionValidatorHelper.SubmissionForm, postUrl: String) {
-        val viewUrlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(postUrl))
-        val pendingIntent = PendingIntent.getActivity(application, 0, viewUrlIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+    fun showPostPublishedNotification(form: SubmissionValidatorHelper.SubmissionForm, user: String, postUrl: String?) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.reddit.com/user/${user.substring(2)}/?sort=new"))
+        val contentIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
 
         val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -54,11 +54,18 @@ object NotificationHelper {
             .setContentTitle("Submission published to r/${form.sr}")
             .setContentText(form.title)
             .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
-            .addAction(0, "View", pendingIntent)
-            .build()
+            .setContentIntent(contentIntent)
+
+        postUrl?.let { url ->
+            val viewPostActionIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val viewPostActionPendingIntent = PendingIntent.getActivity(application, 0, viewPostActionIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+
+            notification.addAction(0, "View Post", viewPostActionPendingIntent)
+        }
+
 
         NotificationManagerCompat.from(application)
-            .notify(SystemClock.uptimeMillis().toInt(), notification)
+            .notify(SystemClock.uptimeMillis().toInt(), notification.build())
     }
 
     fun showDraftPublishedNotification(draftAndSub: Pair<Draft, Subreddit>, postUrl: String) {

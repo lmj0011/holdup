@@ -79,7 +79,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                             viewModel.postSubmission(SubmissionKind.Link)
                         }
                         "Image" -> {
-
+                            viewModel.postSubmission(SubmissionKind.Image)
                         }
                         "Video" -> {
 
@@ -144,6 +144,14 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
 
         viewModel.submissionSelfText.observe(viewLifecycleOwner, {
             viewModel.validateSubmission(SubmissionKind.Self)
+        })
+
+        viewModel.submissionImageTitle.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Image)
+        })
+
+        viewModel.submissionImageGallery.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Image)
         })
 
         viewModel.readyToPost().observe(viewLifecycleOwner, {
@@ -267,7 +275,11 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 Triple(
                     "Image",
                     requireContext().getDrawable(R.drawable.ic_baseline_image_24)!!,
-                    ImageSubmissionFragment()
+                    ImageSubmissionFragment(
+                        SubredditFlairListAdapter.FlairItemClickListener { flair -> viewModel.subredditFlair.postValue(flair)}
+                    ) {
+                        viewModel.subredditFlair.postValue(null)
+                    }
                 ),
             )
 
@@ -325,7 +337,15 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                         viewModel.subredditFlair.postValue(null)
                     }
                 }
-                1 -> ImageSubmissionFragment()
+                1 -> {
+                    ImageSubmissionFragment(
+                        SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                            viewModel.subredditFlair.postValue(flair)
+                        }
+                    ) {
+                        viewModel.subredditFlair.postValue(null)
+                    }
+                }
                 2 -> VideoSubmissionFragment()
                 3 -> TextSubmissionFragment(
                     SubredditFlairListAdapter.FlairItemClickListener { flair ->
