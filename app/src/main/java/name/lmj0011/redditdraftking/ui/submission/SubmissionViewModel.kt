@@ -71,6 +71,15 @@ class SubmissionViewModel(
     var submissionImageGallery = MutableLiveData<MutableList<Image>?>()
         private set
 
+    var submissionPollTitle = MutableLiveData<String?>()
+        private set
+    var submissionPollBodyText = MutableLiveData<String?>()
+        private set
+    var submissionPollOptions = MutableLiveData<List<String>?>()
+        private set
+    var submissionPollDuration = MutableLiveData<Int?>()
+        private set
+
     private var isNsfw = MutableLiveData(false)
     private var isSpoiler = MutableLiveData(false)
     private var readyToPost = MutableLiveData(false)
@@ -222,7 +231,9 @@ class SubmissionViewModel(
                         readyToPost.postValue(false)
                     }
                     SubmissionKind.Poll -> {
-                        readyToPost.postValue(false)
+                        val form = getSubmissionForm(kind)
+                        Timber.d("form: $form")
+                        readyToPost.postValue(submissionValidatorHelper.validate(form, reqs))
                     }
                 }
             }
@@ -262,7 +273,8 @@ class SubmissionViewModel(
                         isSubmissionSuccessful.postValue(false)
                     }
                     SubmissionKind.Poll -> {
-                        isSubmissionSuccessful.postValue(false)
+                        url = json.getJSONObject("json").getJSONObject("data").getString("url")
+                        isSubmissionSuccessful.postValue(true)
                     }
                 }
 
@@ -326,7 +338,11 @@ class SubmissionViewModel(
             }
             SubmissionKind.Poll -> {
                 form.kind = SubmissionKind.Poll.kind
-                readyToPost.postValue(false)
+                submissionPollTitle.value?.let { form.title = it }
+                submissionPollBodyText.value?.let { form.text = it }
+                submissionPollDuration.value?.let { form.duration = it }
+                submissionPollOptions.value?.let { form.pollOptions = it }
+                form.options = getJsonArrayOfOptions(form.pollOptions)
             }
         }
 
@@ -349,6 +365,17 @@ class SubmissionViewModel(
             jsonObj.put("caption", image.caption)
 
             rootArray.put(jsonObj)
+        }
+
+        Timber.d("${rootArray.toString(2)}")
+        return rootArray
+    }
+
+    private fun getJsonArrayOfOptions(options: List<String>): JSONArray {
+        val rootArray = JSONArray()
+
+        options.forEach { opt ->
+            rootArray.put(opt)
         }
 
         Timber.d("${rootArray.toString(2)}")

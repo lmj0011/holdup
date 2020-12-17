@@ -23,6 +23,7 @@ import name.lmj0011.redditdraftking.database.AppDatabase
 import name.lmj0011.redditdraftking.databinding.ActivityFullscreenTextEntryBinding
 import name.lmj0011.redditdraftking.databinding.ActivityMainBinding
 import name.lmj0011.redditdraftking.helpers.NotificationHelper
+import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
 import name.lmj0011.redditdraftking.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.redditdraftking.helpers.workers.ScheduledDraftServiceCallerWorker
 import name.lmj0011.redditdraftking.ui.home.HomeFragmentDirections
@@ -57,7 +58,12 @@ class FullscreenTextEntryActivity : AppCompatActivity() {
 
         binding.saveButton.setOnClickListener {
             val text = binding.textEditTextTextMultiLine.text.toString()
-            viewModel.submissionSelfText.postValue(text)
+
+            when(intent.getStringExtra("kind")) {
+                SubmissionKind.Self.kind -> viewModel.submissionSelfText.postValue(text)
+                SubmissionKind.Poll.kind -> viewModel.submissionPollBodyText.postValue(text)
+            }
+
             hideKeyBoard(binding.textEditTextTextMultiLine)
             finish()
         }

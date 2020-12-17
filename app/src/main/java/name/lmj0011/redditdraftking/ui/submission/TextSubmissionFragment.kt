@@ -134,8 +134,9 @@ class TextSubmissionFragment( // TODO - can be refactored since callbacks are no
 
         binding.textEditTextTextMultiLine.setOnClickListener {
             val intent = Intent(requireContext(), FullscreenTextEntryActivity::class.java)
-            intent.putExtra("start_text", binding.textEditTextTextMultiLine.text.toString());
-            intent.putExtra("start_position", binding.textEditTextTextMultiLine.selectionStart);
+            intent.putExtra("kind", SubmissionKind.Self.kind)
+            intent.putExtra("start_text", binding.textEditTextTextMultiLine.text.toString())
+            intent.putExtra("start_position", binding.textEditTextTextMultiLine.selectionStart)
             startActivityForResult(intent, FullscreenTextEntryActivity.FULLSCREEN_TEXT_ENTRY_REQUEST_CODE)
         }
 

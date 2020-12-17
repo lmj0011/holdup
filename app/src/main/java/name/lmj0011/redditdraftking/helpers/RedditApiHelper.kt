@@ -261,6 +261,31 @@ class RedditApiHelper(val context: Context) {
                     return post(url, oauthToken, payload.toString().toRequestBody(mediaType))
                 }
             }
+            SubmissionKind.Poll.kind -> {
+                url = "api/submit_poll_post?resubmit=true&raw_json=1&gilding_detail=1"
+
+                val payload = JSONObject()
+
+                payload.put("sr", form.sr)
+                payload.put("api_type", form.api_type)
+                payload.put("title", form.title)
+                payload.put("text", form.text)
+                payload.put("flair_id", form.flair_id)
+                payload.put("flair_text", form.flair_text)
+                payload.put("sendreplies", true.toString())
+                payload.put("show_error_list", true.toString())
+                payload.put("validate_on_submit", true.toString())
+                payload.put("nsfw", form.nsfw.toString())
+                payload.put("spoiler", form.spoiler.toString())
+                payload.put("kind", "self")
+                payload.put("submit_type", "subreddit")
+                payload.put("duration", form.duration)
+                payload.put("options", form.options)
+
+
+                val mediaType = String.format("application/json; charset=utf-8").toMediaType()
+                return post(url, oauthToken, payload.toString().toRequestBody(mediaType))
+            }
             else -> {
             /**
              * TODO - throw custom Exception

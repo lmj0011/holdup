@@ -88,6 +88,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                             viewModel.postSubmission(SubmissionKind.Self)
                         }
                         "Poll" -> {
+                            viewModel.postSubmission(SubmissionKind.Poll)
                         }
                         else -> { optionsMenu.getItem(0).isEnabled = true }
                     }
@@ -152,6 +153,22 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
 
         viewModel.submissionImageGallery.observe(viewLifecycleOwner, {
             viewModel.validateSubmission(SubmissionKind.Image)
+        })
+
+        viewModel.submissionPollTitle.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Poll)
+        })
+
+        viewModel.submissionPollBodyText.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Poll)
+        })
+
+        viewModel.submissionPollOptions.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Poll)
+        })
+
+        viewModel.submissionPollDuration.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Poll)
         })
 
         viewModel.readyToPost().observe(viewLifecycleOwner, {
@@ -314,7 +331,13 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 Triple(
                     "Poll",
                     requireContext().getDrawable(R.drawable.ic_baseline_poll_24)!!,
-                    PollSubmissionFragment()
+                    PollSubmissionFragment(
+                        SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                            viewModel.subredditFlair.postValue(flair)
+                        }
+                    ) {
+                        viewModel.subredditFlair.postValue(null)
+                    }
                 ),
             )
         }
@@ -354,7 +377,13 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 ) {
                     viewModel.subredditFlair.postValue(null)
                 }
-                4 -> PollSubmissionFragment()
+                4 -> PollSubmissionFragment(
+                    SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                        viewModel.subredditFlair.postValue(flair)
+                    }
+                ) {
+                    viewModel.subredditFlair.postValue(null)
+                }
                 else -> throw Exception("Unknown Tab Position!")
             }
         }

@@ -15,6 +15,10 @@ class SubmissionValidatorHelper(val context: Context) {
         const val MAX_FLAIR_TEXT_LENGTH = 64
         const val MAX_IMAGE_CAPTION_LENGTH = 180
         const val MIN_GALLERY_LENGTH = 1
+        const val MIN_POLL_OPTIONS = 2
+        const val MAX_POLL_OPTIONS = 6
+        const val MIN_POLL_DURATION = 1 // days
+        const val MAX_POLL_DURATION = 7
     }
 
     /**
@@ -37,7 +41,10 @@ class SubmissionValidatorHelper(val context: Context) {
         var video_poster_url: String = "",
         var images: List<Image> = listOf(),
         var submit_type: String = "subreddit",
-        var items: JSONArray = JSONArray()
+        var items: JSONArray = JSONArray(),
+        var pollOptions: List<String> = listOf(),
+        var options: JSONArray = JSONArray(),
+        var duration: Int = 3
     )
 
     /** TODO - return error message when validation is false
@@ -88,13 +95,18 @@ class SubmissionValidatorHelper(val context: Context) {
                 true
             }
             SubmissionKind.Poll.kind -> {
-                true
+                pollValidate(form, reqs)
             }
             SubmissionKind.VideoGif.kind -> {
                 true
             }
             else -> false
         }
+    }
+
+    private fun selfTextValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
+        // TODO - needs completing
+        return true
     }
 
     private fun linkValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
@@ -107,12 +119,6 @@ class SubmissionValidatorHelper(val context: Context) {
     }
 
     private fun imageValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
-        /**
-         * TODO - needs completing
-         *
-         * check all gallery* rules in [PostRequirements]
-         */
-
         val reqMinItems = reqs.gallery_min_items
         val reqMaxItems = reqs.gallery_max_items
 
@@ -120,6 +126,16 @@ class SubmissionValidatorHelper(val context: Context) {
             form.images.size < MIN_GALLERY_LENGTH -> false
             reqMinItems != null && form.images.size < reqMinItems -> false
             reqMaxItems != null && form.images.size > reqMaxItems -> false
+            else -> true
+        }
+    }
+
+    private fun pollValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
+        return when {
+            form.pollOptions.size < MIN_POLL_OPTIONS -> false
+            form.pollOptions.size > MAX_POLL_OPTIONS -> false
+            form.duration < MIN_POLL_DURATION -> false
+            form.duration > MAX_POLL_DURATION -> false
             else -> true
         }
     }
