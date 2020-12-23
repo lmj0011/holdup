@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.text.format.Formatter
+import androidx.core.net.toUri
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import name.lmj0011.redditdraftking.database.models.Account
@@ -20,6 +21,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 class RedditApiHelper(val context: Context) {
@@ -286,6 +288,12 @@ class RedditApiHelper(val context: Context) {
                 val mediaType = String.format("application/json; charset=utf-8").toMediaType()
                 return post(url, oauthToken, payload.toString().toRequestBody(mediaType))
             }
+            SubmissionKind.Video.kind -> {
+                builder.add("url", form.url)
+                builder.add("video_poster_url", form.video_poster_url)
+
+
+            }
             else -> {
             /**
              * TODO - throw custom Exception
@@ -340,7 +348,7 @@ class RedditApiHelper(val context: Context) {
 
             val mediaAssetUploadResponseAdapter = moshi.adapter(MediaAssetUploadResponse::class.java)
             val mediaAssetUploadResponse = mediaAssetUploadResponseAdapter.fromJson(mediaAssetApiResponse.body!!.source())
-            //Timber.d("mediaAssetUploadResponse: $mediaAssetUploadResponse")
+            Timber.d("mediaAssetUploadResponse: $mediaAssetUploadResponse")
 
             val requestBodyBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
             var uploadFileKey = ""
@@ -375,6 +383,63 @@ class RedditApiHelper(val context: Context) {
             }
 
         }
+        return Pair(mediaId, mediaUrl)
+    }
+
+    /**
+     * just like uploadMedia(Uri, String) but strictly for uploading .png images
+     */
+    fun uploadMedia(file: File, mimeType: String, oauthToken: String): Pair<String, String> {
+            var mediaUrl = ""
+            var mediaId = ""
+            val formBody = FormBody.Builder()
+                .add("filepath", file.name)
+                .add("mimetype", mimeType)
+                .build()
+
+            val url = apiPath["media_asset"] ?: error("api path not found!")
+            val mediaAssetApiResponse = post("${url}?raw_json=1&gilding_detail=1", oauthToken, formBody)
+
+            val moshi = Moshi.Builder()
+                .add(JSONObjectAdapter)
+                .add(KotlinJsonAdapterFactory())
+                .build()
+
+            val mediaAssetUploadResponseAdapter = moshi.adapter(MediaAssetUploadResponse::class.java)
+            val mediaAssetUploadResponse = mediaAssetUploadResponseAdapter.fromJson(mediaAssetApiResponse.body!!.source())
+            Timber.d("mediaAssetUploadResponse: $mediaAssetUploadResponse")
+
+            val requestBodyBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
+            var uploadFileKey = ""
+
+            Timber.d("mediaAssetUploadResponse: $mediaAssetUploadResponse")
+            mediaAssetUploadResponse?.args?.fields?.onEach { pair ->
+                if(pair.name == "key") uploadFileKey = pair.value
+                requestBodyBuilder.addFormDataPart(pair.name, pair.value)
+            }.also {_ ->
+                val contentPart = InputStreamRequestBody(mimeType.toMediaType(), file.length(), context.contentResolver, file.toUri())
+                requestBodyBuilder.addFormDataPart("file", file.name, contentPart)
+            }
+
+            val requestBody = requestBodyBuilder.build()
+            val uploadUrl = "https:${mediaAssetUploadResponse?.args?.action}"
+            val request = Request.Builder()
+                .url(uploadUrl)
+                .post(requestBody)
+                .build()
+
+            val uploadResponse = client.newCall(request).execute()
+
+            when {
+                uploadResponse.isSuccessful -> {
+                    mediaUrl = "${uploadUrl}/${uploadFileKey}"
+                    mediaAssetUploadResponse?.asset?.asset_id?.let { id ->  mediaId = id}
+
+                    Timber.d("mediaUrl: $mediaUrl")
+                    Timber.d("mediaId: $mediaId")
+                }
+                else -> throw IOException("Unexpected code: $uploadResponse")
+            }
         return Pair(mediaId, mediaUrl)
     }
 }

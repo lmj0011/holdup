@@ -17,10 +17,7 @@ import name.lmj0011.redditdraftking.helpers.RedditApiHelper
 import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
 import name.lmj0011.redditdraftking.helpers.SubmissionValidatorHelper
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
-import name.lmj0011.redditdraftking.helpers.models.Image
-import name.lmj0011.redditdraftking.helpers.models.PostRequirements
-import name.lmj0011.redditdraftking.helpers.models.Subreddit
-import name.lmj0011.redditdraftking.helpers.models.SubredditFlair
+import name.lmj0011.redditdraftking.helpers.models.*
 import name.lmj0011.redditdraftking.helpers.util.launchDefault
 import name.lmj0011.redditdraftking.helpers.util.launchIO
 import org.json.JSONArray
@@ -28,6 +25,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import org.kodein.di.instance
 import timber.log.Timber
+import java.io.File
 
 class SubmissionViewModel(
     private val database: SharedDao,
@@ -78,6 +76,11 @@ class SubmissionViewModel(
     var submissionPollOptions = MutableLiveData<List<String>?>()
         private set
     var submissionPollDuration = MutableLiveData<Int?>()
+        private set
+
+    var submissionVideoTitle = MutableLiveData<String?>()
+        private set
+    var submissionVideo = MutableLiveData<Video?>()
         private set
 
     private var isNsfw = MutableLiveData(false)
@@ -198,6 +201,17 @@ class SubmissionViewModel(
     }
 
     /**
+     * uploads a media file to Reddit and returns the url link
+     */
+    fun uploadMedia(file: File, mimeType: String): Pair<String, String>  {
+        return redditApiHelper.uploadMedia(
+            file,
+            mimeType,
+            redditAuthHelper.authClient(account.value!!).getSavedBearer().getAccessToken()!!
+        )
+    }
+
+    /**
      * validates the data (determined by [kind]) currently stored in this viewModel
      *
      * updates [readyToPost]
@@ -225,7 +239,8 @@ class SubmissionViewModel(
                         readyToPost.postValue(submissionValidatorHelper.validate(form, reqs))
                     }
                     SubmissionKind.Video -> {
-                        readyToPost.postValue(false)
+                        val form = getSubmissionForm(kind)
+                        readyToPost.postValue(submissionValidatorHelper.validate(form, reqs))
                     }
                     SubmissionKind.VideoGif -> {
                         readyToPost.postValue(false)
@@ -270,7 +285,7 @@ class SubmissionViewModel(
                         }
                     }
                     SubmissionKind.Video -> {
-                        isSubmissionSuccessful.postValue(false)
+                        isSubmissionSuccessful.postValue(true)
                     }
                     SubmissionKind.Poll -> {
                         url = json.getJSONObject("json").getJSONObject("data").getString("url")
@@ -330,7 +345,11 @@ class SubmissionViewModel(
             }
             SubmissionKind.Video -> {
                 form.kind = SubmissionKind.Video.kind
-                readyToPost.postValue(false)
+                submissionVideoTitle.value?.let { form.title = it }
+                submissionVideo.value?.let {
+                    form.url = it.url
+                    form.video_poster_url = it.posterUrl
+                }
             }
             SubmissionKind.VideoGif -> {
                 form.kind = SubmissionKind.VideoGif.kind

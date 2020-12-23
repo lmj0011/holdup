@@ -92,7 +92,7 @@ class SubmissionValidatorHelper(val context: Context) {
                 imageValidate(form, reqs)
             }
             SubmissionKind.Video.kind -> {
-                true
+                videoValidate(form, reqs)
             }
             SubmissionKind.Poll.kind -> {
                 pollValidate(form, reqs)
@@ -136,6 +136,14 @@ class SubmissionValidatorHelper(val context: Context) {
             form.pollOptions.size > MAX_POLL_OPTIONS -> false
             form.duration < MIN_POLL_DURATION -> false
             form.duration > MAX_POLL_DURATION -> false
+            else -> true
+        }
+    }
+
+    private fun videoValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
+        return when {
+            form.url.isBlank() || !Patterns.WEB_URL.matcher(form.url).matches() -> false
+            form.video_poster_url.isNotBlank() && !Patterns.WEB_URL.matcher(form.video_poster_url).matches() -> false
             else -> true
         }
     }

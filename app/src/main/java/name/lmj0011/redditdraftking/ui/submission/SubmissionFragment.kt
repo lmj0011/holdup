@@ -82,7 +82,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                             viewModel.postSubmission(SubmissionKind.Image)
                         }
                         "Video" -> {
-
+                            viewModel.postSubmission(SubmissionKind.Video)
                         }
                         "Text" -> {
                             viewModel.postSubmission(SubmissionKind.Self)
@@ -169,6 +169,14 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
 
         viewModel.submissionPollDuration.observe(viewLifecycleOwner, {
             viewModel.validateSubmission(SubmissionKind.Poll)
+        })
+
+        viewModel.submissionVideoTitle.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Video)
+        })
+
+        viewModel.submissionVideo.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(SubmissionKind.Video)
         })
 
         viewModel.readyToPost().observe(viewLifecycleOwner, {
@@ -307,7 +315,13 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 Triple(
                     "Video",
                     requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)!!,
-                    VideoSubmissionFragment()
+                    VideoSubmissionFragment(
+                        SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                            viewModel.subredditFlair.postValue(flair)
+                        }
+                    ) {
+                        viewModel.subredditFlair.postValue(null)
+                    }
                 ),
             )
         }
@@ -369,7 +383,13 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                         viewModel.subredditFlair.postValue(null)
                     }
                 }
-                2 -> VideoSubmissionFragment()
+                2 -> VideoSubmissionFragment(
+                    SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                        viewModel.subredditFlair.postValue(flair)
+                    }
+                ) {
+                    viewModel.subredditFlair.postValue(null)
+                }
                 3 -> TextSubmissionFragment(
                     SubredditFlairListAdapter.FlairItemClickListener { flair ->
                         viewModel.subredditFlair.postValue(flair)
