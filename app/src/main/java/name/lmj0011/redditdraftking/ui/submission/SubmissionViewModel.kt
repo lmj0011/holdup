@@ -53,24 +53,19 @@ class SubmissionViewModel(
     private var subreddit = MutableLiveData<Subreddit>()
     private var subredditPostRequirements = MutableLiveData<PostRequirements?>()
 
+    var submissionTitle = MutableLiveData<String?>()
+        private set
     var subredditFlair = MutableLiveData<SubredditFlair?>()
         private set
 
     private var submissionLinkText = MutableLiveData<String?>()
-    private var submissionLinkTitle = MutableLiveData<String?>()
 
-    var submissionSelfTitle = MutableLiveData<String?>()
-        private set
     var submissionSelfText = MutableLiveData<String?>()
         private set
 
-    var submissionImageTitle = MutableLiveData<String?>()
-        private set
     var submissionImageGallery = MutableLiveData<MutableList<Image>?>()
         private set
 
-    var submissionPollTitle = MutableLiveData<String?>()
-        private set
     var submissionPollBodyText = MutableLiveData<String?>()
         private set
     var submissionPollOptions = MutableLiveData<List<String>?>()
@@ -78,8 +73,6 @@ class SubmissionViewModel(
     var submissionPollDuration = MutableLiveData<Int?>()
         private set
 
-    var submissionVideoTitle = MutableLiveData<String?>()
-        private set
     var submissionVideo = MutableLiveData<Video?>()
         private set
 
@@ -101,9 +94,6 @@ class SubmissionViewModel(
         subreddit.postValue(sub)
     }
 
-    fun setSubmissionLinkTitle(s: String) {
-        submissionLinkTitle.postValue(s)
-    }
 
     fun setSubmissionLinkText(s: String) {
         submissionLinkText.postValue(s)
@@ -175,11 +165,6 @@ class SubmissionViewModel(
 
     fun readyToPost(): LiveData<Boolean>{
         return readyToPost
-    }
-
-
-    fun getSubmissionLinkTitle(): LiveData<String?> {
-        return submissionLinkTitle
     }
 
     fun getSubmissionLinkText(): LiveData<String?> {
@@ -317,17 +302,17 @@ class SubmissionViewModel(
         when (kind) {
             SubmissionKind.Link -> {
                 form.kind = SubmissionKind.Link.kind
-                submissionLinkTitle.value?.let { form.title = it }
+                submissionTitle.value?.let { form.title = it }
                 submissionLinkText.value?.let { form.url = it }
             }
             SubmissionKind.Self -> {
                 form.kind = SubmissionKind.Self.kind
-                submissionSelfTitle.value?.let { form.title = it }
+                submissionTitle.value?.let { form.title = it }
                 submissionSelfText.value?.let { form.text = it }
             }
             SubmissionKind.Image -> {
                 form.kind = SubmissionKind.Image.kind
-                submissionImageTitle.value?.let { form.title = it }
+                submissionTitle.value?.let { form.title = it }
                 submissionImageGallery.value?.let { list ->
                     form.images = list.toList()
 
@@ -345,7 +330,7 @@ class SubmissionViewModel(
             }
             SubmissionKind.Video -> {
                 form.kind = SubmissionKind.Video.kind
-                submissionVideoTitle.value?.let { form.title = it }
+                submissionTitle.value?.let { form.title = it }
                 submissionVideo.value?.let {
                     form.url = it.url
                     form.video_poster_url = it.posterUrl
@@ -357,7 +342,7 @@ class SubmissionViewModel(
             }
             SubmissionKind.Poll -> {
                 form.kind = SubmissionKind.Poll.kind
-                submissionPollTitle.value?.let { form.title = it }
+                submissionTitle.value?.let { form.title = it }
                 submissionPollBodyText.value?.let { form.text = it }
                 submissionPollDuration.value?.let { form.duration = it }
                 submissionPollOptions.value?.let { form.pollOptions = it }

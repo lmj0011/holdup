@@ -55,5 +55,5 @@
     <fragment
         android:id="@+id/submissionFragment"
         android:name="name.lmj0011.redditdraftking.ui.submission.SubmissionFragment"
-        android:label="Submission" />
+        android:label="" />
 </navigation>

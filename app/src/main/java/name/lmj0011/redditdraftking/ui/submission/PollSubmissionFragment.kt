@@ -1,5 +1,6 @@
 package name.lmj0011.redditdraftking.ui.submission
 
+import android.app.ActionBar
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -10,6 +11,7 @@ import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TableRow
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.flow.collectLatest
@@ -28,13 +30,9 @@ import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredd
 import timber.log.Timber
 import java.lang.Exception
 
-class PollSubmissionFragment( // TODO - can be refactored since callbacks are not needed because viewModel is a singleton
-    val setFlairItemForSubmission: SubredditFlairListAdapter.FlairItemClickListener,
-    val removeFlairClickListener: (v: View) -> Unit,
-): Fragment(R.layout.fragment_poll_submission),
+class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
     FragmentBaseInit, SubmissionFragmentChild {
     private lateinit var binding: FragmentPollSubmissionBinding
-    private lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
     private lateinit var  viewModel: SubmissionViewModel
     private val defaultSpinnerPosition = 2
 
@@ -50,13 +48,11 @@ class PollSubmissionFragment( // TODO - can be refactored since callbacks are no
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
-
-        resetFlairToDefaultState()
     }
 
     override fun onResume() {
         super.onResume()
-
+        updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Poll)
     }
 
@@ -82,61 +78,6 @@ class PollSubmissionFragment( // TODO - can be refactored since callbacks are no
 
     override fun setupObservers() {
         binding.addOptionImageButton.setOnClickListener { addOption() }
-
-        viewModel.getSubreddit().observe(viewLifecycleOwner, {
-            val listFlow = viewModel.getSubredditFlairListFlow()
-
-            bottomSheetSubredditFlairFragment = BottomSheetSubredditFlairFragment(
-                SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                    binding.addFlairChip.text = flair.text
-                    try {
-                        buildOneColorStateList(Color.parseColor(flair.backGroundColor))?.let {
-                            binding.addFlairChip.chipBackgroundColor = it
-                        }
-                    }
-                    catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
-
-                    when(flair.textColor) {
-                        "light" -> binding.addFlairChip.setTextColor(Color.WHITE)
-                        else -> binding.addFlairChip.setTextColor(Color.DKGRAY)
-                    }
-
-                    setFlairItemForSubmission.clickListener(flair)
-                    viewModel.validateSubmission(SubmissionKind.Poll)
-                    bottomSheetSubredditFlairFragment.dismiss()
-                },
-                { v: View ->
-                    removeFlairClickListener(v)
-                    resetFlairToDefaultState()
-                    viewModel.validateSubmission(SubmissionKind.Poll)
-                    bottomSheetSubredditFlairFragment.dismiss()
-                },
-                listFlow)
-
-            launchUI {
-                listFlow.collectLatest {
-                    if(it.isNotEmpty()) {
-                        binding.addFlairChip.visibility = View.VISIBLE
-
-                        binding.addFlairChip.setOnClickListener {
-                            bottomSheetSubredditFlairFragment.show(childFragmentManager, "BottomSheetSubredditFlairFragment")
-                        }
-                    } else {
-                        binding.addFlairChip.visibility = View.GONE
-                    }
-                }
-            }
-        })
-
-        binding.pollTitleTextView.addTextChangedListener( object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.submissionPollTitle.postValue(s.toString())
-            }
-        })
 
         binding.pollEditTextTextMultiLine.setOnClickListener {
             val intent = Intent(requireContext(), FullscreenTextEntryActivity::class.java)
@@ -170,7 +111,6 @@ class PollSubmissionFragment( // TODO - can be refactored since callbacks are no
         viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
             if (it) {
                 clearUserInputViews()
-                resetFlairToDefaultState()
             }
         })
     }
@@ -178,9 +118,6 @@ class PollSubmissionFragment( // TODO - can be refactored since callbacks are no
     override fun setupRecyclerView() {}
 
     override fun clearUserInputViews() {
-        binding.pollTitleTextView.text.clear()
-        viewModel.submissionPollTitle.postValue(null)
-
         binding.pollEditTextTextMultiLine.text.clear()
         viewModel.submissionPollBodyText.postValue(null)
 
@@ -191,17 +128,10 @@ class PollSubmissionFragment( // TODO - can be refactored since callbacks are no
         viewModel.submissionPollDuration.postValue(null)
     }
 
-    override fun resetFlairToDefaultState() {
-        try {
-            binding.addFlairChip.text = "+ Add Flair"
-            buildOneColorStateList(Color.LTGRAY)?.let {
-                binding.addFlairChip.chipBackgroundColor = it
-            }
-            binding.addFlairChip.setTextColor(Color.BLACK)
+    override fun updateActionBarTitle() {
+        launchUI {
+            (requireActivity() as AppCompatActivity).supportActionBar?.title = "Poll Submission"
         }
-        catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
-
-        viewModel.subredditFlair.postValue(null)
     }
 
     /**

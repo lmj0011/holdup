@@ -86,6 +86,51 @@
                 app:srcCompat="@drawable/ic_baseline_arrow_drop_down_24" />
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/titleAndFlairLinearLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chooseAccountLinearLayout">
+
+            <EditText
+                android:id="@+id/titleEditTextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:hint="An interesting title"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:layout_editor_absoluteX="-16dp"
+                tools:layout_editor_absoluteY="0dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/addFlairChip"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="false"
+                    android:text="+ Add Flair"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+        </LinearLayout>
+
+
+
+
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/submissionPager"
             android:layout_width="match_parent"
@@ -94,7 +139,7 @@
             app:layout_constraintBottom_toTopOf="@+id/postFlagContainer"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/chooseAccountLinearLayout" />
+            app:layout_constraintTop_toBottomOf="@+id/titleAndFlairLinearLayout" />
 
         <LinearLayout
             android:id="@+id/postFlagContainer"

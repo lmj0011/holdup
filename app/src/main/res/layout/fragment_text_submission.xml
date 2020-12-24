@@ -12,45 +12,6 @@
         android:layout_height="match_parent">
 
         <EditText
-            android:id="@+id/textTitleTextView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:hint="An interesting title"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <LinearLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textTitleTextView">
-
-            <com.google.android.material.chip.ChipGroup
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:layout_editor_absoluteX="-16dp"
-                tools:layout_editor_absoluteY="0dp">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/addFlairChip"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checkable="false"
-                    android:text="+ Add Flair"
-                    android:textSize="14sp"
-                    android:visibility="gone" />
-
-            </com.google.android.material.chip.ChipGroup>
-
-        </LinearLayout>
-
-        <EditText
             android:id="@+id/textEditTextTextMultiLine"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -63,7 +24,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -14,4 +14,9 @@ interface FragmentBaseInit {
     fun setupObservers()
 
     fun setupRecyclerView()
+
+    /**
+     *  clear any User input data from this Fragment
+     */
+    fun clearUserInputViews()
 }

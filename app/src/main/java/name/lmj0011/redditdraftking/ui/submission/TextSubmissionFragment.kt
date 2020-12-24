@@ -8,6 +8,8 @@ import android.text.TextWatcher
 import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.app.ActionBar
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.redditdraftking.App
@@ -27,13 +29,9 @@ import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredd
 import org.kodein.di.instance
 import java.lang.Exception
 
-class TextSubmissionFragment( // TODO - can be refactored since callbacks are not needed because viewModel is a singleton
-    val setFlairItemForSubmission: SubredditFlairListAdapter.FlairItemClickListener,
-    val removeFlairClickListener: (v: View) -> Unit,
-): Fragment(R.layout.fragment_text_submission),
+class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
     FragmentBaseInit, SubmissionFragmentChild {
     private lateinit var binding: FragmentTextSubmissionBinding
-    private lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
     private lateinit var  viewModel: SubmissionViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,13 +46,11 @@ class TextSubmissionFragment( // TODO - can be refactored since callbacks are no
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
-
-        resetFlairToDefaultState()
     }
 
     override fun onResume() {
         super.onResume()
-
+        updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Self)
     }
 
@@ -76,62 +72,6 @@ class TextSubmissionFragment( // TODO - can be refactored since callbacks are no
     }
 
     override fun setupObservers() {
-        viewModel.getSubreddit().observe(viewLifecycleOwner, {
-            val listFlow = viewModel.getSubredditFlairListFlow()
-
-            bottomSheetSubredditFlairFragment = BottomSheetSubredditFlairFragment(
-                SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                binding.addFlairChip.text = flair.text
-                try {
-                    buildOneColorStateList(Color.parseColor(flair.backGroundColor))?.let {
-                        binding.addFlairChip.chipBackgroundColor = it
-                    }
-                }
-                catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
-
-                when(flair.textColor) {
-                    "light" -> binding.addFlairChip.setTextColor(Color.WHITE)
-                    else -> binding.addFlairChip.setTextColor(Color.DKGRAY)
-                }
-
-                setFlairItemForSubmission.clickListener(flair)
-                viewModel.validateSubmission(SubmissionKind.Self)
-                bottomSheetSubredditFlairFragment.dismiss()
-            },
-                { v: View ->
-                    removeFlairClickListener(v)
-                    resetFlairToDefaultState()
-                    viewModel.validateSubmission(SubmissionKind.Self)
-                    bottomSheetSubredditFlairFragment.dismiss()
-                },
-                listFlow)
-
-            launchUI {
-                listFlow.collectLatest {
-                    if(it.isNotEmpty()) {
-                        binding.addFlairChip.visibility = View.VISIBLE
-
-                        binding.addFlairChip.setOnClickListener {
-                            bottomSheetSubredditFlairFragment.show(childFragmentManager, "BottomSheetSubredditFlairFragment")
-                        }
-                    } else {
-                        binding.addFlairChip.visibility = View.GONE
-                    }
-                }
-            }
-        })
-
-        binding.textTitleTextView.addTextChangedListener( object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.submissionSelfTitle.postValue(s.toString())
-            }
-        })
-
-
         binding.textEditTextTextMultiLine.setOnClickListener {
             val intent = Intent(requireContext(), FullscreenTextEntryActivity::class.java)
             intent.putExtra("kind", SubmissionKind.Self.kind)
@@ -144,27 +84,18 @@ class TextSubmissionFragment( // TODO - can be refactored since callbacks are no
         viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
             if (it) {
                 clearUserInputViews()
-                resetFlairToDefaultState()
             }
         })
     }
     override fun setupRecyclerView() {}
 
     override fun clearUserInputViews() {
-        binding.textTitleTextView.text.clear()
         binding.textEditTextTextMultiLine.text.clear()
     }
 
-    override fun resetFlairToDefaultState() {
-        try {
-            binding.addFlairChip.text = "+ Add Flair"
-            buildOneColorStateList(Color.LTGRAY)?.let {
-                binding.addFlairChip.chipBackgroundColor = it
-            }
-            binding.addFlairChip.setTextColor(Color.BLACK)
+    override fun updateActionBarTitle() {
+        launchUI {
+            (requireActivity() as AppCompatActivity).supportActionBar?.title = "Self Submission"
         }
-        catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
-
-        viewModel.subredditFlair.postValue(null)
     }
 }

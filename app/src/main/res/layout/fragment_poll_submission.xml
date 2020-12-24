@@ -19,44 +19,9 @@
             android:orientation="vertical">
 
             <EditText
-                android:id="@+id/pollTitleTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:hint="An interesting title" />
-
-            <LinearLayout
-                android:id="@+id/flairLinearLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="horizontal">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    tools:layout_editor_absoluteX="-16dp"
-                    tools:layout_editor_absoluteY="0dp">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/addFlairChip"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="false"
-                        android:text="+ Add Flair"
-                        android:textSize="14sp"
-                        android:visibility="gone" />
-
-                </com.google.android.material.chip.ChipGroup>
-
-            </LinearLayout>
-
-            <EditText
                 android:id="@+id/pollEditTextTextMultiLine"
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
+                android:layout_height="150dp"
                 android:layout_weight="1"
                 android:ems="10"
                 android:focusable="false"

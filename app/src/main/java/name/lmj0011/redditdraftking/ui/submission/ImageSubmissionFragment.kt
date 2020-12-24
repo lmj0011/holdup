@@ -1,11 +1,13 @@
 package name.lmj0011.redditdraftking.ui.submission
 
+import android.app.ActionBar
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
@@ -33,14 +35,9 @@ import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredd
 import timber.log.Timber
 import java.lang.Exception
 
-class ImageSubmissionFragment(
-    // TODO - can be refactored since callbacks are not needed because viewModel is a singleton
-    val setFlairItemForSubmission: SubredditFlairListAdapter.FlairItemClickListener,
-    val removeFlairClickListener: (v: View) -> Unit,
-): Fragment(R.layout.fragment_image_submission),
+class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
     FragmentBaseInit, SubmissionFragmentChild, BottomSheetImagePicker.OnImagesSelectedListener {
     private lateinit var binding: FragmentImageSubmissionBinding
-    private lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
     private lateinit var  viewModel: SubmissionViewModel
     private lateinit var listAdapter: GalleryListAdapter
     private lateinit var footerAdapter: AddImageListAdapter
@@ -58,13 +55,11 @@ class ImageSubmissionFragment(
         setupBinding(view)
         setupObservers()
         setupRecyclerView()
-
-        resetFlairToDefaultState()
     }
 
     override fun onResume() {
         super.onResume()
-
+        updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Image)
     }
 
@@ -74,65 +69,9 @@ class ImageSubmissionFragment(
     }
 
     override fun setupObservers() {
-        viewModel.getSubreddit().observe(viewLifecycleOwner, {
-            val listFlow = viewModel.getSubredditFlairListFlow()
-
-            bottomSheetSubredditFlairFragment = BottomSheetSubredditFlairFragment(
-                SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                    binding.addFlairChip.text = flair.text
-                    try {
-                        buildOneColorStateList(Color.parseColor(flair.backGroundColor))?.let {
-                            binding.addFlairChip.chipBackgroundColor = it
-                        }
-                    }
-                    catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
-
-                    when(flair.textColor) {
-                        "light" -> binding.addFlairChip.setTextColor(Color.WHITE)
-                        else -> binding.addFlairChip.setTextColor(Color.DKGRAY)
-                    }
-
-                    setFlairItemForSubmission.clickListener(flair)
-                    viewModel.validateSubmission(SubmissionKind.Image)
-                    bottomSheetSubredditFlairFragment.dismiss()
-                },
-                { v: View ->
-                    removeFlairClickListener(v)
-                    resetFlairToDefaultState()
-                    viewModel.validateSubmission(SubmissionKind.Image)
-                    bottomSheetSubredditFlairFragment.dismiss()
-                },
-                listFlow)
-
-            launchUI {
-                listFlow.collectLatest {
-                    if(it.isNotEmpty()) {
-                        binding.addFlairChip.visibility = View.VISIBLE
-
-                        binding.addFlairChip.setOnClickListener {
-                            bottomSheetSubredditFlairFragment.show(childFragmentManager, "BottomSheetSubredditFlairFragment")
-                        }
-                    } else {
-                        binding.addFlairChip.visibility = View.GONE
-                    }
-                }
-            }
-        })
-
-        binding.imageTitleTextView.addTextChangedListener( object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.submissionImageTitle.postValue(s.toString())
-            }
-        })
-
         viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
             if (it) {
                 clearUserInputViews()
-                resetFlairToDefaultState()
             }
         })
 
@@ -178,21 +117,7 @@ class ImageSubmissionFragment(
      *  clear any User input data from this Fragment
      */
     override fun clearUserInputViews() {
-        binding.imageTitleTextView.text.clear()
         viewModel.submissionImageGallery.postValue(mutableListOf())
-    }
-
-    override fun resetFlairToDefaultState() {
-        try {
-            binding.addFlairChip.text = "+ Add Flair"
-            buildOneColorStateList(Color.LTGRAY)?.let {
-                binding.addFlairChip.chipBackgroundColor = it
-            }
-            binding.addFlairChip.setTextColor(Color.BLACK)
-        }
-        catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
-
-        viewModel.subredditFlair.postValue(null)
     }
 
     override fun onImagesSelected(uris: List<Uri>, tag: String?) {
@@ -241,6 +166,12 @@ class ImageSubmissionFragment(
                 binding.progressBar.isVisible = false
                 binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, footerAdapter)
             }
+        }
+    }
+
+    override fun updateActionBarTitle() {
+        launchUI {
+            (requireActivity() as AppCompatActivity).supportActionBar?.title = "Image Submission"
         }
     }
 }

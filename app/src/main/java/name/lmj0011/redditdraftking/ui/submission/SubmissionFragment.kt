@@ -1,8 +1,11 @@
 package name.lmj0011.redditdraftking.ui.submission
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.*
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -10,20 +13,26 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.tabs.TabLayoutMediator
+import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.database.AppDatabase
-import name.lmj0011.redditdraftking.helpers.models.Subreddit
 import name.lmj0011.redditdraftking.databinding.FragmentSubmissionBinding
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
+import name.lmj0011.redditdraftking.helpers.interfaces.FragmentBaseInit
+import name.lmj0011.redditdraftking.helpers.models.Subreddit
+import name.lmj0011.redditdraftking.helpers.util.buildOneColorStateList
+import name.lmj0011.redditdraftking.helpers.util.launchUI
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetAccountsFragment
+import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
+import timber.log.Timber
 
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
  */
-class SubmissionFragment: Fragment(R.layout.fragment_submission) {
+class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseInit {
     private lateinit var binding: FragmentSubmissionBinding
     private lateinit var tabLayoutMediator: TabLayoutMediator
     private lateinit var viewModel: SubmissionViewModel
@@ -31,6 +40,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
 
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
+    lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +84,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 optionsMenu.getItem(0).isEnabled = false
 
                 layout.getTabAt(layout.selectedTabPosition)?.let {
-                    when(it.text) {
+                    when (it.text) {
                         "Link" -> {
                             viewModel.postSubmission(SubmissionKind.Link)
                         }
@@ -90,7 +100,9 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                         "Poll" -> {
                             viewModel.postSubmission(SubmissionKind.Poll)
                         }
-                        else -> { optionsMenu.getItem(0).isEnabled = true }
+                        else -> {
+                            optionsMenu.getItem(0).isEnabled = true
+                        }
                     }
                 }
                 true
@@ -99,7 +111,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
         }
     }
 
-    private fun setupObservers() {
+    override fun setupObservers() {
         viewModel.getSubreddit().observe(viewLifecycleOwner, {
             binding.chooseSubredditTextView.text = it.displayNamePrefixed
             Glide
@@ -113,6 +125,55 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             reattachTabLayoutMediator(it)
 
             viewModel.setSubredditPostRequirements(it)
+
+            val listFlow = viewModel.getSubredditFlairListFlow()
+
+            bottomSheetSubredditFlairFragment = BottomSheetSubredditFlairFragment(
+                SubredditFlairListAdapter.FlairItemClickListener { flair ->
+                    binding.addFlairChip.text = flair.text
+                    try {
+                        buildOneColorStateList(Color.parseColor(flair.backGroundColor))?.let {
+                            binding.addFlairChip.chipBackgroundColor = it
+                        }
+                    } catch (ex: java.lang.Exception) { /* flair.backGroundColor was either null or not a recognizable color */
+                    }
+
+                    when (flair.textColor) {
+                        "light" -> binding.addFlairChip.setTextColor(Color.WHITE)
+                        else -> binding.addFlairChip.setTextColor(Color.DKGRAY)
+                    }
+
+                    viewModel.subredditFlair.postValue(flair)
+                    viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
+                    bottomSheetSubredditFlairFragment.dismiss()
+                },
+                { v: View ->
+                    viewModel.subredditFlair.postValue(null)
+                    resetFlairToDefaultState()
+                    viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
+                    bottomSheetSubredditFlairFragment.dismiss()
+                },
+                listFlow
+            )
+
+            launchUI {
+                listFlow.collectLatest { list ->
+                    Timber.d("list: $list")
+
+                    if (list.isNotEmpty()) {
+                        binding.addFlairChip.visibility = View.VISIBLE
+
+                        binding.addFlairChip.setOnClickListener {
+                            bottomSheetSubredditFlairFragment.show(
+                                childFragmentManager,
+                                "BottomSheetSubredditFlairFragment"
+                            )
+                        }
+                    } else {
+                        binding.addFlairChip.visibility = View.GONE
+                    }
+                }
+            }
         })
 
 
@@ -128,55 +189,55 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
 
             binding.chooseSubredditLinearLayout.visibility = View.VISIBLE
 
-            viewModel.recentAndJoinedSubredditPair.postValue(Pair(viewModel.getRecentSubredditListFlow(), viewModel.getJoinedSubredditListFlow()))
+            viewModel.recentAndJoinedSubredditPair.postValue(
+                Pair(
+                    viewModel.getRecentSubredditListFlow(),
+                    viewModel.getJoinedSubredditListFlow()
+                )
+            )
         })
 
-        viewModel.getSubmissionLinkTitle().observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Link)
+
+        binding.titleEditTextView.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                viewModel.submissionTitle.postValue(s.toString())
+            }
+        })
+
+        viewModel.submissionTitle.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
         })
 
         viewModel.getSubmissionLinkText().observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Link)
-        })
-
-        viewModel.submissionSelfTitle.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Self)
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
         })
 
         viewModel.submissionSelfText.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Self)
-        })
-
-        viewModel.submissionImageTitle.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Image)
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
         })
 
         viewModel.submissionImageGallery.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Image)
-        })
-
-        viewModel.submissionPollTitle.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Poll)
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
         })
 
         viewModel.submissionPollBodyText.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Poll)
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
         })
 
         viewModel.submissionPollOptions.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Poll)
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
         })
 
         viewModel.submissionPollDuration.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Poll)
-        })
-
-        viewModel.submissionVideoTitle.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Video)
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
         })
 
         viewModel.submissionVideo.observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(SubmissionKind.Video)
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
         })
 
         viewModel.readyToPost().observe(viewLifecycleOwner, {
@@ -185,10 +246,14 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
 
         viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
             if (it) {
+                clearUserInputViews()
+                resetFlairToDefaultState()
                 resetFlagsState()
             }
         })
     }
+
+    override fun setupRecyclerView() {}
 
     private fun resetFlagsState() {
         binding.nsfwChip.isChecked = false
@@ -196,7 +261,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
-    private fun setupBinding(view: View) {
+    override fun setupBinding(view: View) {
         binding = FragmentSubmissionBinding.bind(view)
         binding.lifecycleOwner = this
         binding.submissionPager.adapter = TabCollectionAdapterDefault(this)
@@ -237,7 +302,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             bottomSheetAccountsFragment.show(childFragmentManager, "BottomSheetAccountsFragment")
         }
 
-        binding.chooseSubredditLinearLayout.setOnClickListener {_ ->
+        binding.chooseSubredditLinearLayout.setOnClickListener { _ ->
             viewModel.getAccount().value?.let {
                 bottomSheetSubredditSearchFragment = BottomSheetSubredditSearchFragment(
                     SubredditSearchListAdapter.SubredditSearchClickListener { sub ->
@@ -246,7 +311,10 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                     },
                     viewModel.recentAndJoinedSubredditPair.value!!
                 )
-                bottomSheetSubredditSearchFragment.show(childFragmentManager, "BottomSheetSubredditSearchFragment")
+                bottomSheetSubredditSearchFragment.show(
+                    childFragmentManager,
+                    "BottomSheetSubredditSearchFragment"
+                )
             }
         }
 
@@ -258,27 +326,45 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             binding.flagsChipGroup.isVisible = !binding.flagsChipGroup.isVisible
         }
         
-        binding.nsfwChip.setOnCheckedChangeListener { _, isChecked -> viewModel.setNsfwFlag(isChecked) }
+        binding.nsfwChip.setOnCheckedChangeListener { _, isChecked -> viewModel.setNsfwFlag(
+            isChecked
+        ) }
 
-        binding.spoilerChip.setOnCheckedChangeListener { _, isChecked ->  viewModel.setSpoilerFlag(isChecked) }
+        binding.spoilerChip.setOnCheckedChangeListener { _, isChecked ->  viewModel.setSpoilerFlag(
+            isChecked
+        ) }
     }
 
 
     /**
      * Reconfigures the TabLayout based on this Subreddit allowed Post types
+     * - retains the selected Tab, if it's still available
      */
     private fun reattachTabLayoutMediator(subreddit: Subreddit) {
+        val oldTabLayout = binding.submissionTabLayout
         val tabCollection = getTabCollectionTriples(subreddit)
+        val oldSelectedTabText = oldTabLayout.getTabAt(oldTabLayout.selectedTabPosition)?.text
 
         tabLayoutMediator.detach()
         binding.submissionPager.adapter = TabCollectionAdapterDynamic(this, tabCollection)
 
-        tabLayoutMediator = TabLayoutMediator(binding.submissionTabLayout, binding.submissionPager) { tab, position ->
+        tabLayoutMediator = TabLayoutMediator(oldTabLayout, binding.submissionPager) { tab, position ->
             tab.text = tabCollection[position].first
             tab.icon = tabCollection[position].second
         }
 
         tabLayoutMediator.attach()
+
+        // try to retain the selected Tab, if it's still available
+        val newTabLayout = binding.submissionTabLayout
+        for (i in 0 until newTabLayout.tabCount) {
+            val tab = newTabLayout.getTabAt(i)
+
+            if (tab?.text == oldSelectedTabText) {
+                newTabLayout.selectTab(tab)
+                break
+            }
+        }
     }
 
     private fun getTabCollectionTriples(subreddit: Subreddit): List<Triple<String, Drawable, Fragment>> {
@@ -286,13 +372,10 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
 
         listOfTriples.add(
             Triple(
-            "Link",
-            requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
-            LinkSubmissionFragment(
-                SubredditFlairListAdapter.FlairItemClickListener { flair -> viewModel.subredditFlair.postValue(flair)}
-            ) {
-                viewModel.subredditFlair.postValue(null)
-            })
+                "Link",
+                requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
+                LinkSubmissionFragment()
+            )
         )
 
         if (subreddit.allowImages) {
@@ -300,28 +383,18 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 Triple(
                     "Image",
                     requireContext().getDrawable(R.drawable.ic_baseline_image_24)!!,
-                    ImageSubmissionFragment(
-                        SubredditFlairListAdapter.FlairItemClickListener { flair -> viewModel.subredditFlair.postValue(flair)}
-                    ) {
-                        viewModel.subredditFlair.postValue(null)
-                    }
-                ),
+                    ImageSubmissionFragment()
+                )
             )
 
         }
 
-        if (subreddit.allowVideos || subreddit.allowVideoGifs) {
+        if (subreddit.allowVideos) {
             listOfTriples.add(
                 Triple(
                     "Video",
                     requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)!!,
-                    VideoSubmissionFragment(
-                        SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                            viewModel.subredditFlair.postValue(flair)
-                        }
-                    ) {
-                        viewModel.subredditFlair.postValue(null)
-                    }
+                    VideoSubmissionFragment()
                 ),
             )
         }
@@ -330,13 +403,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
             Triple(
                 "Text",
                 requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)!!,
-                TextSubmissionFragment(
-                    SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                        viewModel.subredditFlair.postValue(flair)
-                    }
-                ) {
-                    viewModel.subredditFlair.postValue(null)
-                }
+                TextSubmissionFragment()
             ),
         )
 
@@ -345,18 +412,54 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
                 Triple(
                     "Poll",
                     requireContext().getDrawable(R.drawable.ic_baseline_poll_24)!!,
-                    PollSubmissionFragment(
-                        SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                            viewModel.subredditFlair.postValue(flair)
-                        }
-                    ) {
-                        viewModel.subredditFlair.postValue(null)
-                    }
+                    PollSubmissionFragment()
                 ),
             )
         }
 
         return listOfTriples.toList()
+    }
+
+    override fun clearUserInputViews() {
+        binding.titleEditTextView.text.clear()
+        viewModel.submissionTitle.postValue(null)
+    }
+
+    private fun resetFlairToDefaultState() {
+        try {
+            binding.addFlairChip.text = "+ Add Flair"
+            buildOneColorStateList(Color.LTGRAY)?.let {
+                binding.addFlairChip.chipBackgroundColor = it
+            }
+            binding.addFlairChip.setTextColor(Color.BLACK)
+        }
+        catch (ex: java.lang.Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
+
+        viewModel.subredditFlair.postValue(null)
+    }
+
+    private fun getSelectedTabPositionSubmissionType(): SubmissionKind {
+        val layout = binding.submissionTabLayout
+        val tab = layout.getTabAt(layout.selectedTabPosition)
+
+        return when(tab?.text) {
+            "Link" -> {
+                SubmissionKind.Link
+            }
+            "Image" -> {
+                SubmissionKind.Image
+            }
+            "Video" -> {
+                SubmissionKind.Video
+            }
+            "Text" -> {
+                SubmissionKind.Self
+            }
+            "Poll" -> {
+                SubmissionKind.Poll
+            }
+            else -> throw Exception("Invalid SubmissionKind!")
+        }
     }
 
     inner class TabCollectionAdapterDefault(fragment: Fragment) : FragmentStateAdapter(fragment) {
@@ -365,51 +468,20 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission) {
         override fun createFragment(position: Int): Fragment {
             // Return a NEW fragment instance
             return when(position) {
-                0 -> {
-                    LinkSubmissionFragment(
-                        SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                            viewModel.subredditFlair.postValue(flair)
-                        }
-                    ) {
-                        viewModel.subredditFlair.postValue(null)
-                    }
-                }
-                1 -> {
-                    ImageSubmissionFragment(
-                        SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                            viewModel.subredditFlair.postValue(flair)
-                        }
-                    ) {
-                        viewModel.subredditFlair.postValue(null)
-                    }
-                }
-                2 -> VideoSubmissionFragment(
-                    SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                        viewModel.subredditFlair.postValue(flair)
-                    }
-                ) {
-                    viewModel.subredditFlair.postValue(null)
-                }
-                3 -> TextSubmissionFragment(
-                    SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                        viewModel.subredditFlair.postValue(flair)
-                    }
-                ) {
-                    viewModel.subredditFlair.postValue(null)
-                }
-                4 -> PollSubmissionFragment(
-                    SubredditFlairListAdapter.FlairItemClickListener { flair ->
-                        viewModel.subredditFlair.postValue(flair)
-                    }
-                ) {
-                    viewModel.subredditFlair.postValue(null)
-                }
+                0 -> LinkSubmissionFragment()
+                1 -> ImageSubmissionFragment()
+                2 -> VideoSubmissionFragment()
+                3 -> TextSubmissionFragment()
+                4 -> PollSubmissionFragment()
                 else -> throw Exception("Unknown Tab Position!")
             }
         }
     }
 
-    inner class TabCollectionAdapterDynamic(fragment: Fragment, val tabCollection: List<Triple<String, Drawable, Fragment>>) : FragmentStateAdapter(fragment) {
+    inner class TabCollectionAdapterDynamic(
+        fragment: Fragment,
+        val tabCollection: List<Triple<String, Drawable, Fragment>>
+    ) : FragmentStateAdapter(fragment) {
 
         override fun getItemCount(): Int = tabCollection.size
 

@@ -3,9 +3,7 @@ package name.lmj0011.redditdraftking.helpers.interfaces
 interface SubmissionFragmentChild {
 
     /**
-     *  clear any User input data from this Fragment
+     * Call this in the onResume() method
      */
-    fun clearUserInputViews()
-
-    fun resetFlairToDefaultState()
+    fun updateActionBarTitle()
 }
