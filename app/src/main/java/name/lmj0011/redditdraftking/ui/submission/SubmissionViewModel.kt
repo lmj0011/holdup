@@ -12,10 +12,7 @@ import kotlinx.coroutines.flow.*
 import name.lmj0011.redditdraftking.App
 import name.lmj0011.redditdraftking.database.SharedDao
 import name.lmj0011.redditdraftking.database.models.Account
-import name.lmj0011.redditdraftking.helpers.NotificationHelper
-import name.lmj0011.redditdraftking.helpers.RedditApiHelper
-import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
-import name.lmj0011.redditdraftking.helpers.SubmissionValidatorHelper
+import name.lmj0011.redditdraftking.helpers.*
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
 import name.lmj0011.redditdraftking.helpers.models.*
 import name.lmj0011.redditdraftking.helpers.util.launchDefault
@@ -48,6 +45,7 @@ class SubmissionViewModel(
     private var redditAuthHelper: RedditAuthHelper = (application as App).kodein.instance()
     private var redditApiHelper: RedditApiHelper = (application as App).kodein.instance()
     private var submissionValidatorHelper: SubmissionValidatorHelper = (application as App).kodein.instance()
+    private var dataStoreHelper: DataStoreHelper = (application as App).kodein.instance()
 
     private var account = MutableLiveData<Account>()
     private var subreddit = MutableLiveData<Subreddit>()
@@ -85,6 +83,26 @@ class SubmissionViewModel(
 
     var recentAndJoinedSubredditPair = MutableLiveData(Pair(getRecentSubredditListFlow(), getJoinedSubredditListFlow()))
         private set
+
+    /**
+     * Sets the first Account in the db as the active account for Submissions if
+     * there's not an Account set in DataStore
+     */
+    fun setAccount() {
+        launchIO {
+            val accounts = database.getAllAccounts()
+            val username = dataStoreHelper.getSelectedAccountUsername().first()
+
+            val lastSelected = accounts.filter {
+                it.name == username
+            }
+
+            when {
+                lastSelected.isNotEmpty() -> account.postValue(lastSelected.first())
+                accounts.isNotEmpty() -> account.postValue(accounts.first())
+            }
+        }
+    }
 
     fun setAccount(acct: Account) {
         account.postValue(acct)

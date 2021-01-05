@@ -14,19 +14,23 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
+import name.lmj0011.redditdraftking.App
 import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.database.AppDatabase
 import name.lmj0011.redditdraftking.databinding.FragmentSubmissionBinding
+import name.lmj0011.redditdraftking.helpers.DataStoreHelper
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
 import name.lmj0011.redditdraftking.helpers.interfaces.FragmentBaseInit
 import name.lmj0011.redditdraftking.helpers.models.Subreddit
 import name.lmj0011.redditdraftking.helpers.util.buildOneColorStateList
+import name.lmj0011.redditdraftking.helpers.util.launchIO
 import name.lmj0011.redditdraftking.helpers.util.launchUI
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetAccountsFragment
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
+import org.kodein.di.instance
 import timber.log.Timber
 
 /**
@@ -37,6 +41,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
     private lateinit var tabLayoutMediator: TabLayoutMediator
     private lateinit var viewModel: SubmissionViewModel
     private lateinit var optionsMenu: Menu
+    private lateinit var dataStoreHelper: DataStoreHelper
 
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
@@ -49,15 +54,20 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
             requireActivity().application
         )
 
+        dataStoreHelper = (requireContext().applicationContext as App).kodein.instance()
+
         setHasOptionsMenu(true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.setAccount()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
-
-        // TODO - select last Account or first in db and then call viewModel.setAccount()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -179,6 +189,8 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
 
         viewModel.getAccount().observe(viewLifecycleOwner, {
             binding.chooseAccountTextView.text = it.name
+            launchIO { dataStoreHelper.setSelectedAccountUsername(it.name) }
+
             Glide
                 .with(this)
                 .load(it.iconImage)

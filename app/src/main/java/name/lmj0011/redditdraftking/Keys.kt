@@ -1,5 +1,7 @@
 package name.lmj0011.redditdraftking
 
+import androidx.datastore.preferences.core.preferencesKey
+
 /**
  * global keys
  */
@@ -11,12 +13,9 @@ object Keys {
 
     // Worker tags
     const val SCHEDULED_DRAFT_SERVICE_CALLER_WORKER_TAG = "name.lmj0011.redditdraftking.helpers.workers#ScheduledDraftServiceCallerWorker"
-}
 
-/**
- * global keys specific to Preferences
- */
-object PreferenceKeys {
-    const val nextRuntimeUniqueInt = "pref_next_runtime_unique_int"
-    const val nextRuntimeUniqueLong = "pref_next_runtime_unique_long"
+    // Datastore
+    val SELECTED_ACCOUNT_USERNAME = preferencesKey<String>("pref_selected_account_username")
+    val NEXT_RUNTIME_UNIQUE_INT = preferencesKey<Int>("pref_next_runtime_unique_int")
+    val NEXT_RUNTIME_UNIQUE_LONG = preferencesKey<Long>("pref_next_runtime_unique_long")
 }

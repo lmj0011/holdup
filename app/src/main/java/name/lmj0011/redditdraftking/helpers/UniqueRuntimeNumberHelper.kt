@@ -1,7 +1,10 @@
 package name.lmj0011.redditdraftking.helpers
 
 import android.content.Context
+import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.redditdraftking.App
+import name.lmj0011.redditdraftking.helpers.util.launchIO
+import name.lmj0011.redditdraftking.helpers.util.launchUI
 import org.kodein.di.instance
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -12,9 +15,21 @@ class UniqueRuntimeNumberHelper(val context: Context)  {
         const val INITIAL_NEXT_LONG = 1L
     }
 
-    private val preferences: PreferencesHelper = (context.applicationContext as App).kodein.instance()
-    private var intCounter: AtomicInteger = AtomicInteger(preferences.nextRuntimeUniqueInt())
-    private var longCounter: AtomicLong = AtomicLong(preferences.nextRuntimeUniqueLong())
+    private val dataStoreHelper: DataStoreHelper = (context.applicationContext as App).kodein.instance()
+    private lateinit var intCounter: AtomicInteger
+    private lateinit var longCounter: AtomicLong
+
+    init {
+        launchIO {
+            dataStoreHelper.getNextRuntimeUniqueInt().collectLatest { cnt ->
+                cnt?.let { intCounter = AtomicInteger(it) }
+            }
+
+            dataStoreHelper.getNextRuntimeUniqueLong().collectLatest { cnt ->
+                cnt?.let { longCounter = AtomicLong(it) }
+            }
+        }
+    }
 
     /**
      * Get a unique Integer, should only be used for runtime uniqueness
@@ -23,11 +38,11 @@ class UniqueRuntimeNumberHelper(val context: Context)  {
         val cnt = intCounter.getAndIncrement()
         return when {
             (cnt < Int.MAX_VALUE) -> {
-                preferences.nextRuntimeUniqueInt(cnt)
+                launchIO { dataStoreHelper.setNextRuntimeUniqueInt(cnt) }
                 cnt
             }
             else -> {
-                preferences.nextRuntimeUniqueInt(INITIAL_NEXT_INT)
+                launchIO { dataStoreHelper.setNextRuntimeUniqueInt(INITIAL_NEXT_INT) }
                 INITIAL_NEXT_INT
             }
         }
@@ -40,11 +55,11 @@ class UniqueRuntimeNumberHelper(val context: Context)  {
         val cnt = longCounter.getAndIncrement()
         return when {
             (cnt < Long.MAX_VALUE) -> {
-                preferences.nextRuntimeUniqueLong(cnt)
+                launchIO { dataStoreHelper.setNextRuntimeUniqueLong(cnt) }
                 cnt
             }
             else -> {
-                preferences.nextRuntimeUniqueLong(INITIAL_NEXT_LONG)
+                launchIO { dataStoreHelper.setNextRuntimeUniqueLong(INITIAL_NEXT_LONG) }
                 INITIAL_NEXT_LONG
             }
         }

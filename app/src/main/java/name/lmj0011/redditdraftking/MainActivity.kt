@@ -5,6 +5,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.webkit.CookieManager
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
@@ -15,11 +16,17 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import name.lmj0011.redditdraftking.database.AppDatabase
 import name.lmj0011.redditdraftking.databinding.ActivityMainBinding
 import name.lmj0011.redditdraftking.helpers.NotificationHelper
+import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
 import name.lmj0011.redditdraftking.helpers.util.isIgnoringBatteryOptimizations
+import name.lmj0011.redditdraftking.helpers.util.launchIO
 import name.lmj0011.redditdraftking.helpers.workers.ScheduledDraftServiceCallerWorker
-import name.lmj0011.redditdraftking.ui.home.HomeFragmentDirections
+import name.lmj0011.redditdraftking.ui.accounts.AccountsViewModel
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
@@ -27,6 +34,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     lateinit var navController: NavController
     lateinit var appBarConfiguration: AppBarConfiguration
+    private val  viewModel by viewModels<AccountsViewModel> {
+        ViewModelFactory(AppDatabase.getInstance(application).sharedDao, application)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,12 +70,28 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
             when(destination.id){
                 R.id.homeFragment -> {
-                    showFabAndSetListener(
-                        {
-                            navController.navigate(R.id.submissionFragment)
-                        },
-                        R.drawable.ic_baseline_edit_24
-                    )
+                    launchIO {
+                        val accountsSize = viewModel.getAccounts().size
+
+                        withContext(Dispatchers.Main) {
+                            showFabAndSetListener(
+                                {
+                                    if (accountsSize > 0) {
+                                        navController.navigate(R.id.submissionFragment)
+                                    } else {
+                                        MaterialAlertDialogBuilder(this@MainActivity)
+                                            .setMessage("You will need to connect your Reddit account before creating a Submission")
+                                            .setPositiveButton("Log In") { _, _ ->
+                                                navController.navigate(R.id.redditAuthWebviewFragment)
+                                            }
+                                            .setNegativeButton("Cancel") {_, _ -> }
+                                            .show()
+                                    }
+                                },
+                                R.drawable.ic_baseline_edit_24
+                            )
+                        }
+                    }
                 }
                 R.id.accountsFragment -> {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {

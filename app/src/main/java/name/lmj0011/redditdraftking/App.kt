@@ -25,8 +25,8 @@ class App: Application(), Configuration.Provider {
             bind<RedditApiHelper>() with singleton { RedditApiHelper(this@App) }
             bind<RedditAuthHelper>() with singleton { RedditAuthHelper(this@App) }
             bind<SubmissionValidatorHelper>() with singleton { SubmissionValidatorHelper(this@App) }
-            bind<PreferencesHelper>() with singleton { PreferencesHelper(this@App) }
             bind<UniqueRuntimeNumberHelper>() with singleton { UniqueRuntimeNumberHelper(this@App) }
+            bind<DataStoreHelper>() with singleton { DataStoreHelper(this@App) }
         }
 
         Timber.plant(Timber.DebugTree())
