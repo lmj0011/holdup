@@ -1,10 +1,15 @@
 package name.lmj0011.redditdraftking.database.models
 
+import android.os.Parcelable
+import androidx.annotation.Keep
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 import name.lmj0011.redditdraftking.database.BaseEntity
 
+@Keep
+@Parcelize
 @Entity(tableName = "subreddits_table")
 data class Subreddit (
     @ColumnInfo(name = "created_at")
@@ -28,4 +33,4 @@ data class Subreddit (
 
     @ColumnInfo(name = "url")
     var url: String,
-) : BaseEntity()
+) : BaseEntity(), Parcelable

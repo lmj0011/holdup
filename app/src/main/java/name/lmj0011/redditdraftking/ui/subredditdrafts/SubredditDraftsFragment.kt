@@ -26,7 +26,7 @@ import name.lmj0011.redditdraftking.helpers.UniqueRuntimeNumberHelper
 import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getLocalDateFromUtcMillis
 import name.lmj0011.redditdraftking.helpers.adapters.DraftListAdapter
 import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
-import name.lmj0011.redditdraftking.helpers.receivers.PublishScheduledDraftReceiver
+import name.lmj0011.redditdraftking.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.redditdraftking.helpers.util.launchIO
 import org.kodein.di.instance
 import timber.log.Timber
@@ -108,8 +108,8 @@ class SubredditDraftsFragment : Fragment(R.layout.fragment_subreddit_drafts) {
                         cal.set(Calendar.HOUR_OF_DAY, timePicker.hour)
                         cal.set(Calendar.MINUTE, timePicker.minute)
 
-                        draft.requestCode = requestCodeHelper.nextInt()
-                        val alarmIntent = Intent(context, PublishScheduledDraftReceiver::class.java).let { intent ->
+//                        draft.requestCode = requestCodeHelper.nextInt()
+                        val alarmIntent = Intent(context, PublishScheduledSubmissionReceiver::class.java).let { intent ->
                             intent.putExtra("draftUuid", draft.uuid)
                             PendingIntent.getBroadcast(context, draft.requestCode, intent, 0)
                         }
@@ -121,11 +121,7 @@ class SubredditDraftsFragment : Fragment(R.layout.fragment_subreddit_drafts) {
                             withContext(Dispatchers.Main) {
                                 val localDate = getLocalDateFromUtcMillis(draft.postAtMillis)
                                 if(localDate != null) {
-                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                                        alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, localDate.time, alarmIntent)
-                                    } else {
-                                        alarmMgr.set(AlarmManager.RTC_WAKEUP, localDate.time, alarmIntent)
-                                    }
+                                    alarmMgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, localDate.time, alarmIntent)
                                     refreshRecyclerView()
                                 } else {
                                     // TODO Show ERROR "Unable to `getLocalDateFromUtcMillis`"

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable name="submission" type="name.lmj0011.redditdraftking.database.models.Submission"/>
+        <variable name="clickListener" type="name.lmj0011.redditdraftking.helpers.adapters.SubmissionListAdapter.ClickListener"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/listItemSubmissionConstraintLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="@{() -> clickListener.onClick(submission)}"
+        android:padding="5dp">
+
+        <ImageView
+            android:id="@+id/subredditIconImageView"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_baseline_image_24" />
+
+        <TextView
+            android:id="@+id/subredditDisplayNameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:singleLine="true"
+            android:textAlignment="center"
+            app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="r/doordash" />
+
+        <TextView
+            android:id="@+id/submissionTitleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
+            app:layout_constraintTop_toBottomOf="@+id/subredditDisplayNameTextView"
+            tools:text="How to become the Top Dasher" />
+
+        <ImageView
+            android:id="@+id/submissionKindIconImageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
+            app:layout_constraintTop_toBottomOf="@+id/submissionTitleTextView"
+            tools:srcCompat="@drawable/ic_baseline_text_snippet_24" />
+
+        <TextView
+            android:id="@+id/submissionPublishDateTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            app:layout_constraintStart_toEndOf="@+id/submissionKindIconImageView"
+            app:layout_constraintTop_toBottomOf="@+id/submissionTitleTextView"
+            tools:text="11/05/20 8:00am" />
+
+        <ImageView
+            android:id="@+id/accountIconImageView"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
+            app:layout_constraintTop_toBottomOf="@+id/submissionKindIconImageView"
+            app:srcCompat="@drawable/ic_baseline_image_24" />
+
+        <TextView
+            android:id="@+id/accountUsernameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:singleLine="true"
+            android:textAlignment="center"
+            app:layout_constraintStart_toEndOf="@+id/accountIconImageView"
+            app:layout_constraintTop_toBottomOf="@+id/submissionKindIconImageView"
+            tools:text="u/appleEater352" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

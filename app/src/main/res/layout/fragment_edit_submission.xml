@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/chooseSubredditLinearLayout"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/chooseSubredditImageView"
+                android:layout_width="25dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                app:srcCompat="@drawable/ic_baseline_image_24" />
+
+            <TextView
+                android:id="@+id/chooseSubredditTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Choose a community" />
+
+            <ImageView
+                android:id="@+id/chooseSubredditPickerImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:srcCompat="@drawable/ic_baseline_arrow_drop_down_24" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/chooseAccountLinearLayout"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chooseSubredditLinearLayout">
+
+            <TextView
+                android:id="@+id/postingAsTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text=" Posting as: "
+                android:textAlignment="center" />
+
+            <ImageView
+                android:id="@+id/chooseAccountImageView"
+                android:layout_width="25dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                app:srcCompat="@drawable/ic_baseline_image_24" />
+
+            <TextView
+                android:id="@+id/chooseAccountTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Choose an account" />
+
+            <ImageView
+                android:id="@+id/chooseAccountPickerImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:srcCompat="@drawable/ic_baseline_arrow_drop_down_24" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/titleAndFlairLinearLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chooseAccountLinearLayout">
+
+            <EditText
+                android:id="@+id/titleEditTextView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:hint="An interesting title"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:layout_editor_absoluteX="-16dp"
+                tools:layout_editor_absoluteY="0dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/addFlairChip"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="false"
+                    android:text="+ Add Flair"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+        </LinearLayout>
+
+
+
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/submissionPager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            app:layout_constraintBottom_toTopOf="@+id/postFlagContainer"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/titleAndFlairLinearLayout" />
+
+        <LinearLayout
+            android:id="@+id/postFlagContainer"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@+id/submissionPager"
+            app:layout_constraintBottom_toTopOf="@+id/submissionTabLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/toggleFlagsImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                app:srcCompat="@drawable/ic_baseline_more_vert_24" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/flagsChipGroup"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/nsfwChip"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="NSFW" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/spoilerChip"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SPOILER" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+        </LinearLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/submissionTabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -1,6 +1,12 @@
 package name.lmj0011.redditdraftking.helpers.enums
 
-enum class SubmissionKind(val kind: String) {
+import android.os.Parcelable
+import androidx.annotation.Keep
+import kotlinx.parcelize.Parcelize
+
+@Keep
+@Parcelize
+enum class SubmissionKind(val kind: String) : Parcelable {
     Link("link"),
     Self("self"),
     Image("image"),

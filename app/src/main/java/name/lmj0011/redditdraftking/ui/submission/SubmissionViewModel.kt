@@ -8,13 +8,27 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.shareIn
 import name.lmj0011.redditdraftking.App
 import name.lmj0011.redditdraftking.database.SharedDao
 import name.lmj0011.redditdraftking.database.models.Account
-import name.lmj0011.redditdraftking.helpers.*
+import name.lmj0011.redditdraftking.database.models.Submission
+import name.lmj0011.redditdraftking.helpers.DataStoreHelper
+import name.lmj0011.redditdraftking.helpers.NotificationHelper
+import name.lmj0011.redditdraftking.helpers.RedditApiHelper
+import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
+import name.lmj0011.redditdraftking.helpers.SubmissionValidatorHelper
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
-import name.lmj0011.redditdraftking.helpers.models.*
+import name.lmj0011.redditdraftking.helpers.models.Image
+import name.lmj0011.redditdraftking.helpers.models.PostRequirements
+import name.lmj0011.redditdraftking.helpers.models.Subreddit
+import name.lmj0011.redditdraftking.helpers.models.SubredditFlair
+import name.lmj0011.redditdraftking.helpers.models.Video
 import name.lmj0011.redditdraftking.helpers.util.launchDefault
 import name.lmj0011.redditdraftking.helpers.util.launchIO
 import org.json.JSONArray
@@ -40,6 +54,8 @@ class SubmissionViewModel(
             
             return instance
         }
+
+        fun getNewInstance(database: SharedDao, application: Application): SubmissionViewModel = SubmissionViewModel(database, application)
     }
 
     private var redditAuthHelper: RedditAuthHelper = (application as App).kodein.instance()
@@ -105,10 +121,12 @@ class SubmissionViewModel(
     }
 
     fun setAccount(acct: Account) {
+        Timber.d("account: $acct")
         account.postValue(acct)
     }
 
     fun setSubreddit(sub: Subreddit) {
+        Timber.d("subreddit: $sub")
         subreddit.postValue(sub)
     }
 
@@ -258,60 +276,153 @@ class SubmissionViewModel(
         }
     }
 
-    fun postSubmission(kind: SubmissionKind) {
+    /**
+     * Post to Reddit, data needed for the Post comes from this viewModel's LiveData
+     *
+     * returns a Pair<jsonData, errorMessage>
+     */
+    fun postSubmission(kind: SubmissionKind): Pair<JSONObject?, String?> {
         val form = getSubmissionForm(kind)
 
-        launchIO {
-            val res = redditApiHelper.submit(form,
-                redditAuthHelper.authClient(account.value!!).getSavedBearer().getAccessToken()!!
-            )
+        val res = redditApiHelper.submit(form,
+            redditAuthHelper.authClient(account.value!!).getSavedBearer().getAccessToken()!!
+        )
 
-            val json = JSONObject(res.body!!.string())
-            Timber.d("$json")
-            try {
-                var url: String? = null
+        val responsePair = RedditApiHelper.parseSubmitResponse(JSONObject(res.body!!.source().readUtf8()))
 
-                when (kind) {
-                    SubmissionKind.Link -> {
-                        url = json.getJSONObject("json").getJSONObject("data").getString("url")
-                        isSubmissionSuccessful.postValue(true)
-                    }
-                    SubmissionKind.Self -> {
-                        url = json.getJSONObject("json").getJSONObject("data").getString("url")
-                        isSubmissionSuccessful.postValue(true)
-                    }
-                    SubmissionKind.Image -> {
-                        isSubmissionSuccessful.postValue(true)
-
-                        if(form.images.size > 1) {
-                            url = json.getJSONObject("json").getJSONObject("data").getString("url")
-                        }
-                    }
-                    SubmissionKind.Video -> {
-                        isSubmissionSuccessful.postValue(true)
-                    }
-                    SubmissionKind.Poll -> {
-                        url = json.getJSONObject("json").getJSONObject("data").getString("url")
-                        isSubmissionSuccessful.postValue(true)
+        if (responsePair.first != null && responsePair.second == null) { // successful response
+            when (kind) {
+                SubmissionKind.Image -> {
+                    if(form.images.size > 1) {
+                        NotificationHelper.showSubmissionPublishedNotification(
+                            subreddit.value!!,
+                            account.value!!,
+                            form,
+                            responsePair.first!!.getString("url")
+                        )
+                    } else {
+                        NotificationHelper.showSubmissionPublishedNotification(
+                            subreddit.value!!,
+                            account.value!!,
+                            form,
+                            null
+                        )
                     }
                 }
-
-                NotificationHelper.showPostPublishedNotification(form, account.value!!.name, url)
-            } catch(ex: JSONException) {
-                Timber.e(ex)
-                isSubmissionSuccessful.postValue(false)
-
-                val errors = json.getJSONObject("json").getJSONArray("errors")
-
-                if (errors.length() > 0) {
-                    val arr = errors.getJSONArray(0)
-                    val errorMessage = "error: ${arr.join(" ").replace("\"", "")}"
-                    Timber.d("$errorMessage")
-                    /** TODO - throw custom Exception */
-                } else throw ex
-
+                SubmissionKind.Video -> {
+                    NotificationHelper.showSubmissionPublishedNotification(
+                        subreddit.value!!,
+                        account.value!!,
+                        form,
+                        null
+                    )
+                }
+                else -> {
+                    NotificationHelper.showSubmissionPublishedNotification(
+                        subreddit.value!!,
+                        account.value!!,
+                        form,
+                        responsePair.first!!.getString("url")
+                    )
+                }
             }
+            isSubmissionSuccessful.postValue(true)
         }
+
+        return responsePair
+    }
+
+    fun saveSubmission(kind: SubmissionKind, postAtMillis: Long, alarmRequestCode: Int) {
+        val submission = Submission(kind = kind, postAtMillis = postAtMillis, alarmRequestCode = alarmRequestCode)
+
+        submissionTitle.value?.let { submission.title = it }
+
+        isNsfw.value?.let { submission.isNsfw = it}
+        isSpoiler.value?.let { submission.isSpoiler = it }
+
+        subredditFlair.value?.let { submission.subredditFlair = it }
+
+        submissionSelfText.value?.let { submission.body = it }
+
+        submissionLinkText.value?.let { submission.url = it }
+
+        submissionImageGallery.value?.let { submission.imgGallery = it }
+
+        submissionPollBodyText.value?.let { submission.body = it }
+        submissionPollOptions.value?.let { submission.pollOptions = it.toMutableList() }
+        submissionPollDuration.value?.let { submission.pollDuration = it }
+
+        submissionVideo.value?.let { submission.video = it }
+
+        subreddit.value?.let { submission.subreddit = it }
+
+        account.value?.let { submission.account = it }
+
+        database.insert(submission)
+    }
+
+    fun updateSubmission(submission: Submission) {
+        submissionTitle.value?.let { submission.title = it }
+
+        isNsfw.value?.let { submission.isNsfw = it}
+        isSpoiler.value?.let { submission.isSpoiler = it }
+
+        subredditFlair.value?.let { submission.subredditFlair = it }
+
+        // submission.body gets set in SubmissionFragmentChild
+//        submissionSelfText.value?.let { submission.body = it }
+
+        submissionLinkText.value?.let { submission.url = it }
+
+        submissionImageGallery.value?.let { submission.imgGallery = it }
+
+//        submissionPollBodyText.value?.let { submission.body = it }
+
+        submissionPollOptions.value?.let { submission.pollOptions = it.toMutableList() }
+        submissionPollDuration.value?.let { submission.pollDuration = it }
+
+        submissionVideo.value?.let { submission.video = it }
+
+        subreddit.value?.let { submission.subreddit = it }
+
+        account.value?.let { submission.account = it }
+
+        database.update(submission)
+    }
+
+    fun deleteSubmission(submission: Submission) {
+
+        database.deleteBySubmissionId(submission.id)
+    }
+
+    /**
+     * Takes a Submission and configure this viewModel to reflect
+     * its data.
+     *
+     * returns a Pair<jsonData, errorMessage>
+     */
+    fun populateFromSubmissionThenPost(sub: Submission, postNow: Boolean = true): Pair<JSONObject?, String?>? {
+
+        account.postValue(sub.account)
+        subreddit.postValue(sub.subreddit)
+        submissionTitle.postValue(sub.title)
+        subredditFlair.postValue(sub.subredditFlair)
+        submissionLinkText.postValue(sub.url)
+        submissionSelfText.postValue(sub.body)
+        submissionImageGallery.postValue(sub.imgGallery)
+        submissionPollBodyText.postValue(sub.body)
+        submissionPollOptions.postValue(sub.pollOptions)
+        submissionPollDuration.postValue(sub.pollDuration)
+        submissionVideo.postValue(sub.video)
+
+        isNsfw.postValue(sub.isNsfw)
+        isSpoiler.postValue(sub.isSpoiler)
+
+        val kind = sub.kind
+
+        return if (postNow && kind != null) {
+            postSubmission(kind)
+        } else null
     }
 
     private fun getSubmissionForm(kind: SubmissionKind): SubmissionValidatorHelper.SubmissionForm {

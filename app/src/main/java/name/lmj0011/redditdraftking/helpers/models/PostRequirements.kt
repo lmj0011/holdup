@@ -1,9 +1,15 @@
 package name.lmj0011.redditdraftking.helpers.models
 
+import android.os.Parcelable
+import androidx.annotation.Keep
+import kotlinx.parcelize.Parcelize
+
 
 /**
  * ref: https://www.reddit.com/dev/api#GET_api_v1_{subreddit}_post_requirements
  */
+@Keep
+@Parcelize
 data class PostRequirements (
     val title_regexes: List<String>,
     val body_blacklisted_strings: List<String>,
@@ -35,4 +41,4 @@ data class PostRequirements (
     val link_repost_age: Int?,
     val body_text_min_length: Int?
 
-)
+) : Parcelable

@@ -2,10 +2,7 @@ package name.lmj0011.redditdraftking.database
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import name.lmj0011.redditdraftking.database.models.Account
-import name.lmj0011.redditdraftking.database.models.Draft
-import name.lmj0011.redditdraftking.database.models.Subreddit
-import name.lmj0011.redditdraftking.database.models.SubredditWithDrafts
+import name.lmj0011.redditdraftking.database.models.*
 
 @Dao
 interface SharedDao: BaseDao {
@@ -15,6 +12,8 @@ interface SharedDao: BaseDao {
     fun actualInsert(subreddit: Subreddit)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun actualInsert(account: Account)
+    @Insert
+    fun actualInsert(submission: Submission)
 
     fun insert(draft: Draft) {
         actualInsert(setTimestamps(draft) as Draft)
@@ -24,6 +23,9 @@ interface SharedDao: BaseDao {
     }
     fun insert(account: Account) {
         actualInsert(setTimestamps(account) as Account)
+    }
+    fun insert(submission: Submission) {
+        actualInsert(setTimestamps(submission) as Submission)
     }
 
     // try to update, then insert row if it does not exists
@@ -55,6 +57,8 @@ interface SharedDao: BaseDao {
     fun actualInsertAllSubreddits(subreddits: MutableList<Subreddit>)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun actualInsertAllAccounts(accounts: MutableList<Account>)
+    @Insert
+    fun actualInsertAllSubmissions(submissions: MutableList<Submission>)
 
 
     fun insertAllDrafts(drafts: MutableList<Draft>) {
@@ -69,6 +73,10 @@ interface SharedDao: BaseDao {
         val list = accounts.map { setTimestamps(it) as Account }.toMutableList()
         actualInsertAllAccounts(list)
     }
+    fun insertAllSubmissions(submissions: MutableList<Submission>) {
+        val list = submissions.map { setTimestamps(it) as Submission }.toMutableList()
+        actualInsertAllSubmissions(list)
+    }
 
     @Update
     fun actualUpdate(draft: Draft)
@@ -76,6 +84,8 @@ interface SharedDao: BaseDao {
     fun actualUpdate(subreddit: Subreddit)
     @Update
     fun actualUpdate(account: Account)
+    @Update
+    fun actualUpdate(submission: Submission)
 
     fun update(draft: Draft) {
         actualUpdate(setUpdatedAt(draft) as Draft)
@@ -86,6 +96,9 @@ interface SharedDao: BaseDao {
     fun update(account: Account) {
         actualUpdate(setUpdatedAt(account) as Account)
     }
+    fun update(submission: Submission) {
+        actualUpdate(setUpdatedAt(submission) as Submission)
+    }
 
     @Update
     fun actualUpdateAllDrafts(drafts: MutableList<Draft>)
@@ -93,6 +106,8 @@ interface SharedDao: BaseDao {
     fun actualUpdateAllSubreddits(subreddits: MutableList<Subreddit>)
     @Update
     fun actualUpdateAllAccounts(accounts: MutableList<Account>)
+    @Update
+    fun actualUpdateAllSubmissions(submissions: MutableList<Submission>)
 
     fun updateAllDrafts(drafts: MutableList<Draft>) {
         val list = drafts.map { setUpdatedAt(it) as Draft }.toMutableList()
@@ -106,6 +121,10 @@ interface SharedDao: BaseDao {
         val list = accounts.map { setUpdatedAt(it) as Account }.toMutableList()
         actualUpdateAllAccounts(list)
     }
+    fun updateAllSubmissions(submissions: MutableList<Submission>) {
+        val list = submissions.map { setUpdatedAt(it) as Submission }.toMutableList()
+        actualUpdateAllSubmissions(list)
+    }
 
     @Query("SELECT * from drafts_table WHERE uuid = :uuid")
     fun getDraft(uuid: String): Draft?
@@ -115,6 +134,10 @@ interface SharedDao: BaseDao {
     fun getAccount(id: Long): Account?
     @Query("SELECT * from accounts_table WHERE name = :name")
     fun getAccountByName(name: String): Account?
+    @Query("SELECT * from submissions_table WHERE id = :id")
+    fun getSubmission(id: Long): Submission?
+    @Query("SELECT * from submissions_table WHERE alarmRequestCode = :alarmRequestCode")
+    fun getSubmissionByAlarmRequestCode(alarmRequestCode: Int): Submission?
 
     @Query("SELECT * FROM drafts_table")
     fun getAllDraftsObserverable(): LiveData<MutableList<Draft>>
@@ -124,6 +147,10 @@ interface SharedDao: BaseDao {
     fun getAllSubredditsObserverable(): LiveData<MutableList<Subreddit>>
     @Query("SELECT * FROM accounts_table ORDER BY name COLLATE NOCASE ASC")
     fun getAllAccounts(): MutableList<Account>
+    @Query("SELECT * FROM submissions_table")
+    fun getAllSubmissionsObserverable(): LiveData<MutableList<Submission>>
+    @Query("SELECT * FROM submissions_table")
+    fun getAllSubmissions(): MutableList<Submission>
 
     @Query("DELETE from drafts_table WHERE uuid = :uuid")
     fun deleteByDraftId(uuid: String): Int
@@ -133,6 +160,10 @@ interface SharedDao: BaseDao {
     fun deleteByAccountId(id: Long): Int
     @Query("DELETE from accounts_table WHERE name = :name")
     fun deleteByAccountName(name: String): Int
+    @Query("DELETE from submissions_table WHERE id = :id")
+    fun deleteBySubmissionId(id: Long): Int
+    @Query("DELETE from submissions_table")
+    fun deleteAllSubmissionId(): Int
 
 
 

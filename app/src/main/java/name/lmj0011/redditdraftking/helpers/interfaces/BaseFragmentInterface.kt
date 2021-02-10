@@ -2,8 +2,7 @@ package name.lmj0011.redditdraftking.helpers.interfaces
 
 import android.view.View
 
-interface FragmentBaseInit {
-
+interface BaseFragmentInterface {
     /**
      *  These functions should be called in Fragment.onViewCreated
      *  in the following order

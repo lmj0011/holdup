@@ -19,6 +19,9 @@
             app:launchSingleTop="false"
             app:popUpTo="@id/homeFragment"
             app:popUpToInclusive="false" />
+        <action
+            android:id="@+id/action_homeFragment_to_editSubmissionFragment"
+            app:destination="@id/editSubmissionFragment" />
     </fragment>
 
     <fragment
@@ -56,4 +59,12 @@
         android:id="@+id/submissionFragment"
         android:name="name.lmj0011.redditdraftking.ui.submission.SubmissionFragment"
         android:label="" />
+    <fragment
+        android:id="@+id/editSubmissionFragment"
+        android:name="name.lmj0011.redditdraftking.ui.submission.EditSubmissionFragment"
+        android:label="Edit Submission" >
+        <argument
+            android:name="submission"
+            app:argType="name.lmj0011.redditdraftking.database.models.Submission" />
+    </fragment>
 </navigation>

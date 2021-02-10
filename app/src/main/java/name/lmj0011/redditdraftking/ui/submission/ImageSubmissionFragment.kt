@@ -1,11 +1,7 @@
 package name.lmj0011.redditdraftking.ui.submission
 
-import android.app.ActionBar
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -15,46 +11,48 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import com.kroegerama.imgpicker.BottomSheetImagePicker
 import com.kroegerama.imgpicker.ButtonType
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 import name.lmj0011.redditdraftking.R
-import name.lmj0011.redditdraftking.database.AppDatabase
+import name.lmj0011.redditdraftking.database.models.Submission
 import name.lmj0011.redditdraftking.databinding.FragmentImageSubmissionBinding
 import name.lmj0011.redditdraftking.helpers.adapters.AddImageListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.GalleryListAdapter
-import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
-import name.lmj0011.redditdraftking.helpers.interfaces.FragmentBaseInit
+import name.lmj0011.redditdraftking.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.redditdraftking.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.redditdraftking.helpers.models.Image
-import name.lmj0011.redditdraftking.helpers.util.buildOneColorStateList
 import name.lmj0011.redditdraftking.helpers.util.launchIO
 import name.lmj0011.redditdraftking.helpers.util.launchUI
-import name.lmj0011.redditdraftking.helpers.util.showToastMessage
-import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
+import name.lmj0011.redditdraftking.helpers.util.showSnackBar
 import timber.log.Timber
 import java.lang.Exception
 
-class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
-    FragmentBaseInit, SubmissionFragmentChild, BottomSheetImagePicker.OnImagesSelectedListener {
+class ImageSubmissionFragment(
+    override var viewModel:  SubmissionViewModel,
+    override val submission: Submission? = null,
+    override val actionBarTitle: String? = "Image Submission"
+): Fragment(R.layout.fragment_image_submission),
+    BaseFragmentInterface, SubmissionFragmentChild, BottomSheetImagePicker.OnImagesSelectedListener {
     private lateinit var binding: FragmentImageSubmissionBinding
-    private lateinit var  viewModel: SubmissionViewModel
     private lateinit var listAdapter: GalleryListAdapter
     private lateinit var footerAdapter: AddImageListAdapter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel = SubmissionViewModel.getInstance(
-            AppDatabase.getInstance(requireActivity().application).sharedDao,
-            requireActivity().application
-        )
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
         setupRecyclerView()
+
+        submission?.let {
+            listAdapter.submitList(it.imgGallery)
+            listAdapter.notifyDataSetChanged()
+
+            // scroll to end of List
+            binding.imageGalleryList.adapter?.let { recyclerView ->
+                binding.imageGalleryList.scrollToPosition(recyclerView.itemCount - 1)
+            }
+        }
     }
 
     override fun onResume() {
@@ -126,7 +124,7 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
             withContext(Dispatchers.Main) {
                 binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, AddImageListAdapter(
                     AddImageListAdapter.AddImageClickListener {
-                        showToastMessage(requireContext(), "Uploading Image(s)")
+                        showSnackBar(binding.root, "Busy uploading images..")
                     }
                 ))
 
@@ -170,8 +168,10 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
     }
 
     override fun updateActionBarTitle() {
-        launchUI {
-            (requireActivity() as AppCompatActivity).supportActionBar?.title = "Image Submission"
+        actionBarTitle?.let {
+            launchUI {
+                (requireActivity() as AppCompatActivity).supportActionBar?.title = it
+            }
         }
     }
 }

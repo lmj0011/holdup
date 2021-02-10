@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
 apply plugin: "androidx.navigation.safeargs.kotlin"
 
 android {
@@ -17,7 +17,7 @@ android {
         targetSdkVersion 30
         versionCode 1
         versionName "0.1.0"
-        vectorDrawables.useSupportLibrary = true
+        vectorDrawables.useSupportLibrary true
         multiDexEnabled true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -51,8 +51,9 @@ android {
         jvmTarget = '1.8'
     }
 
-    dataBinding {
-        enabled = true
+    buildFeatures {
+        viewBinding true
+        dataBinding true
     }
 }
 
@@ -67,11 +68,9 @@ dependencies {
     }
     implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
     implementation 'androidx.vectordrawable:vectordrawable:1.1.0'
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.3.1'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.3.1'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.3.2'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.3.2'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.3.1'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.3.1'
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
     implementation "androidx.recyclerview:recyclerview:1.2.0-beta01"
     implementation "androidx.recyclerview:recyclerview-selection:1.1.0-rc03"
@@ -117,12 +116,8 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
 
-    // Flipper https://fbflipper.com/docs/getting-started/android-native
-    debugImplementation 'com.facebook.flipper:flipper:0.58.0'
-    debugImplementation 'com.facebook.soloader:soloader:0.9.0'
-    releaseImplementation 'com.facebook.flipper:flipper-noop:0.51.0'
-
-
     implementation 'com.kroegerama:bottomsheet-imagepicker:1.1.2'
+
+    implementation 'com.github.javafaker:javafaker:1.0.2'
 
 }

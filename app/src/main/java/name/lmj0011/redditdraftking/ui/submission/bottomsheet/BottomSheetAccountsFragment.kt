@@ -63,7 +63,7 @@ class BottomSheetAccountsFragment(private val setAccountForSubmission: (account:
                             refreshRecyclerView()
                         }
                     }
-                    .setNegativeButton("Cancel") {_, _ -> }
+                    .setNeutralButton("Cancel") {_, _ -> }
                     .show()
             },
             AccountListAdapter.AccountNameClickListener(setAccountForSubmission)

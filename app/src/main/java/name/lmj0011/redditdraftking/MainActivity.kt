@@ -14,8 +14,6 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,7 +23,6 @@ import name.lmj0011.redditdraftking.helpers.NotificationHelper
 import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
 import name.lmj0011.redditdraftking.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.redditdraftking.helpers.util.launchIO
-import name.lmj0011.redditdraftking.helpers.workers.ScheduledDraftServiceCallerWorker
 import name.lmj0011.redditdraftking.ui.accounts.AccountsViewModel
 import timber.log.Timber
 
@@ -62,8 +59,6 @@ class MainActivity : AppCompatActivity() {
         if(!isIgnoringBatteryOptimizations(this)) {
             NotificationHelper.showBatteryOptimizationInfoNotification()
         }
-
-        WorkManager.getInstance(this).enqueue(OneTimeWorkRequestBuilder<ScheduledDraftServiceCallerWorker>().build())
     }
 
     private fun setupNavigationListener(){
@@ -80,11 +75,14 @@ class MainActivity : AppCompatActivity() {
                                         navController.navigate(R.id.submissionFragment)
                                     } else {
                                         MaterialAlertDialogBuilder(this@MainActivity)
-                                            .setMessage("You will need to connect your Reddit account before creating a Submission")
+                                            .setMessage("Log into your Reddit account to start scheduling Submissions")
+                                            .setNeutralButton("Cancel") {dialog, _ ->
+                                                dialog.dismiss()
+                                            }
+                                            .setNegativeButton("") {_, _ -> }
                                             .setPositiveButton("Log In") { _, _ ->
                                                 navController.navigate(R.id.redditAuthWebviewFragment)
                                             }
-                                            .setNegativeButton("Cancel") {_, _ -> }
                                             .show()
                                     }
                                 },

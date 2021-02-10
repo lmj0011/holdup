@@ -1,11 +1,16 @@
 package name.lmj0011.redditdraftking.database.models
 
+import android.os.Parcelable
+import androidx.annotation.Keep
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 import name.lmj0011.redditdraftking.Keys
 import name.lmj0011.redditdraftking.database.BaseEntity
 
+@Keep
+@Parcelize
 @Entity(tableName = "drafts_table")
 data class Draft(
     @ColumnInfo(name = "created_at")
@@ -48,4 +53,4 @@ data class Draft(
     @ColumnInfo(name = "date_modified")
     var dateModified: String = "" // comes from DraftsJsonResponse
 
-) : BaseEntity()
+) : BaseEntity(), Parcelable

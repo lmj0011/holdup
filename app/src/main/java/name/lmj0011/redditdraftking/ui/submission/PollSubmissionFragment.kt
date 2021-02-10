@@ -1,8 +1,6 @@
 package name.lmj0011.redditdraftking.ui.submission
 
-import android.app.ActionBar
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -14,40 +12,38 @@ import android.widget.TableRow
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.redditdraftking.FullscreenTextEntryActivity
 import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.database.AppDatabase
+import name.lmj0011.redditdraftking.database.models.Submission
 import name.lmj0011.redditdraftking.databinding.FragmentPollSubmissionBinding
 import name.lmj0011.redditdraftking.helpers.SubmissionValidatorHelper.Companion.MAX_POLL_OPTIONS
-import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
-import name.lmj0011.redditdraftking.helpers.interfaces.FragmentBaseInit
+import name.lmj0011.redditdraftking.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.redditdraftking.helpers.interfaces.SubmissionFragmentChild
-import name.lmj0011.redditdraftking.helpers.util.buildOneColorStateList
 import name.lmj0011.redditdraftking.helpers.util.launchUI
-import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import timber.log.Timber
-import java.lang.Exception
 
-class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
-    FragmentBaseInit, SubmissionFragmentChild {
+class PollSubmissionFragment(
+    override var viewModel:  SubmissionViewModel,
+    override val submission: Submission? = null,
+    override val actionBarTitle: String? = "Poll Submission"
+): Fragment(R.layout.fragment_poll_submission),
+    BaseFragmentInterface, SubmissionFragmentChild {
     private lateinit var binding: FragmentPollSubmissionBinding
-    private lateinit var  viewModel: SubmissionViewModel
     private val defaultSpinnerPosition = 2
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel = SubmissionViewModel.getInstance(
-            AppDatabase.getInstance(requireActivity().application).sharedDao,
-            requireActivity().application
-        )
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
+
+        submission?.let {
+            binding.pollEditTextTextMultiLine.setText(it.body)
+            restoreOptions(it)
+            binding.pollDurationSpinner.setSelection(it.pollDuration - 1)
+
+        }
     }
 
     override fun onResume() {
@@ -61,7 +57,9 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
 
         when(requestCode) {
             FullscreenTextEntryActivity.FULLSCREEN_TEXT_ENTRY_REQUEST_CODE -> {
-                viewModel.submissionPollBodyText.value?.let {
+                val text = data?.getStringExtra(FullscreenTextEntryActivity.RESULT_OUTPUT_TEXT)
+                text?.let{
+                    viewModel.submissionPollBodyText.postValue(it)
                     binding.pollEditTextTextMultiLine.setText(it)
                 }
             }
@@ -81,7 +79,6 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
 
         binding.pollEditTextTextMultiLine.setOnClickListener {
             val intent = Intent(requireContext(), FullscreenTextEntryActivity::class.java)
-            intent.putExtra("kind", SubmissionKind.Poll.kind)
             intent.putExtra("start_text",  binding.pollEditTextTextMultiLine.text.toString());
             intent.putExtra("start_position",  binding.pollEditTextTextMultiLine.selectionStart);
             startActivityForResult(intent, FullscreenTextEntryActivity.FULLSCREEN_TEXT_ENTRY_REQUEST_CODE)
@@ -129,8 +126,10 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
     }
 
     override fun updateActionBarTitle() {
-        launchUI {
-            (requireActivity() as AppCompatActivity).supportActionBar?.title = "Poll Submission"
+        actionBarTitle?.let {
+            launchUI {
+                (requireActivity() as AppCompatActivity).supportActionBar?.title = it
+            }
         }
     }
 
@@ -151,6 +150,38 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
             binding.pollOptionsTableLayout.addView(tableRow)
             pollOptionsTableRefresh()
         }
+    }
+
+    /**
+     * restore the poll options
+     */
+    private fun restoreOptions(submission: Submission) {
+        submission.pollOptions.take(2).forEachIndexed { idx, option ->
+            val tableRowView = binding.pollOptionsTableLayout.getChildAt(idx)
+
+            if(tableRowView is TableRow) {
+                val editText = tableRowView.findViewWithTag<EditText>("optionEditText")
+                editText.setText(option)
+            }
+        }
+
+        submission.pollOptions.drop(2).forEach { option ->
+            val tableRowView = layoutInflater.inflate(R.layout.poll_option_tablerow, null)
+
+            val editText = tableRowView.findViewWithTag<EditText>("optionEditText")
+            editText.setText(option)
+
+            tableRowView.findViewWithTag<ImageView?>("removeOptionImageView")?.let { imgView ->
+                imgView.setOnClickListener {
+                    binding.pollOptionsTableLayout.removeView(tableRowView)
+                    pollOptionsTableRefresh()
+                }
+            }
+
+            binding.pollOptionsTableLayout.addView(tableRowView)
+            pollOptionsTableRefresh()
+        }
+
     }
 
     /**

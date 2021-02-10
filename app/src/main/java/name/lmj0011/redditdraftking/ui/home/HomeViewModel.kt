@@ -10,6 +10,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import name.lmj0011.redditdraftking.database.models.Draft
 import name.lmj0011.redditdraftking.database.SharedDao
+import name.lmj0011.redditdraftking.database.models.Submission
 import name.lmj0011.redditdraftking.database.models.Subreddit
 import name.lmj0011.redditdraftking.helpers.models.DraftJsonObject
 import name.lmj0011.redditdraftking.helpers.models.SubredditJsonObject
@@ -27,10 +28,15 @@ class HomeViewModel(
     var drafts = database.getAllDraftsObserverable()
     var subreddits = database.getAllSubredditsObserverable()
     var subredditsWithDrafts = database.getSubredditWithDrafts()
+    var submissions = database.getAllSubmissionsObserverable()
 
     override fun onCleared() {
         super.onCleared()
         viewModelJob.cancel()
+    }
+
+    fun getSubmissions(): MutableList<Submission> {
+        return database.getAllSubmissions()
     }
 
     @SuppressLint("NewApi")

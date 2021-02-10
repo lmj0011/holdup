@@ -1,17 +1,13 @@
 package name.lmj0011.redditdraftking.ui.submission
 
-import android.app.ActionBar
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.media.MediaPlayer
 import android.media.ThumbnailUtils.createVideoThumbnail
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Size
 import android.view.View
 import android.widget.MediaController
@@ -20,48 +16,54 @@ import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.database.AppDatabase
+import name.lmj0011.redditdraftking.database.models.Submission
 import name.lmj0011.redditdraftking.databinding.FragmentVideoSubmissionBinding
-import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
-import name.lmj0011.redditdraftking.helpers.interfaces.FragmentBaseInit
+import name.lmj0011.redditdraftking.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.redditdraftking.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.redditdraftking.helpers.models.Video
-import name.lmj0011.redditdraftking.helpers.util.buildOneColorStateList
 import name.lmj0011.redditdraftking.helpers.util.launchIO
 import name.lmj0011.redditdraftking.helpers.util.launchUI
-import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Exception
+import kotlin.Exception
 
-class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
-    FragmentBaseInit, SubmissionFragmentChild {
+class VideoSubmissionFragment(
+    override var viewModel:  SubmissionViewModel,
+    override val submission: Submission? = null,
+    override val actionBarTitle: String? = "Video Submission"
+): Fragment(R.layout.fragment_video_submission),
+    BaseFragmentInterface, SubmissionFragmentChild {
     companion object {
         const val GET_VIDEO_REQUEST_CODE = 100
     }
 
     private lateinit var binding: FragmentVideoSubmissionBinding
-    private lateinit var  viewModel: SubmissionViewModel
     private lateinit var mediaPlayer: MediaPlayer
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel = SubmissionViewModel.getInstance(
-            AppDatabase.getInstance(requireActivity().application).sharedDao,
-            requireActivity().application
-        )
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
         setupRecyclerView()
+
+        submission?.let {
+            it.video?.let { video ->
+                try {
+                    showVideoUI()
+                    val uri = Uri.parse(video.url)
+                    binding.videoView.setMediaController(MediaController(requireContext()))
+                    binding.videoView.setVideoURI(uri)
+                } catch (ex: Exception) {
+                    Timber.e(ex)
+                    hideVideoUI()
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -166,10 +168,16 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
     override fun setupObservers() {
         viewModel.submissionVideo.observe(viewLifecycleOwner, { video ->
             if (video != null) {
-                showVideoUI()
-                val uri = Uri.parse(video.sourceUri)
-                binding.videoView.setMediaController(MediaController(requireContext()))
-                binding.videoView.setVideoURI(uri)
+                try {
+                    showVideoUI()
+                    val uri = Uri.parse(video.sourceUri)
+                    binding.videoView.setMediaController(MediaController(requireContext()))
+                    binding.videoView.setVideoURI(uri)
+                } catch (ex: Exception) {
+                    Timber.e(ex)
+                    hideVideoUI()
+                }
+
             } else hideVideoUI()
         })
 
@@ -200,8 +208,10 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
     }
 
     override fun updateActionBarTitle() {
-        launchUI {
-            (requireActivity() as AppCompatActivity).supportActionBar?.title = "Video Submission"
+        actionBarTitle?.let {
+            launchUI {
+                (requireActivity() as AppCompatActivity).supportActionBar?.title = it
+            }
         }
     }
 

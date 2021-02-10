@@ -12,6 +12,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.children
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import java.lang.Exception
 
@@ -61,7 +62,10 @@ fun buildOneColorStateList(color: Int /* Color.parseColor("#FFFF") */): ColorSta
     )
 }
 
-fun showToastMessage(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
-    val toast = Toast.makeText(context, message, duration)
-    toast.show()
+/**
+ * displays a vanilla snackBar
+ */
+fun showSnackBar(view: View, message: String) {
+    val snackBar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+    snackBar.show()
 }

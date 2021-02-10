@@ -35,6 +35,30 @@ class RedditApiHelper(val context: Context) {
         val acceptedMimeTypes = listOf(
             "image/png", "video/quicktime", "video/mp4", "image/jpeg", "image/gif"
         )
+
+        /**
+         * This function can be called to parse responses from SubmissionViewModel.postSubmission
+         *
+         * returns a Pair<jsonData, errorMessage>
+         */
+        fun parseSubmitResponse(json: JSONObject): Pair<JSONObject?, String?> {
+            var data: JSONObject? = null
+            var errorMessage: String? = null
+
+            try {
+                data = json.getJSONObject("json").getJSONObject("data")
+
+            } catch(ex: JSONException) {
+                val errors = json.getJSONObject("json").getJSONArray("errors")
+
+                if (errors.length() > 0) {
+                    val arr = errors.getJSONArray(0)
+                    errorMessage = "error: ${arr.join(" ").replace("\"", "")}"
+                } else throw ex
+            }
+
+            return Pair(data, errorMessage)
+        }
     }
 
     fun get(apiPath: String, oauthToken: String): Response {
@@ -92,22 +116,24 @@ class RedditApiHelper(val context: Context) {
             if (obj.getString("kind") == "t5") {
                 try {
 
-                    var iconImgUrl = if (obj.getJSONObject("data").getString("icon_img").isNullOrBlank()) {
-                        obj.getJSONObject("data").getString("community_icon")
-                    } else obj.getJSONObject("data").getString("icon_img")
+                    val dataObj = obj.getJSONObject("data")
+                    var iconImgUrl = if (dataObj.getString("icon_img").isNullOrBlank()) {
+                        dataObj.getString("community_icon")
+                    } else dataObj.getString("icon_img")
 
                     iconImgUrl = iconImgUrl.split("?").first()
                     val sub = Subreddit(
-                        displayName = obj.getJSONObject("data").getString("display_name"),
-                        displayNamePrefixed = obj.getJSONObject("data").getString("display_name_prefixed"),
+                        guid = dataObj.getString("name"),
+                        displayName = dataObj.getString("display_name"),
+                        displayNamePrefixed = dataObj.getString("display_name_prefixed"),
                         iconImgUrl = iconImgUrl,
-                        subscribers = obj.getJSONObject("data").getInt("subscribers"),
-                        allowGalleries = obj.getJSONObject("data").getBoolean("allow_galleries"),
-                        allowImages = obj.getJSONObject("data").getBoolean("allow_images"),
-                        allowVideos = obj.getJSONObject("data").getBoolean("allow_videos"),
-                        allowVideoGifs = obj.getJSONObject("data").getBoolean("allow_videogifs"),
-                        allowPolls = obj.getJSONObject("data").getBoolean("allow_polls"),
-                        linkFlairEnabled = obj.getJSONObject("data").getBoolean("link_flair_enabled")
+                        subscribers = dataObj.getInt("subscribers"),
+                        allowGalleries = dataObj.getBoolean("allow_galleries"),
+                        allowImages = dataObj.getBoolean("allow_images"),
+                        allowVideos = dataObj.getBoolean("allow_videos"),
+                        allowVideoGifs = dataObj.getBoolean("allow_videogifs"),
+                        allowPolls = dataObj.getBoolean("allow_polls"),
+                        linkFlairEnabled = dataObj.getBoolean("link_flair_enabled")
                     )
                     subredditSet.add(sub)
                 } catch(ex: JSONException) {

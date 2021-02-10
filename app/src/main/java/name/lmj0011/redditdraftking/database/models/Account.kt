@@ -1,10 +1,15 @@
 package name.lmj0011.redditdraftking.database.models
 
+import android.os.Parcelable
+import androidx.annotation.Keep
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 import name.lmj0011.redditdraftking.database.BaseEntity
 
+@Keep
+@Parcelize
 @Entity(tableName = "accounts_table")
 data class Account (
     @PrimaryKey(autoGenerate = true)
@@ -22,4 +27,4 @@ data class Account (
 
     @ColumnInfo(name = "icon_image")
     var iconImage: String = "",
-) : BaseEntity()
+) : BaseEntity(), Parcelable

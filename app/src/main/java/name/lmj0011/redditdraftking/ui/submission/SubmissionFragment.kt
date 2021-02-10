@@ -1,6 +1,10 @@
 package name.lmj0011.redditdraftking.ui.submission
 
 import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -9,24 +13,35 @@ import android.text.TextWatcher
 import android.view.*
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.redditdraftking.App
+import name.lmj0011.redditdraftking.BaseFragment
 import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.database.AppDatabase
 import name.lmj0011.redditdraftking.databinding.FragmentSubmissionBinding
 import name.lmj0011.redditdraftking.helpers.DataStoreHelper
+import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getElapsedTimeUntilFutureTime
+import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getLocalDateFromUtcMillis
+import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getPostAtDateForListLayout
+import name.lmj0011.redditdraftking.helpers.TestHelper
+import name.lmj0011.redditdraftking.helpers.UniqueRuntimeNumberHelper
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.redditdraftking.helpers.enums.SubmissionKind
-import name.lmj0011.redditdraftking.helpers.interfaces.FragmentBaseInit
+import name.lmj0011.redditdraftking.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.redditdraftking.helpers.models.Subreddit
+import name.lmj0011.redditdraftking.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.redditdraftking.helpers.util.buildOneColorStateList
 import name.lmj0011.redditdraftking.helpers.util.launchIO
 import name.lmj0011.redditdraftking.helpers.util.launchUI
+import name.lmj0011.redditdraftking.helpers.util.showSnackBar
+import name.lmj0011.redditdraftking.helpers.util.withUIContext
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetAccountsFragment
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import name.lmj0011.redditdraftking.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
@@ -36,16 +51,19 @@ import timber.log.Timber
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
  */
-class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseInit {
+class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragmentInterface {
     private lateinit var binding: FragmentSubmissionBinding
     private lateinit var tabLayoutMediator: TabLayoutMediator
     private lateinit var viewModel: SubmissionViewModel
-    private lateinit var optionsMenu: Menu
     private lateinit var dataStoreHelper: DataStoreHelper
+    private lateinit var alarmMgr: AlarmManager
+    private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
 
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
     lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
+
+    private var optionsMenu: Menu? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +73,8 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
         )
 
         dataStoreHelper = (requireContext().applicationContext as App).kodein.instance()
+        requestCodeHelper = (requireContext().applicationContext as App).kodein.instance()
+        alarmMgr = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         setHasOptionsMenu(true)
     }
@@ -62,6 +82,65 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
     override fun onResume() {
         super.onResume()
         viewModel.setAccount()
+
+        /**
+         * TEST CODE
+         */
+//        val dao = AppDatabase.getInstance(requireActivity().application).sharedDao
+//        val tHelper = TestHelper(requireContext())
+//
+//        launchIO {
+//            dao.deleteAllSubmissionId() // clear submissions table
+//
+//            val postAtUtcMillis = 1612916400602
+//            val submissions = tHelper.generateSubmissions(
+//                listOf(
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                )
+//            )
+//
+//            dao.insertAllSubmissions(submissions)
+//
+//            withUIContext {
+//
+//                submissions.forEach { sub ->
+//                    val alarmIntent = Intent(context, PublishScheduledSubmissionReceiver::class.java).let { intent ->
+//                        intent.putExtra("alarmRequestCode", sub.alarmRequestCode)
+//                        PendingIntent.getBroadcast(context, sub.alarmRequestCode, intent, 0)
+//                    }
+//
+//                    val futureElapsedDate = getLocalDateFromUtcMillis(
+//                        getElapsedTimeUntilFutureTime(
+//                            sub.postAtMillis
+//                        )
+//                    )
+//
+//                    if (futureElapsedDate != null) {
+//                        alarmMgr.setExactAndAllowWhileIdle(
+//                            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                            futureElapsedDate.time,
+//                            alarmIntent
+//                        )
+//                        Timber.d("alarm set for Submission: ${getPostAtDateForListLayout(sub)}")
+//                    } else {
+//                        Timber.e("failed to set alarm!")
+//                    }
+//                }
+//
+//            }
+//        }
+        /**
+         *
+         */
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -73,12 +152,13 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         optionsMenu = menu
-        optionsMenu.clear()
-        inflater.inflate(R.menu.submission, optionsMenu)
+        optionsMenu?.clear()
+        inflater.inflate(R.menu.submission, menu)
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
+        optionsMenu = menu
         viewModel.readyToPost().value!!.let {
             menu.getItem(0).isEnabled = it
         }
@@ -91,29 +171,9 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
         return when (item.itemId) {
             R.id.action_post_submission -> {
                 val layout = binding.submissionTabLayout
-                optionsMenu.getItem(0).isEnabled = false
 
                 layout.getTabAt(layout.selectedTabPosition)?.let {
-                    when (it.text) {
-                        "Link" -> {
-                            viewModel.postSubmission(SubmissionKind.Link)
-                        }
-                        "Image" -> {
-                            viewModel.postSubmission(SubmissionKind.Image)
-                        }
-                        "Video" -> {
-                            viewModel.postSubmission(SubmissionKind.Video)
-                        }
-                        "Text" -> {
-                            viewModel.postSubmission(SubmissionKind.Self)
-                        }
-                        "Poll" -> {
-                            viewModel.postSubmission(SubmissionKind.Poll)
-                        }
-                        else -> {
-                            optionsMenu.getItem(0).isEnabled = true
-                        }
-                    }
+                    showPostConfirmationDialog(it.text.toString())
                 }
                 true
             }
@@ -258,6 +318,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
 
         viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
             if (it) {
+                optionsMenu?.getItem(0)?.isEnabled = false
                 clearUserInputViews()
                 resetFlairToDefaultState()
                 resetFlagsState()
@@ -386,7 +447,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
             Triple(
                 "Link",
                 requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
-                LinkSubmissionFragment()
+                LinkSubmissionFragment(viewModel)
             )
         )
 
@@ -395,7 +456,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
                 Triple(
                     "Image",
                     requireContext().getDrawable(R.drawable.ic_baseline_image_24)!!,
-                    ImageSubmissionFragment()
+                    ImageSubmissionFragment(viewModel)
                 )
             )
 
@@ -406,7 +467,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
                 Triple(
                     "Video",
                     requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)!!,
-                    VideoSubmissionFragment()
+                    VideoSubmissionFragment(viewModel)
                 ),
             )
         }
@@ -415,7 +476,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
             Triple(
                 "Text",
                 requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)!!,
-                TextSubmissionFragment()
+                TextSubmissionFragment(viewModel)
             ),
         )
 
@@ -424,7 +485,7 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
                 Triple(
                     "Poll",
                     requireContext().getDrawable(R.drawable.ic_baseline_poll_24)!!,
-                    PollSubmissionFragment()
+                    PollSubmissionFragment(viewModel)
                 ),
             )
         }
@@ -474,17 +535,105 @@ class SubmissionFragment: Fragment(R.layout.fragment_submission), FragmentBaseIn
         }
     }
 
+    private fun showPostConfirmationDialog(kind: String) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("When would you like to post?")
+            .setNeutralButton("Now") {_, _ ->
+                launchIO {
+                    val responsePair = when (kind) {
+                        "Link" -> {
+                            viewModel.postSubmission(SubmissionKind.Link)
+                        }
+                        "Image" -> {
+                            viewModel.postSubmission(SubmissionKind.Image)
+                        }
+                        "Video" -> {
+                            viewModel.postSubmission(SubmissionKind.Video)
+                        }
+                        "Text" -> {
+                            viewModel.postSubmission(SubmissionKind.Self)
+                        }
+                        "Poll" -> {
+                            viewModel.postSubmission(SubmissionKind.Poll)
+                        }
+                        else -> Pair(null, null)
+                    }
+
+                    withUIContext {
+                        responsePair.first?.let { _ ->
+                            findNavController().navigateUp()
+                        }
+
+                        responsePair.second?.let { msg ->
+                            showSnackBar(binding.root, msg)
+                        }
+                    }
+
+                }
+
+            }
+            .setNegativeButton("") {_, _ -> }
+            .setPositiveButton("Later") { _, _ ->
+                pickDateAndTime { cal ->
+                    launchIO {
+                        val alarmRequestCode = requestCodeHelper.nextInt()
+
+                        withUIContext {
+                            val alarmIntent = Intent(context, PublishScheduledSubmissionReceiver::class.java).let { intent ->
+                                intent.putExtra("alarmRequestCode", alarmRequestCode)
+                                PendingIntent.getBroadcast(context, alarmRequestCode, intent, 0)
+                            }
+
+                            val futureElapsedDate = getLocalDateFromUtcMillis(getElapsedTimeUntilFutureTime(cal.timeInMillis))
+
+                            if (futureElapsedDate != null) {
+                                alarmMgr.setExactAndAllowWhileIdle(
+                                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                    futureElapsedDate.time,
+                                    alarmIntent
+                                )
+                                Timber.d("alarm set for new Submission")
+                            } else {
+                                Timber.e("failed to set alarm!")
+                            }
+                        }
+
+                        when (kind) {
+                            "Link" -> {
+                                viewModel.saveSubmission(SubmissionKind.Link, cal.timeInMillis, alarmRequestCode)
+                            }
+                            "Image" -> {
+                                viewModel.saveSubmission(SubmissionKind.Image, cal.timeInMillis, alarmRequestCode)
+                            }
+                            "Video" -> {
+                                viewModel.saveSubmission(SubmissionKind.Video, cal.timeInMillis, alarmRequestCode)
+                            }
+                            "Text" -> {
+                                viewModel.saveSubmission(SubmissionKind.Self, cal.timeInMillis, alarmRequestCode)
+                            }
+                            "Poll" -> {
+                                viewModel.saveSubmission(SubmissionKind.Poll, cal.timeInMillis, alarmRequestCode)
+                            }
+                        }
+
+                        launchUI { findNavController().navigateUp() }
+                    }
+                }
+            }
+            .show()
+    }
+
     inner class TabCollectionAdapterDefault(fragment: Fragment) : FragmentStateAdapter(fragment) {
         override fun getItemCount(): Int = 5
 
         override fun createFragment(position: Int): Fragment {
             // Return a NEW fragment instance
             return when(position) {
-                0 -> LinkSubmissionFragment()
-                1 -> ImageSubmissionFragment()
-                2 -> VideoSubmissionFragment()
-                3 -> TextSubmissionFragment()
-                4 -> PollSubmissionFragment()
+                0 -> LinkSubmissionFragment(viewModel)
+                1 -> ImageSubmissionFragment(viewModel)
+                2 -> VideoSubmissionFragment(viewModel)
+                3 -> TextSubmissionFragment(viewModel)
+                4 -> PollSubmissionFragment(viewModel)
                 else -> throw Exception("Unknown Tab Position!")
             }
         }

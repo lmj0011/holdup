@@ -18,7 +18,6 @@ import androidx.navigation.fragment.findNavController
 import com.kirkbushman.auth.RedditAuth
 import com.kirkbushman.auth.errors.AccessDeniedException
 import com.kirkbushman.auth.managers.SharedPrefsStorageManager
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

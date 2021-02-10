@@ -27,7 +27,7 @@ class GalleryListAdapter (
 
             Glide
                 .with(context)
-                .load(image.sourceUri)
+                .load(image.url)
                 .into(binding.backgroundImageView)
 
             binding.executePendingBindings()

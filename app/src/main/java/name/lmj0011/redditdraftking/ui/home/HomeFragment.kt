@@ -12,13 +12,17 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import name.lmj0011.redditdraftking.App
 import name.lmj0011.redditdraftking.R
 import name.lmj0011.redditdraftking.database.AppDatabase
+import name.lmj0011.redditdraftking.database.models.Submission
 import name.lmj0011.redditdraftking.databinding.FragmentHomeBinding
 import name.lmj0011.redditdraftking.helpers.RedditAuthHelper
 import name.lmj0011.redditdraftking.helpers.adapters.JSONObjectAdapter
+import name.lmj0011.redditdraftking.helpers.adapters.SubmissionListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditListAdapter
 import name.lmj0011.redditdraftking.helpers.models.DraftsJsonResponse
 import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
 import name.lmj0011.redditdraftking.helpers.util.launchIO
+import name.lmj0011.redditdraftking.helpers.util.withUIContext
+import name.lmj0011.redditdraftking.ui.submission.EditSubmissionFragment
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.IOException
@@ -32,7 +36,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         requireActivity().application)
     }
     private lateinit var redditAuthHelper: RedditAuthHelper
-    private lateinit var listAdapter: SubredditListAdapter
+    private lateinit var listAdapter: SubmissionListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,9 +64,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupRecyclerView() {
-        listAdapter = SubredditListAdapter(
-            SubredditListAdapter.SubredditClickListener  { sub ->
-                val action = HomeFragmentDirections.actionNavigationHomeToSubredditDraftsFragment(sub.uuid)
+        listAdapter = SubmissionListAdapter(
+            SubmissionListAdapter.ClickListener  {
+                val action = HomeFragmentDirections.actionHomeFragmentToEditSubmissionFragment(it)
                 findNavController().navigate(action)
             }
         )
@@ -81,12 +85,17 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun refreshRecyclerView() {
         launchIO {
-            getDrafts()
+           val list = homeViewModel.getSubmissions()
+
+            withUIContext {
+                listAdapter.submitList(list)
+                listAdapter.notifyDataSetChanged()
+            }
         }
     }
 
     private fun setupObservers() {
-        homeViewModel.subredditsWithDrafts.observe(viewLifecycleOwner) {
+        homeViewModel.submissions.observe(viewLifecycleOwner) {
             listAdapter.submitList(it)
             listAdapter.notifyDataSetChanged()
         }

@@ -2,6 +2,7 @@ package name.lmj0011.redditdraftking.helpers
 
 import android.app.*
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
@@ -10,83 +11,105 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
+import name.lmj0011.redditdraftking.App
 import name.lmj0011.redditdraftking.MainActivity
 import name.lmj0011.redditdraftking.R
+import name.lmj0011.redditdraftking.database.models.Account
 import name.lmj0011.redditdraftking.database.models.Draft
-import name.lmj0011.redditdraftking.database.models.Subreddit
+import name.lmj0011.redditdraftking.database.models.Submission
+import name.lmj0011.redditdraftking.helpers.models.Subreddit
+import name.lmj0011.redditdraftking.helpers.util.launchIO
+import name.lmj0011.redditdraftking.helpers.util.launchNow
+import org.kodein.di.instance
+import timber.log.Timber
+import java.net.URL
 
 object NotificationHelper {
-    const val SCHEDULED_DRAFT_SERVICE_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#scheduledDraftService"
-    const val SCHEDULED_DRAFT_SERVICE_NOTIFICATION_ID = 100
     const val SUBMISSION_PUBLISHED_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#submissionPublished"
-    const val DRAFT_PUBLISHED_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#draftPublished"
+    const val POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#scheduledSubmissionService"
+    const val POSTING_SCHEDULED_SUBMISSION_SERVICE_NOTIFICATION_ID = 100
     const val BATTERY_OPTIMIZATION_INFO_CHANNEL_ID = "name.lmj0011.redditdraftking.helpers.NotificationHelper#batteryOptimizationInfo"
     const val BATTERY_OPTIMIZATION_INFO_NOTIFICATION_ID = 101
-    lateinit var application: Application
+    private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
+    private lateinit var application: Application
 
     /**
      * create all necessary Notification channels here
      */
     fun init(application: Application) {
         this.application = application
+        requestCodeHelper = (application as App).kodein.instance()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val list = mutableListOf(
-                NotificationChannel(DRAFT_PUBLISHED_CHANNEL_ID, "Draft Published", NotificationManager.IMPORTANCE_HIGH),
                 NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_HIGH),
                 NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH)
             )
 
-            val serviceChannel = NotificationChannel(SCHEDULED_DRAFT_SERVICE_CHANNEL_ID, "Scheduled Draft Service", NotificationManager.IMPORTANCE_MIN)
-            serviceChannel.setSound(null, null)
+            val sssServiceChannel = NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN)
+            sssServiceChannel.setSound(null, null)
+            list.add(sssServiceChannel)
 
-            list.add(serviceChannel)
             NotificationManagerCompat.from(application).createNotificationChannels(list)
         }
     }
 
-    fun showPostPublishedNotification(form: SubmissionValidatorHelper.SubmissionForm, user: String, postUrl: String?) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.reddit.com/user/${user.substring(2)}/?sort=new"))
-        val contentIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+    fun showSubmissionPublishedNotification(subreddit: Subreddit, account: Account, form: SubmissionValidatorHelper.SubmissionForm, postUrl: String?) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.reddit.com/user/${account.name.substring(2)}/?sort=new"))
+        val defaultContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
 
         val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setAutoCancel(true)
-            .setContentTitle("Submission published to r/${form.sr}")
+            .setContentTitle("Submission successfully published")
             .setContentText(form.title)
             .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
-            .setContentIntent(contentIntent)
+            .setContentIntent(defaultContentPendingIntent)
 
         postUrl?.let { url ->
-            val viewPostActionIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            val viewPostActionPendingIntent = PendingIntent.getActivity(application, 0, viewPostActionIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val customContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
 
-            notification.addAction(0, "View Post", viewPostActionPendingIntent)
+            notification.setContentIntent(customContentPendingIntent)
         }
 
 
-        NotificationManagerCompat.from(application)
-            .notify(SystemClock.uptimeMillis().toInt(), notification.build())
+        launchIO {
+            try {
+                val url = URL(subreddit.iconImgUrl)
+                val image = BitmapFactory.decodeStream(url.openStream())
+                notification
+                    .setLargeIcon(image)
+                    .setStyle(NotificationCompat.BigPictureStyle()
+                        .bigPicture(image)
+                        .bigLargeIcon(null))
+            } catch (ex: Exception) {
+                Timber.e(ex)
+            }
+
+            NotificationManagerCompat.from(application)
+                .notify(requestCodeHelper.nextInt(), notification.build())
+        }
     }
 
-    fun showDraftPublishedNotification(draftAndSub: Pair<Draft, Subreddit>, postUrl: String) {
-        val draft = draftAndSub.first
-        val subreddit = draftAndSub.second
-        val viewUrlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(postUrl))
-        val pendingIntent = PendingIntent.getActivity(application, 0, viewUrlIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+    fun showSubmissionPublishedErrorNotification(submission: Submission, errorMessage: String) {
+        val intent = Intent(application, MainActivity::class.java)
+        val defaultContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
 
-        val notification = NotificationCompat.Builder(application, DRAFT_PUBLISHED_CHANNEL_ID)
+        val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setShowWhen(true)
-            .setContentTitle("Draft Published")
-            .setContentText(draft.title)
-            .setLargeIcon(Glide.with(application).asBitmap().load(subreddit.iconImgUrl).circleCrop().submit().get())
+            .setAutoCancel(true)
+            .setContentTitle("Submission failed to publish to ${submission.subreddit?.displayNamePrefixed}")
+            .setContentText(submission.title)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(errorMessage))
             .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
-            .addAction(0, "View", pendingIntent)
-            .build()
+            .setContentIntent(defaultContentPendingIntent)
 
-        NotificationManagerCompat.from(application)
-            .notify(SystemClock.uptimeMillis().toInt(), notification)
+        launchIO {
+            NotificationManagerCompat.from(application)
+                .notify(requestCodeHelper.nextInt(), notification.build())
+        }
     }
+
 
     fun showBatteryOptimizationInfoNotification() {
         val settingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -117,28 +140,31 @@ object NotificationHelper {
             .notify(BATTERY_OPTIMIZATION_INFO_NOTIFICATION_ID, notification)
     }
 
-    fun getScheduledDraftReminderForegroundServiceNotification(): Notification {
+    fun getPostingSubmissionForegroundServiceNotification(submission: Submission): Notification {
         val intent = Intent(application, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(application, 0, intent, 0)
 
-        return NotificationCompat.Builder(application, SCHEDULED_DRAFT_SERVICE_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(application, POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID)
+
+        builder
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setShowWhen(false)
-            .setContentTitle("Scheduled Draft Service")
-            .setContentText("Drafts posting soon.")
+            .setContentTitle("Posting Scheduled Submission")
+            .setContentText("${submission.title}")
             .setContentIntent(pendingIntent)
-            .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
-            .build()
+            .color = ContextCompat.getColor(application, R.color.colorPrimary)
+
+        return builder.build()
     }
 
-    fun getResetAlarmsForegroundServiceNotification(): Notification {
+    fun getReschedulingSubmissionsForegroundServiceNotification(): Notification {
         val intent = Intent(application, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(application, 0, intent, 0)
 
-        return NotificationCompat.Builder(application, SCHEDULED_DRAFT_SERVICE_CHANNEL_ID)
+        return NotificationCompat.Builder(application, POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setShowWhen(false)
-            .setContentTitle("Rescheduling Drafts")
+            .setContentTitle("Rescheduling Submissions")
             .setContentIntent(pendingIntent)
             .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
             .build()
