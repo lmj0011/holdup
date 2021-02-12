@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import name.lmj0011.redditdraftking.database.AppDatabase
 import name.lmj0011.redditdraftking.databinding.ActivityMainBinding
+import name.lmj0011.redditdraftking.databinding.DialogAboutBinding
 import name.lmj0011.redditdraftking.helpers.NotificationHelper
 import name.lmj0011.redditdraftking.helpers.factories.ViewModelFactory
 import name.lmj0011.redditdraftking.helpers.util.isIgnoringBatteryOptimizations
@@ -92,12 +93,10 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 R.id.accountsFragment -> {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                        CookieManager.getInstance().removeAllCookies{
-                            if(it) Timber.d("webview Cookies were successfully cleared!")
-                            else Timber.d("webview Cookies COULD NOT be cleared!")
-                        }
-                    } else CookieManager.getInstance().removeAllCookie()
+                    CookieManager.getInstance().removeAllCookies{
+                        if(it) Timber.d("webview Cookies were successfully cleared!")
+                        else Timber.d("webview Cookies COULD NOT be cleared!")
+                    }
                     showFabAndSetListener({ navController.navigate(R.id.redditAuthWebviewFragment) }, R.drawable.ic_baseline_add_24)
                 }
                 else -> hideFab()
@@ -112,6 +111,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
+        if(BuildConfig.DEBUG) menuInflater.inflate(R.menu.main_debug, menu)
         return true
     }
 
@@ -121,6 +121,17 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
 
         return when (item.itemId) {
+            R.id.action_about -> {
+                val aboutDialog = DialogAboutBinding.inflate(layoutInflater)
+                if(BuildConfig.DEBUG) {
+                    aboutDialog.versionTextView.text = "v${BuildConfig.VERSION_NAME} (${getString(R.string.app_build)}) DEBUG"
+                } else {
+                    aboutDialog.versionTextView.text = "v${BuildConfig.VERSION_NAME} (${getString(R.string.app_build)})"
+                }
+
+                MaterialAlertDialogBuilder(this@MainActivity).setView(aboutDialog.root).show()
+                true
+            }
             R.id.action_manage_accounts -> {
                 navController.navigate(R.id.accountsFragment)
                 true

@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/action_manage_accounts"
-        android:title="Manage Accounts"
+    <item android:id="@+id/action_about"
+        android:title="About"
         android:orderInCategory="1"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_testing"
-        android:title="Testing"
-        android:orderInCategory="2"
         app:showAsAction="never"/>
 </menu>

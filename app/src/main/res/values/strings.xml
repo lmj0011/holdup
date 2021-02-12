@@ -20,4 +20,6 @@
     <string name="too_early_submission">Scheduled Submission is trying to post too early, this may have been caused by an older Alarm that was set for this Submission before it was updated.</string>
     <string name="enable_inbox_replies">Enable inbox replies</string>
     <string name="when_would_you_like_to_post">When would you like to post?</string>
+
+    <string name="github_repo_url">https://github.com/lmj0011</string>
 </resources>
