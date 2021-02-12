@@ -28,7 +28,7 @@ class UniqueRuntimeNumberHelper(val context: Context)  {
      */
     suspend fun nextInt(): Int {
         val cnt = dataStoreHelper.getNextRuntimeUniqueInt().conflate().first()
-        val intCounter = if (cnt != null) AtomicInteger(cnt) else AtomicInteger(INITIAL_NEXT_INT)
+        val intCounter = AtomicInteger(cnt)
 
         val value = intCounter.incrementAndGet()
         return when {
@@ -48,7 +48,7 @@ class UniqueRuntimeNumberHelper(val context: Context)  {
      */
     suspend fun nextLong(): Long {
         val cnt = dataStoreHelper.getNextRuntimeUniqueLong().conflate().first()
-        val longCounter = if (cnt != null) AtomicLong(cnt) else AtomicLong(INITIAL_NEXT_LONG)
+        val longCounter = AtomicLong(cnt)
 
         val value = longCounter.incrementAndGet()
         return when {

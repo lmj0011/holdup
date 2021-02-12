@@ -18,4 +18,5 @@ object Keys {
     val SELECTED_ACCOUNT_USERNAME = preferencesKey<String>("pref_selected_account_username")
     val NEXT_RUNTIME_UNIQUE_INT = preferencesKey<Int>("pref_next_runtime_unique_int")
     val NEXT_RUNTIME_UNIQUE_LONG = preferencesKey<Long>("pref_next_runtime_unique_long")
+    val ENABLE_INBOX_REPLIES = preferencesKey<Boolean>("pref_enable_inbox_replies")
 }

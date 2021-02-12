@@ -16,6 +16,7 @@ import name.lmj0011.redditdraftking.helpers.util.apiPath
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.logging.HttpLoggingInterceptor
 import okio.IOException
 import org.json.JSONArray
 import org.json.JSONException
@@ -27,9 +28,19 @@ import java.util.concurrent.TimeUnit
 class RedditApiHelper(val context: Context) {
     companion object {
         const val BASE_URL = "https://oauth.reddit.com/"
-        
+
+        private val okHttpLogging = HttpLoggingInterceptor { message ->
+            Timber.d(message)
+        }
+
+        init {
+            okHttpLogging.setLevel(HttpLoggingInterceptor.Level.BASIC)
+            okHttpLogging.redactHeader("Authorization")
+        }
+
         val client = OkHttpClient.Builder()
             .readTimeout(0,  TimeUnit.MILLISECONDS)
+            .addInterceptor(okHttpLogging)
             .build()
 
         val acceptedMimeTypes = listOf(
@@ -250,7 +261,7 @@ class RedditApiHelper(val context: Context) {
         builder.add("title", form.title)
         builder.add("flair_id", form.flair_id)
         builder.add("flair_text", form.flair_text)
-        builder.add("sendreplies", true.toString())
+        builder.add("sendreplies", form.sendreplies.toString())
         builder.add("show_error_list", true.toString())
         builder.add("validate_on_submit", true.toString())
         builder.add("nsfw", form.nsfw.toString())
@@ -276,7 +287,7 @@ class RedditApiHelper(val context: Context) {
                     payload.put("title", form.title)
                     payload.put("flair_id", form.flair_id)
                     payload.put("flair_text", form.flair_text)
-                    payload.put("sendreplies", true.toString())
+                    payload.put("sendreplies", form.sendreplies.toString())
                     payload.put("show_error_list", true.toString())
                     payload.put("validate_on_submit", true.toString())
                     payload.put("nsfw", form.nsfw.toString())
@@ -300,7 +311,7 @@ class RedditApiHelper(val context: Context) {
                 payload.put("text", form.text)
                 payload.put("flair_id", form.flair_id)
                 payload.put("flair_text", form.flair_text)
-                payload.put("sendreplies", true.toString())
+                payload.put("sendreplies", form.sendreplies.toString())
                 payload.put("show_error_list", true.toString())
                 payload.put("validate_on_submit", true.toString())
                 payload.put("nsfw", form.nsfw.toString())
@@ -317,8 +328,6 @@ class RedditApiHelper(val context: Context) {
             SubmissionKind.Video.kind -> {
                 builder.add("url", form.url)
                 builder.add("video_poster_url", form.video_poster_url)
-
-
             }
             else -> {
             /**

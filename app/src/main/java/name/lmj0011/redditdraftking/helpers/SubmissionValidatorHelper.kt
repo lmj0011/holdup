@@ -33,6 +33,7 @@ class SubmissionValidatorHelper(val context: Context) {
         var kind: String = "",
         var nsfw: Boolean = false,
         var resubmit: Boolean = true,
+        var sendreplies: Boolean = true,
         var spoiler: Boolean = false,
         var sr: String = "",
         var text: String = "",

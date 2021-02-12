@@ -11,7 +11,11 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
+import android.widget.CheckBox
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.AppCompatCheckedTextView
 import androidx.core.view.isVisible
+import androidx.core.view.iterator
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -28,8 +32,6 @@ import name.lmj0011.redditdraftking.databinding.FragmentSubmissionBinding
 import name.lmj0011.redditdraftking.helpers.DataStoreHelper
 import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getElapsedTimeUntilFutureTime
 import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getLocalDateFromUtcMillis
-import name.lmj0011.redditdraftking.helpers.DateTimeHelper.getPostAtDateForListLayout
-import name.lmj0011.redditdraftking.helpers.TestHelper
 import name.lmj0011.redditdraftking.helpers.UniqueRuntimeNumberHelper
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.redditdraftking.helpers.adapters.SubredditSearchListAdapter
@@ -62,6 +64,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
     lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
+    lateinit var enableInboxReplies: AppCompatCheckedTextView
 
     private var optionsMenu: Menu? = null
 
@@ -182,6 +185,10 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     }
 
     override fun setupObservers() {
+        viewModel.sendReplies.observe(viewLifecycleOwner, {
+            if(::enableInboxReplies.isInitialized) enableInboxReplies.isChecked = it
+        })
+
         viewModel.getSubreddit().observe(viewLifecycleOwner, {
             binding.chooseSubredditTextView.text = it.displayNamePrefixed
             Glide
@@ -536,8 +543,14 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     }
 
     private fun showPostConfirmationDialog(kind: String) {
+        val checkedItem = if(viewModel.sendReplies.value!!) 0 else -1
+
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("When would you like to post?")
+            .setTitle(getString(R.string.when_would_you_like_to_post))
+            .setSingleChoiceItems(arrayOf(getString(R.string.enable_inbox_replies)), checkedItem) { dialog, which ->
+                enableInboxReplies = (dialog as AlertDialog).listView.getChildAt(which) as AppCompatCheckedTextView
+                viewModel.toggleSendReplies()
+            }
             .setNeutralButton("Now") {_, _ ->
                 launchIO {
                     val responsePair = when (kind) {

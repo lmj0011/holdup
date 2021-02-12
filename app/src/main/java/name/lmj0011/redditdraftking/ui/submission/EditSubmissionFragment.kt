@@ -3,12 +3,15 @@ package name.lmj0011.redditdraftking.ui.submission
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.AppCompatCheckedTextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -61,6 +64,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
     lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
+    lateinit var enableInboxReplies: AppCompatCheckedTextView
 
     private var optionsMenu: Menu? = null
 
@@ -137,6 +141,10 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
     }
 
     override fun setupObservers() {
+        viewModel.sendReplies.observe(viewLifecycleOwner, {
+            if(::enableInboxReplies.isInitialized) enableInboxReplies.isChecked = it
+        })
+
         viewModel.getSubreddit().observe(viewLifecycleOwner, {
             binding.chooseSubredditTextView.text = it.displayNamePrefixed
             Glide
@@ -375,8 +383,14 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
     }
 
     private fun showPostConfirmationDialog() {
+        val checkedItem = if(viewModel.sendReplies.value!!) 0 else -1
+
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("When would you like to post?")
+            .setTitle(getString(R.string.when_would_you_like_to_post))
+            .setSingleChoiceItems(arrayOf(getString(R.string.enable_inbox_replies)), checkedItem) { dialog, which ->
+                enableInboxReplies = (dialog as AlertDialog).listView.getChildAt(which) as AppCompatCheckedTextView
+                viewModel.toggleSendReplies()
+            }
             .setNeutralButton("Now") {_, _ ->
                 launchIO {
                     val responsePair = viewModel.postSubmission(args.submission.kind!!)

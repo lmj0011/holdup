@@ -90,6 +90,9 @@ class SubmissionViewModel(
     var submissionVideo = MutableLiveData<Video?>()
         private set
 
+    var sendReplies = MutableLiveData(true)
+        private set
+
     private var isNsfw = MutableLiveData(false)
     private var isSpoiler = MutableLiveData(false)
     private var readyToPost = MutableLiveData(false)
@@ -99,6 +102,12 @@ class SubmissionViewModel(
 
     var recentAndJoinedSubredditPair = MutableLiveData(Pair(getRecentSubredditListFlow(), getJoinedSubredditListFlow()))
         private set
+
+    init {
+        launchIO {
+            sendReplies.postValue(dataStoreHelper.getEnableInboxReplies().first())
+        }
+    }
 
     /**
      * Sets the first Account in the db as the active account for Submissions if
@@ -144,6 +153,15 @@ class SubmissionViewModel(
 
             subredditPostRequirements.postValue(postRequirements)
         }
+    }
+
+    fun toggleSendReplies() {
+        val enable = !sendReplies.value!!
+        launchIO {
+            dataStoreHelper.setEnableInboxReplies(enable)
+        }
+
+        sendReplies.postValue(enable)
     }
 
     fun setNsfwFlag(nsfw: Boolean) {
@@ -484,6 +502,7 @@ class SubmissionViewModel(
         subredditFlair.value?.let { form.flair_text = it.text }
         isNsfw.value?.let { form.nsfw = it}
         isSpoiler.value?.let { form.spoiler = it}
+        sendReplies.value?.let { form.sendreplies = it }
 
         return form
     }

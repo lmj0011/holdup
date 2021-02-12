@@ -18,4 +18,6 @@
     <string name="file_provider" translatable="false">name.lmj0011.redditdraftking.fileprovider</string>
     <string name="image_picker_pick_single">Select an Image</string>
     <string name="too_early_submission">Scheduled Submission is trying to post too early, this may have been caused by an older Alarm that was set for this Submission before it was updated.</string>
+    <string name="enable_inbox_replies">Enable inbox replies</string>
+    <string name="when_would_you_like_to_post">When would you like to post?</string>
 </resources>

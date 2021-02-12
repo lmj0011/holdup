@@ -26,9 +26,9 @@ class DataStoreHelper(val context: Context) {
         }
     }
 
-    fun getNextRuntimeUniqueInt(): Flow<Int?> {
+    fun getNextRuntimeUniqueInt(): Flow<Int> {
         return dataStore.data.mapLatest { prefs ->
-            prefs[Keys.NEXT_RUNTIME_UNIQUE_INT]
+            prefs[Keys.NEXT_RUNTIME_UNIQUE_INT] ?: UniqueRuntimeNumberHelper.INITIAL_NEXT_INT
         }
     }
     suspend fun setNextRuntimeUniqueInt(count: Int) {
@@ -37,14 +37,25 @@ class DataStoreHelper(val context: Context) {
         }
     }
 
-    fun getNextRuntimeUniqueLong(): Flow<Long?> {
+    fun getNextRuntimeUniqueLong(): Flow<Long> {
         return dataStore.data.mapLatest { prefs ->
-            prefs[Keys.NEXT_RUNTIME_UNIQUE_LONG]
+            prefs[Keys.NEXT_RUNTIME_UNIQUE_LONG] ?: UniqueRuntimeNumberHelper.INITIAL_NEXT_LONG
         }
     }
     suspend fun setNextRuntimeUniqueLong(count: Long) {
         dataStore.edit { prefs ->
             prefs[Keys.NEXT_RUNTIME_UNIQUE_LONG] = count
+        }
+    }
+
+    fun getEnableInboxReplies(): Flow<Boolean> {
+        return dataStore.data.mapLatest { prefs ->
+            prefs[Keys.ENABLE_INBOX_REPLIES] ?: true
+        }
+    }
+    suspend fun setEnableInboxReplies(enable: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[Keys.ENABLE_INBOX_REPLIES] = enable
         }
     }
 }
