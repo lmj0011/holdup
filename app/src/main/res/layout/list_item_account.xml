@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <variable name="account" type="name.lmj0011.redditdraftking.database.models.Account"/>
-        <variable name="logOutClickListener" type="name.lmj0011.redditdraftking.helpers.adapters.AccountListAdapter.LogOutClickListener"/>
-        <variable name="accountNameClickListener" type="name.lmj0011.redditdraftking.helpers.adapters.AccountListAdapter.AccountNameClickListener"/>
+        <variable name="account" type="name.lmj0011.holdup.database.models.Account"/>
+        <variable name="logOutClickListener" type="name.lmj0011.holdup.helpers.adapters.AccountListAdapter.LogOutClickListener"/>
+        <variable name="accountNameClickListener" type="name.lmj0011.holdup.helpers.adapters.AccountListAdapter.AccountNameClickListener"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

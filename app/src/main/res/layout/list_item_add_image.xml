@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <variable name="addImageClickListener" type="name.lmj0011.redditdraftking.helpers.adapters.AddImageListAdapter.AddImageClickListener"/>
+        <variable name="addImageClickListener" type="name.lmj0011.holdup.helpers.adapters.AddImageListAdapter.AddImageClickListener"/>
     </data>
 
     <com.google.android.material.card.MaterialCardView

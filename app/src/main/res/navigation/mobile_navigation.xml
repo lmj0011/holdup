@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="name.lmj0011.redditdraftking.ui.home.HomeFragment"
+        android:name="name.lmj0011.holdup.ui.home.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home" >
         <action
@@ -26,22 +26,22 @@
 
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="name.lmj0011.redditdraftking.ui.dashboard.DashboardFragment"
+        android:name="name.lmj0011.holdup.ui.dashboard.DashboardFragment"
         android:label="@string/title_dashboard"
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="name.lmj0011.redditdraftking.ui.notifications.NotificationsFragment"
+        android:name="name.lmj0011.holdup.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
     <fragment
         android:id="@+id/redditAuthWebviewFragment"
-        android:name="name.lmj0011.redditdraftking.ui.redditauthwebview.RedditAuthWebviewFragment"
+        android:name="name.lmj0011.holdup.ui.redditauthwebview.RedditAuthWebviewFragment"
         android:label="Authorize Account Access" />
     <fragment
         android:id="@+id/subredditDraftsFragment"
-        android:name="name.lmj0011.redditdraftking.ui.subredditdrafts.SubredditDraftsFragment"
+        android:name="name.lmj0011.holdup.ui.subredditdrafts.SubredditDraftsFragment"
         android:label="Drafts" >
         <argument
             android:name="subredditUuid"
@@ -49,22 +49,22 @@
     </fragment>
     <fragment
         android:id="@+id/accountsFragment"
-        android:name="name.lmj0011.redditdraftking.ui.accounts.AccountsFragment"
+        android:name="name.lmj0011.holdup.ui.accounts.AccountsFragment"
         android:label="Accounts" />
     <fragment
         android:id="@+id/testingFragment"
-        android:name="name.lmj0011.redditdraftking.ui.testing.TestingFragment"
+        android:name="name.lmj0011.holdup.ui.testing.TestingFragment"
         android:label="Testing" />
     <fragment
         android:id="@+id/submissionFragment"
-        android:name="name.lmj0011.redditdraftking.ui.submission.SubmissionFragment"
+        android:name="name.lmj0011.holdup.ui.submission.SubmissionFragment"
         android:label="" />
     <fragment
         android:id="@+id/editSubmissionFragment"
-        android:name="name.lmj0011.redditdraftking.ui.submission.EditSubmissionFragment"
+        android:name="name.lmj0011.holdup.ui.submission.EditSubmissionFragment"
         android:label="Edit Submission" >
         <argument
             android:name="submission"
-            app:argType="name.lmj0011.redditdraftking.database.models.Submission" />
+            app:argType="name.lmj0011.holdup.database.models.Submission" />
     </fragment>
 </navigation>

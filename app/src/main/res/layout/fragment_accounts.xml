@@ -6,7 +6,7 @@
     <data>
         <variable
             name="accountsViewModel"
-            type="name.lmj0011.redditdraftking.ui.accounts.AccountsViewModel" />
+            type="name.lmj0011.holdup.ui.accounts.AccountsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

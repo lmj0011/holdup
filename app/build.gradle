@@ -12,7 +12,7 @@ android {
     def appBuildPrefix =  ['sh', '-c', 'git rev-parse --short=8 HEAD'].execute().text.trim()
 
     defaultConfig {
-        applicationId "name.lmj0011.redditdraftking"
+        applicationId "name.lmj0011.holdup"
         minSdkVersion 26
         targetSdkVersion 30
         versionCode 1

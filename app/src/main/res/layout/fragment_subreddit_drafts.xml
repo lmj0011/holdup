@@ -6,7 +6,7 @@
     <data>
         <variable
             name="subredditDraftsViewModel"
-            type="name.lmj0011.redditdraftking.ui.subredditdrafts.SubredditDraftsViewModel" />
+            type="name.lmj0011.holdup.ui.subredditdrafts.SubredditDraftsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

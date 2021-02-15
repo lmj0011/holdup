@@ -15,7 +15,7 @@
         <item quantity="other">%d Drafts</item>
     </plurals>
 
-    <string name="file_provider" translatable="false">name.lmj0011.redditdraftking.fileprovider</string>
+    <string name="file_provider" translatable="false">name.lmj0011.holdup.fileprovider</string>
     <string name="image_picker_pick_single">Select an Image</string>
     <string name="too_early_submission">Scheduled Submission is trying to post too early, this may have been caused by an older Alarm that was set for this Submission before it was updated.</string>
     <string name="enable_inbox_replies">Enable inbox replies</string>

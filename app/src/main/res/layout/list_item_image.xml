@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <variable name="image" type="name.lmj0011.redditdraftking.helpers.models.Image"/>
-        <variable name="removeImageClickListener" type="name.lmj0011.redditdraftking.helpers.adapters.GalleryListAdapter.RemoveImageClickListener"/>
+        <variable name="image" type="name.lmj0011.holdup.helpers.models.Image"/>
+        <variable name="removeImageClickListener" type="name.lmj0011.holdup.helpers.adapters.GalleryListAdapter.RemoveImageClickListener"/>
     </data>
 
     <com.google.android.material.card.MaterialCardView
