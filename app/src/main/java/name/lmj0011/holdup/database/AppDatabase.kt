@@ -6,11 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import name.lmj0011.holdup.database.models.Account
-import name.lmj0011.holdup.database.models.Draft
 import name.lmj0011.holdup.database.models.Submission
-import name.lmj0011.holdup.database.models.Subreddit
 
-@Database(entities = [Draft::class, Subreddit::class, Account::class, Submission::class], version = 1,  exportSchema = true)
+@Database(entities = [Account::class, Submission::class], version = 1,  exportSchema = true)
 @TypeConverters(DataConverters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract val sharedDao : SharedDao

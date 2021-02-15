@@ -7,22 +7,15 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.squareup.moshi.*
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.databinding.FragmentHomeBinding
 import name.lmj0011.holdup.helpers.RedditAuthHelper
-import name.lmj0011.holdup.helpers.adapters.JSONObjectAdapter
 import name.lmj0011.holdup.helpers.adapters.SubmissionListAdapter
-import name.lmj0011.holdup.helpers.models.DraftsJsonResponse
 import name.lmj0011.holdup.helpers.factories.ViewModelFactory
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.withUIContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okio.IOException
 import org.kodein.di.instance
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
@@ -95,42 +88,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         homeViewModel.submissions.observe(viewLifecycleOwner) {
             listAdapter.submitList(it)
             listAdapter.notifyDataSetChanged()
-        }
-    }
-
-    fun getDrafts() {
-        val client = OkHttpClient()
-        val moshi = Moshi.Builder()
-            .add(JSONObjectAdapter)
-            .add(KotlinJsonAdapterFactory())
-            .build()
-
-        val draftsJsonAdapter = moshi.adapter(DraftsJsonResponse::class.java)
-
-        homeViewModel.database.getAllAccounts().forEach { acct ->
-            if(redditAuthHelper.authClient(acct).hasSavedBearer()) {
-                //refresh token
-                redditAuthHelper.authClient(acct).getSavedBearer().renewToken()
-            } else return
-
-            val request = Request.Builder()
-                .url("https://oauth.reddit.com/api/v1/drafts.json?raw_json=1")
-                .header("Authorization", "Bearer ${redditAuthHelper.authClient(acct).getSavedBearer().getAccessToken()}")
-                .build()
-
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
-                val res = draftsJsonAdapter.fromJson(response.body!!.source())
-
-                res!!.subreddits.forEach {
-                    homeViewModel.insertSubreddit(it)
-                }
-
-                res!!.drafts.forEach {
-                    homeViewModel.insertDraft(it)
-                }
-            }
         }
     }
 }

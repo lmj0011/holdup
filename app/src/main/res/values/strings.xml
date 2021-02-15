@@ -1,19 +1,10 @@
 <resources>
     <string name="app_name">Holdup</string>
     <string name="title_home">Scheduled</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
 
-    <string name="empty_subreddit_list_text">No Drafts found, start a new one in your favorite reddit app or reddit.com and they will show up here</string>
     <string name="go_to_reddit_btn">Go to reddit.com</string>
-    <string name="no_auth_text">Draft King requires access to your Reddit account in order to fetch drafts and allow you to schedule when they should be posted</string>
     <string name="connect_reddit_btn">Connect Reddit</string>
-    <string name="notification_battery_optimization_info_content_text">Battery Optimization may caused scheduled Submissions to fail to post. Consider turning off Battery Optimization for this app in Settings.</string>
-
-    <plurals name="draftsAvailable">
-        <item quantity="one">%d Draft</item>
-        <item quantity="other">%d Drafts</item>
-    </plurals>
+    <string name="notification_battery_optimization_info_content_text">Battery Optimization may cause scheduled Submissions not to post. If you encounter this issue, consider turning off Battery Optimization for this app in Settings.</string>
 
     <string name="file_provider" translatable="false">name.lmj0011.holdup.fileprovider</string>
     <string name="image_picker_pick_single">Select an Image</string>

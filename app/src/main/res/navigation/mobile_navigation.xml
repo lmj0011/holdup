@@ -11,9 +11,6 @@
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home" >
         <action
-            android:id="@+id/action_navigation_home_to_subredditDraftsFragment"
-            app:destination="@id/subredditDraftsFragment" />
-        <action
             android:id="@+id/action_homeFragment_to_submissionFragment"
             app:destination="@id/submissionFragment"
             app:launchSingleTop="false"
@@ -25,28 +22,9 @@
     </fragment>
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="name.lmj0011.holdup.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
-
-    <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="name.lmj0011.holdup.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
-    <fragment
         android:id="@+id/redditAuthWebviewFragment"
         android:name="name.lmj0011.holdup.ui.redditauthwebview.RedditAuthWebviewFragment"
         android:label="Authorize Account Access" />
-    <fragment
-        android:id="@+id/subredditDraftsFragment"
-        android:name="name.lmj0011.holdup.ui.subredditdrafts.SubredditDraftsFragment"
-        android:label="Drafts" >
-        <argument
-            android:name="subredditUuid"
-            app:argType="string" />
-    </fragment>
     <fragment
         android:id="@+id/accountsFragment"
         android:name="name.lmj0011.holdup.ui.accounts.AccountsFragment"

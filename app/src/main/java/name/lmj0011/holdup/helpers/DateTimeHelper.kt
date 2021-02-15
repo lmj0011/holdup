@@ -1,7 +1,6 @@
 package name.lmj0011.holdup.helpers
 
 import android.os.SystemClock
-import name.lmj0011.holdup.database.models.Draft
 import name.lmj0011.holdup.database.models.Submission
 import timber.log.Timber
 import java.text.SimpleDateFormat
@@ -42,26 +41,6 @@ object DateTimeHelper {
      */
     fun getLocalDateFormatFromUtcMillis(timeMillisUtc: Long, pattern: String = "yyyy/MM/dd HH:mm"): String {
         return SimpleDateFormat(pattern, Locale.getDefault()).format(getLocalDateFromUtcMillis(timeMillisUtc, pattern)!!)
-    }
-
-    fun getPostAtDateForListLayout(draft: Draft): String {
-        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-        val timeDiff = draft.postAtMillis - cal.timeInMillis
-
-        return when {
-            (timeDiff < 86400000L) -> { // Draft is scheduled within 24 hrs
-                "today ${getLocalDateFormatFromUtcMillis(draft.postAtMillis, "h:mm a")}"
-            }
-            (timeDiff in 86400000L..172799999) -> { // Draft is scheduled to post sometime tomorrow
-                "tomorrow ${getLocalDateFormatFromUtcMillis(draft.postAtMillis, "h:mm a")}"
-            }
-            (timeDiff <= 604800000L) -> { // Draft is scheduled to post sometime this week
-                getLocalDateFormatFromUtcMillis(draft.postAtMillis, "EEE h:mm a")
-            }
-            else -> {
-                getLocalDateFormatFromUtcMillis(draft.postAtMillis, "MM/dd/yy h:mm a")
-            }
-        }
     }
 
     fun getPostAtDateForListLayout(submission: Submission): String {

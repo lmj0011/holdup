@@ -10,7 +10,6 @@ import name.lmj0011.holdup.ui.home.HomeViewModel
 import name.lmj0011.holdup.ui.redditauthwebview.RedditAuthWebviewViewModel
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetViewModel
-import name.lmj0011.holdup.ui.subredditdrafts.SubredditDraftsViewModel
 import name.lmj0011.holdup.ui.testing.TestingViewModel
 
 class ViewModelFactory(
@@ -22,10 +21,6 @@ class ViewModelFactory(
         return when {
             modelClass.isAssignableFrom(HomeViewModel::class.java) -> {
                 HomeViewModel(dataSource as SharedDao, application) as T
-            }
-
-            modelClass.isAssignableFrom(SubredditDraftsViewModel::class.java) -> {
-                SubredditDraftsViewModel(dataSource as SharedDao, application) as T
             }
 
             modelClass.isAssignableFrom(RedditAuthWebviewViewModel::class.java) -> {
