@@ -48,7 +48,7 @@ class AccountsFragment: Fragment(R.layout.fragment_accounts)  {
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
-        menu.findItem(R.id.action_manage_accounts).isVisible = false
+        menu.findItem(R.id.action_manage_accounts)?.isVisible = false
     }
 
     private fun setupBinding(view: View) {

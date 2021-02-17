@@ -571,10 +571,12 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                     }
 
                     withUIContext {
+                        // Post was successful
                         responsePair.first?.let { _ ->
                             findNavController().navigateUp()
                         }
 
+                        // Post failed
                         responsePair.second?.let { msg ->
                             showSnackBar(binding.root, msg)
                         }

@@ -2,6 +2,8 @@ package com.kirkbushman.auth.utils
 
 import android.util.Base64
 import com.kirkbushman.auth.models.Scope
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -26,9 +28,13 @@ object Utils {
     }
 
     fun buildRetrofit(baseUrl: String, logging: Boolean): Retrofit {
+        val moshi = Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+
         return Retrofit.Builder()
             .baseUrl(baseUrl)
-            .addConverterFactory(MoshiConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .client(getOkHttpClient(logging))
             .build()
     }

@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.core.view.children
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
+import timber.log.Timber
 
 
 /**
@@ -19,10 +20,9 @@ import com.google.android.material.tabs.TabLayout
 fun isIgnoringBatteryOptimizations(context: Context): Boolean {
     val pwrm = context.applicationContext.getSystemService(Context.POWER_SERVICE) as PowerManager
     val name = context.applicationContext.packageName
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        return pwrm.isIgnoringBatteryOptimizations(name)
-    }
-    return true
+    Timber.d("context.applicationContext.packageName: $name")
+    Timber.d("pwrm.isIgnoringBatteryOptimizations: ${pwrm.isIgnoringBatteryOptimizations(name)}")
+    return pwrm.isIgnoringBatteryOptimizations(name)
 }
 
 

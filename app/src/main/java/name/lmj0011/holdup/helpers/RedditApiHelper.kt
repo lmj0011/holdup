@@ -60,6 +60,7 @@ class RedditApiHelper(val context: Context) {
                 data = json.getJSONObject("json").getJSONObject("data")
 
             } catch(ex: JSONException) {
+                Timber.e(json.toString(2))
                 val errors = json.getJSONObject("json").getJSONArray("errors")
 
                 if (errors.length() > 0) {

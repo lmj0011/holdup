@@ -121,7 +121,7 @@ class RedditAuthWebviewFragment : Fragment() {
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
 
-        menu.findItem(R.id.action_manage_accounts).isVisible = false
+        menu.findItem(R.id.action_manage_accounts)?.isVisible = false
     }
 
 }
