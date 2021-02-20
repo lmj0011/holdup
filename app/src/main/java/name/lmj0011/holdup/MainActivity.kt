@@ -16,20 +16,28 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.databinding.ActivityMainBinding
 import name.lmj0011.holdup.databinding.DialogAboutBinding
-import name.lmj0011.holdup.helpers.NotificationHelper
+import name.lmj0011.holdup.databinding.DialogFeedbackBinding
+import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.factories.ViewModelFactory
-import name.lmj0011.holdup.helpers.util.isIgnoringBatteryOptimizations
+import name.lmj0011.holdup.helpers.util.getDebugDump
 import name.lmj0011.holdup.helpers.util.launchIO
+import name.lmj0011.holdup.helpers.util.launchUI
+import name.lmj0011.holdup.helpers.util.sendBugReport
+import name.lmj0011.holdup.helpers.util.sendGeneralFeedback
+import name.lmj0011.holdup.helpers.util.showSnackBar
 import name.lmj0011.holdup.ui.accounts.AccountsViewModel
+import org.kodein.di.instance
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var dataStoreHelper: DataStoreHelper
     lateinit var navController: NavController
     lateinit var appBarConfiguration: AppBarConfiguration
     private val  viewModel by viewModels<AccountsViewModel> {
@@ -40,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        dataStoreHelper = (this.applicationContext as App).kodein.instance()
         navController = findNavController(R.id.nav_host_fragment)
         appBarConfiguration = AppBarConfiguration(setOf(R.id.homeFragment))
         setSupportActionBar(binding.toolbar)
@@ -51,14 +60,6 @@ class MainActivity : AppCompatActivity() {
             { navController.navigate(R.id.action_homeFragment_to_submissionFragment) },
             R.drawable.ic_baseline_edit_24
         )
-    }
-
-    override fun onPause() {
-        super.onPause()
-
-        if(!isIgnoringBatteryOptimizations(this)) {
-            NotificationHelper.showBatteryOptimizationInfoNotification()
-        }
     }
 
     private fun setupNavigationListener(){
@@ -120,14 +121,40 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
 
         return when (item.itemId) {
-            R.id.action_about -> {
-                val aboutDialog = DialogAboutBinding.inflate(layoutInflater)
-                if(BuildConfig.DEBUG) {
-                    aboutDialog.versionTextView.text = "v${BuildConfig.VERSION_NAME} (${getString(R.string.app_build)}) DEBUG"
-                } else {
-                    aboutDialog.versionTextView.text = "v${BuildConfig.VERSION_NAME} (${getString(R.string.app_build)})"
+            R.id.action_leave_feedback -> {
+                val feedbackDialog = DialogFeedbackBinding.inflate(layoutInflater)
+                feedbackDialog.generalButton.setOnClickListener {
+                    try {
+                        sendGeneralFeedback(this@MainActivity)
+                    } catch(ex: Exception) {
+                        val msg = ex.message ?: "Could not open email app."
+                        showSnackBar(binding.root, msg)
+                    }
                 }
 
+                feedbackDialog.bugReportButton.setOnClickListener {
+                    launchIO {
+                        val prefs = dataStoreHelper.dataStore.data.first()
+                        val dao = AppDatabase.getInstance(application).sharedDao
+                        val template = getDebugDump(this@MainActivity, prefs, dao)
+
+                        launchUI {
+                            try {
+                                sendBugReport(this@MainActivity, template)
+                            } catch(ex: Exception) {
+                                val msg = ex.message ?: "Could not open email app."
+                                showSnackBar(binding.root, msg)
+                            }
+                        }
+                    }
+                }
+
+                MaterialAlertDialogBuilder(this@MainActivity).setView(feedbackDialog.root).show()
+                true
+            }
+            R.id.action_about -> {
+                val aboutDialog = DialogAboutBinding.inflate(layoutInflater)
+                aboutDialog.versionTextView.text = "Version: ${BuildConfig.VERSION_NAME}"
                 MaterialAlertDialogBuilder(this@MainActivity).setView(aboutDialog.root).show()
                 true
             }

@@ -4,7 +4,7 @@
 
     <string name="go_to_reddit_btn">Go to reddit.com</string>
     <string name="connect_reddit_btn">Connect Reddit</string>
-    <string name="notification_battery_optimization_info_content_text">Battery Optimization may cause scheduled Submissions not to post. If you encounter this issue, consider turning off Battery Optimization for this app in Settings.</string>
+    <string name="notification_battery_optimization_info_content_text">Battery Optimization can cause scheduled Submissions not to post. Consider turning off Battery Optimization for this app in Settings.</string>
 
     <string name="file_provider" translatable="false">name.lmj0011.holdup.fileprovider</string>
     <string name="image_picker_pick_single">Select an Image</string>
@@ -14,4 +14,5 @@
 
     <string name="github_repo_url">https://github.com/lmj0011</string>
     <string name="app_tagline">A Post scheduler for Reddit</string>
+    <string name="dev_email">holdupapp@protonmail.com</string>
 </resources>

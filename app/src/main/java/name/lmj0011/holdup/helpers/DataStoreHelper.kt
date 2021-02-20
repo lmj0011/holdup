@@ -1,6 +1,7 @@
 package name.lmj0011.holdup.helpers
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -10,10 +11,9 @@ import kotlinx.coroutines.flow.mapLatest
 import name.lmj0011.holdup.Keys
 
 class DataStoreHelper(val context: Context) {
-    private val dataStore: DataStore<Preferences> = context.createDataStore(
+    val dataStore: DataStore<Preferences> = context.createDataStore(
         name = "preferences"
     )
-
 
     fun getSelectedAccountUsername(): Flow<String?> {
         return dataStore.data.mapLatest { prefs ->

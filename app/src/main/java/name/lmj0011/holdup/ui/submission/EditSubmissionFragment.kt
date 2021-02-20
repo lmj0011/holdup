@@ -21,6 +21,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
 import name.lmj0011.holdup.R
@@ -30,6 +31,7 @@ import name.lmj0011.holdup.databinding.FragmentEditSubmissionBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.DateTimeHelper.getElapsedTimeUntilFutureTime
 import name.lmj0011.holdup.helpers.DateTimeHelper.getLocalDateFromUtcMillis
+import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.UniqueRuntimeNumberHelper
 import name.lmj0011.holdup.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.holdup.helpers.adapters.SubredditSearchListAdapter
@@ -38,6 +40,7 @@ import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.models.SubredditFlair
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
+import name.lmj0011.holdup.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.helpers.util.showSnackBar
@@ -442,7 +445,13 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
                         sub.postAtMillis = cal.timeInMillis
                         viewModel.updateSubmission(sub)
 
-                        withUIContext { findNavController().navigateUp() }
+                        launchUI {
+                            if(!isIgnoringBatteryOptimizations(requireContext())) {
+                                NotificationHelper.showBatteryOptimizationInfoNotification()
+                            }
+
+                            findNavController().navigateUp()
+                        }
                     }
                 }
             }
@@ -454,7 +463,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
 
         override fun createFragment(position: Int): Fragment {
             // Return a NEW fragment instance
-            return when ((args.submission as Submission).kind) {
+            return when (args.submission.kind) {
                 SubmissionKind.Link -> LinkSubmissionFragment(viewModel, args.submission, null)
                 SubmissionKind.Image -> ImageSubmissionFragment(viewModel, args.submission, null)
                 SubmissionKind.Video ->  VideoSubmissionFragment(viewModel, args.submission, null)

@@ -22,6 +22,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
 import name.lmj0011.holdup.R
@@ -30,6 +31,7 @@ import name.lmj0011.holdup.databinding.FragmentSubmissionBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.DateTimeHelper.getElapsedTimeUntilFutureTime
 import name.lmj0011.holdup.helpers.DateTimeHelper.getLocalDateFromUtcMillis
+import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.UniqueRuntimeNumberHelper
 import name.lmj0011.holdup.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.holdup.helpers.adapters.SubredditSearchListAdapter
@@ -38,6 +40,7 @@ import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.models.Subreddit
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
+import name.lmj0011.holdup.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.helpers.util.showSnackBar
@@ -629,7 +632,13 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                             }
                         }
 
-                        launchUI { findNavController().navigateUp() }
+                        launchUI {
+                            if(!isIgnoringBatteryOptimizations(requireContext())) {
+                                NotificationHelper.showBatteryOptimizationInfoNotification()
+                            }
+
+                            findNavController().navigateUp()
+                        }
                     }
                 }
             }

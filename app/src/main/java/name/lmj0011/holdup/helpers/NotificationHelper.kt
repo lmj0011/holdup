@@ -36,15 +36,16 @@ object NotificationHelper {
         this.application = application
         requestCodeHelper = (application as App).kodein.instance()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val list = mutableListOf(
-                NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_HIGH),
-                NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH)
-            )
 
-            val sssServiceChannel = NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN)
-            sssServiceChannel.setSound(null, null)
-            list.add(sssServiceChannel)
+            val chn1 = NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH)
 
+            val chn2 = NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_DEFAULT)
+            chn2.setSound(null, null)
+
+            val chn3 = NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN)
+            chn3.setSound(null, null)
+
+            val list = mutableListOf(chn1,chn2,chn3)
             NotificationManagerCompat.from(application).createNotificationChannels(list)
         }
     }
@@ -54,7 +55,7 @@ object NotificationHelper {
         val defaultContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
 
         val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
             .setAutoCancel(true)
             .setContentTitle("Submission successfully published")
             .setContentText(form.title)
@@ -92,7 +93,7 @@ object NotificationHelper {
         val defaultContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
 
         val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
             .setAutoCancel(true)
             .setContentTitle("Submission failed to publish to ${submission.subreddit?.displayNamePrefixed}")
             .setContentText(submission.title)
@@ -119,7 +120,7 @@ object NotificationHelper {
         val moreInfoPendingIntent = PendingIntent.getActivity(application, 0, moreInfoIntent, 0)
 
         val notification =  NotificationCompat.Builder(application, BATTERY_OPTIMIZATION_INFO_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
             .setShowWhen(false)
             .setAutoCancel(true)
             .setContentTitle("Battery Optimization is enabled")
@@ -143,7 +144,7 @@ object NotificationHelper {
         val builder = NotificationCompat.Builder(application, POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID)
 
         builder
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
             .setShowWhen(false)
             .setContentTitle("Posting Scheduled Submission")
             .setContentText("${submission.title}")
@@ -158,7 +159,7 @@ object NotificationHelper {
         val pendingIntent = PendingIntent.getActivity(application, 0, intent, 0)
 
         return NotificationCompat.Builder(application, POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
             .setShowWhen(false)
             .setContentTitle("Rescheduling Submissions")
             .setContentIntent(pendingIntent)

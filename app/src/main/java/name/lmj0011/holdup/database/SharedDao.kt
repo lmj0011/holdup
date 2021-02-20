@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Update
 import name.lmj0011.holdup.database.models.Account
 import name.lmj0011.holdup.database.models.Submission
@@ -94,5 +95,11 @@ interface SharedDao: BaseDao {
     fun deleteBySubmissionId(id: Long): Int
     @Query("DELETE from submissions_table")
     fun deleteAllSubmissionId(): Int
+
+    // Special Queries
+    @Query("SELECT COUNT(*) FROM accounts_table")
+    fun accountsRowCount(): Int
+    @Query("SELECT COUNT(*) FROM submissions_table")
+    fun submissionsRowCount(): Int
 
 }
