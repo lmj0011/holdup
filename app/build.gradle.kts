@@ -19,7 +19,7 @@ android {
         applicationId = "name.lmj0011.holdup"
         minSdkVersion(26)
         targetSdkVersion(30)
-        versionCode(5)
+        versionCode(getCommitCount().toInt())
         versionName = "0.1.0"
 
         vectorDrawables {

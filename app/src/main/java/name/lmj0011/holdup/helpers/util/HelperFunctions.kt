@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.core.view.children
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
+import name.lmj0011.holdup.BuildConfig
 import name.lmj0011.holdup.database.SharedDao
 import java.util.UUID
 
@@ -97,12 +98,18 @@ deviceOem: ${Build.MANUFACTURER}
 deviceModel: ${Build.MODEL}
 osVersion: Android ${Build.VERSION.RELEASE}
 apiLevel: ${Build.VERSION.SDK_INT}
+=
+versionName: ${BuildConfig.VERSION_NAME}
+buildType: ${BuildConfig.BUILD_TYPE}
+versionCode: ${BuildConfig.VERSION_CODE}
+gitCommitCount: ${context.getString(R.string.git_commit_count)}
+gitCommitSha: ${context.getString(R.string.git_commit_sha)}
+appBuildTime: ${context.getString(R.string.app_buildtime)}
+=
 preferences: $prefs
 isIgnoringBatteryOptimizations: ${isIgnoringBatteryOptimizations(context)}
 accounts: ${dao.accountsRowCount()}
 submissions: ${dao.submissionsRowCount()}
-gitCommitSha: ${context.getString(R.string.git_commit_sha)}
-appBuildTime: ${context.getString(R.string.app_buildtime)}
 
 ====
 """.trimIndent()
