@@ -14,8 +14,11 @@ import androidx.core.view.children
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import name.lmj0011.holdup.BuildConfig
+import name.lmj0011.holdup.Keys
 import name.lmj0011.holdup.database.SharedDao
 import java.util.UUID
+import java.util.TimeZone
+import java.util.Locale
 
 
 /**
@@ -89,6 +92,9 @@ fun sendBugReport(context: Context, template: String) {
 }
 
 fun getDebugDump(context: Context, prefs: Preferences, dao: SharedDao): String{
+    val mutPrefs = prefs.toMutablePreferences()
+    mutPrefs.remove(Keys.SELECTED_ACCOUNT_USERNAME)
+
     val text = """
 
 
@@ -106,7 +112,9 @@ gitCommitCount: ${context.getString(R.string.git_commit_count)}
 gitCommitSha: ${context.getString(R.string.git_commit_sha)}
 appBuildTime: ${context.getString(R.string.app_buildtime)}
 =
-preferences: $prefs
+locale: ${Locale.getDefault()}
+timezone: ${TimeZone.getDefault().id}
+preferences: $mutPrefs
 isIgnoringBatteryOptimizations: ${isIgnoringBatteryOptimizations(context)}
 accounts: ${dao.accountsRowCount()}
 submissions: ${dao.submissionsRowCount()}
