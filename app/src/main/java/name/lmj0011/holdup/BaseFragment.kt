@@ -7,12 +7,13 @@ import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import timber.log.Timber
 import java.util.*
 
 open class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
     protected fun pickDateAndTime(callBack: (cal: Calendar) -> Unit) {
         // see https://github.com/material-components/material-components-android/issues/882#issuecomment-638983598
-        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        val cal = Calendar.getInstance()
         // ^ because the datepicker give us UTC time to convert ourselves
 
         // big Up! https://stackoverflow.com/a/62080582/2445763
@@ -24,7 +25,13 @@ open class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
         val datePicker = dateBuilder.build()
 
         datePicker.addOnPositiveButtonClickListener { millis ->
-            cal.timeInMillis = millis
+            val dummyCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+            dummyCal.timeInMillis = millis
+
+            cal.set(Calendar.YEAR, dummyCal.get(Calendar.YEAR))
+            cal.set(Calendar.MONTH, dummyCal.get(Calendar.MONTH))
+            cal.set(Calendar.DAY_OF_MONTH, dummyCal.get(Calendar.DAY_OF_MONTH))
+
             askForTime(cal, callBack)
         }
 

@@ -122,18 +122,14 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 //                        PendingIntent.getBroadcast(context, sub.alarmRequestCode, intent, 0)
 //                    }
 //
-//                    val futureElapsedDate = getLocalDateFromUtcMillis(
-//                        getElapsedTimeUntilFutureTime(
-//                            sub.postAtMillis
-//                        )
-//                    )
 //
-//                    if (futureElapsedDate != null) {
-//                        alarmMgr.setExactAndAllowWhileIdle(
-//                            AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//                            futureElapsedDate.time,
-//                            alarmIntent
-//                        )
+//            val futureElapsedTime = getElapsedTimeUntilFutureTime(sub.timeInMillis)
+//
+//            alarmMgr.setExactAndAllowWhileIdle(
+//                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                futureElapsedTime,
+//                alarmIntent
+//            )
 //                        Timber.d("alarm set for Submission: ${getPostAtDateForListLayout(sub)}")
 //                    } else {
 //                        Timber.e("failed to set alarm!")
@@ -600,18 +596,14 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                                 PendingIntent.getBroadcast(context, alarmRequestCode, intent, 0)
                             }
 
-                            val futureElapsedDate = getLocalDateFromUtcMillis(getElapsedTimeUntilFutureTime(cal.timeInMillis))
+                            val futureElapsedTime = getElapsedTimeUntilFutureTime(cal.timeInMillis)
 
-                            if (futureElapsedDate != null) {
-                                alarmMgr.setExactAndAllowWhileIdle(
-                                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                                    futureElapsedDate.time,
-                                    alarmIntent
-                                )
-                                Timber.d("alarm set for new Submission")
-                            } else {
-                                Timber.e("failed to set alarm!")
-                            }
+                            alarmMgr.setExactAndAllowWhileIdle(
+                                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                futureElapsedTime,
+                                alarmIntent
+                            )
+                            Timber.d("alarm set for new Submission")
                         }
 
                         when (kind) {

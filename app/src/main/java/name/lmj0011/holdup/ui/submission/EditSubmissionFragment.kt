@@ -424,22 +424,16 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
                                 PendingIntent.getBroadcast(context, sub.alarmRequestCode, intent, 0)
                             }
 
-                            val futureElapsedDate = getLocalDateFromUtcMillis(
-                                getElapsedTimeUntilFutureTime(
-                                    cal.timeInMillis
-                                )
-                            )
+                            val futureElapsedTime = getElapsedTimeUntilFutureTime(cal.timeInMillis)
 
-                            if (futureElapsedDate != null) {
-                                alarmMgr.setExactAndAllowWhileIdle(
-                                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                                    futureElapsedDate.time,
-                                    alarmIntent
-                                )
-                                Timber.d("alarm set for Submission")
-                            } else {
-                                Timber.e("failed to set alarm!")
-                            }
+                            Timber.d("futureElapsedTime: $futureElapsedTime")
+
+                            alarmMgr.setExactAndAllowWhileIdle(
+                                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                futureElapsedTime,
+                                alarmIntent
+                            )
+                            Timber.d("alarm set for Submission")
                         }
 
                         sub.postAtMillis = cal.timeInMillis

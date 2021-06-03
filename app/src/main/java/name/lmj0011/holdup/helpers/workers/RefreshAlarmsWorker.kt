@@ -58,22 +58,14 @@ class RefreshAlarmsWorker (private val appContext: Context, parameters: WorkerPa
                     PendingIntent.getBroadcast(appContext, it.alarmRequestCode, intent, 0)
                 }
 
-                val futureElapsedDate = getLocalDateFromUtcMillis(
-                    getElapsedTimeUntilFutureTime(
-                        it.postAtMillis
-                    )
-                )
+                val futureElapsedTime = getElapsedTimeUntilFutureTime(it.postAtMillis)
 
-                if (futureElapsedDate != null) {
-                    alarmMgr.setExactAndAllowWhileIdle(
-                        AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                        futureElapsedDate.time, // I have yet to understand how this coming up with the correct number
-                        newAlarmIntent
-                    )
-                    Timber.d("alarm set for Submission: ${getPostAtDateForListLayout(it)}")
-                } else {
-                    Timber.e("failed to set alarm!")
-                }
+                alarmMgr.setExactAndAllowWhileIdle(
+                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    futureElapsedTime, // I have yet to understand how this coming up with the correct number
+                    newAlarmIntent
+                )
+                Timber.d("alarm set for Submission: ${getPostAtDateForListLayout(it)}")
 
                 dao.update(it)
             }
