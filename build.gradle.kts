@@ -2,10 +2,10 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:4.1.2")
+        classpath("com.android.tools.build:gradle:7.0.0-beta05")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${findProperty("kotlin.version")}")
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.3.3")
 
@@ -17,7 +17,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         maven(url ="https://jitpack.io")
     }
 }

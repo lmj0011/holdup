@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.datastore.preferences.core.Preferences
 import android.os.PowerManager
+import android.util.Patterns
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
@@ -16,6 +17,7 @@ import com.google.android.material.tabs.TabLayout
 import name.lmj0011.holdup.BuildConfig
 import name.lmj0011.holdup.Keys
 import name.lmj0011.holdup.database.SharedDao
+import org.jsoup.Jsoup
 import java.util.UUID
 import java.util.TimeZone
 import java.util.Locale
@@ -123,4 +125,27 @@ submissions: ${dao.submissionsRowCount()}
 """.trimIndent()
 
     return text
+}
+
+suspend fun extractTitleFromUrl(url: String): String {
+    var title = ""
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    if(Patterns.WEB_URL.matcher(url).matches()) {
+        val doc = Jsoup.connect(url).get()
+        val metaTags = doc.getElementsByTag("meta")
+
+        for(metaTag in metaTags) {
+            val content = metaTag.attr("content")
+            val name = metaTag.attr("property")
+
+            if ("og:title" == name && content.isNotBlank()) {
+                title = content
+            } else {
+                title = doc.title()
+            }
+        }
+    }
+
+    return title
 }

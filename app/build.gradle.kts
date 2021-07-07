@@ -12,14 +12,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion(30)
-    buildToolsVersion("29.0.3")
+    compileSdk =30
 
     defaultConfig {
         applicationId = "name.lmj0011.holdup"
-        minSdkVersion(26)
-        targetSdkVersion(30)
-        versionCode(getCommitCount().toInt())
+        minSdk = 26
+        targetSdk = 30
+        versionCode = getCommitCount().toInt()
         versionName = "0.1.1"
 
         vectorDrawables {
@@ -47,11 +46,11 @@ android {
         }
 
         named("debug") {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             isDebuggable = true
-            versionNameSuffix("+debug.${getGitSha().take(8)}")
-            applicationIdSuffix(".debug")
+            versionNameSuffix = "+debug.${getGitSha().take(8)}"
+            applicationIdSuffix = ".debug"
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
         }
     }
@@ -67,12 +66,12 @@ android {
 
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     buildFeatures {
@@ -143,7 +142,7 @@ dependencies {
     implementation("com.jakewharton.timber:timber:4.7.1")
 
     // Moshi
-    val moshiVersion = "1.11.0"
+    val moshiVersion = "1.12.0"
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVersion")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
 
@@ -156,6 +155,7 @@ dependencies {
     kapt("com.github.bumptech.glide:compiler:$glideVersion")
 
 
+    implementation("org.jsoup:jsoup:1.13.1")
     implementation("com.kroegerama:bottomsheet-imagepicker:1.1.2")
     implementation("com.github.javafaker:javafaker:1.0.2")
 }
