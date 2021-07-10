@@ -127,6 +127,9 @@ submissions: ${dao.submissionsRowCount()}
     return text
 }
 
+/**
+ * tries to fetch the title of a webpage
+ */
 suspend fun extractTitleFromUrl(url: String): String {
     var title = ""
 

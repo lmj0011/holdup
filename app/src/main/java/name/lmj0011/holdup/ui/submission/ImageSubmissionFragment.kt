@@ -1,5 +1,8 @@
 package name.lmj0011.holdup.ui.submission
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -93,6 +96,15 @@ class ImageSubmissionFragment(
                     list.remove(img)
                     viewModel.submissionImageGallery.postValue(list)
                 }
+            },
+
+            GalleryListAdapter.CopyImageUrlLongClickListener { img ->
+                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip: ClipData = ClipData.newPlainText("image url", img.url)
+                clipboard.setPrimaryClip(clip)
+
+                showSnackBar(binding.root, "copied image url")
+                true
             }
         )
 

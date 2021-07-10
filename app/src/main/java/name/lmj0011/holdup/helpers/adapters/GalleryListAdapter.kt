@@ -11,15 +11,18 @@ import name.lmj0011.holdup.databinding.ListItemImageBinding
 import name.lmj0011.holdup.helpers.models.Image
 
 class GalleryListAdapter (
-    private val removeImageClickListener: RemoveImageClickListener
+    private val removeImageClickListener: RemoveImageClickListener,
+    private val copyImageUrlLongClickListener: CopyImageUrlLongClickListener
 ): ListAdapter<Image, GalleryListAdapter.ViewHolder>(DiffCallback()) {
     class ViewHolder private constructor(val binding: ListItemImageBinding, val context: Context) :
         RecyclerView.ViewHolder(binding.root){
         fun bind(
             image: Image,
-            removeImageClickListener: RemoveImageClickListener){
+            removeImageClickListener: RemoveImageClickListener,
+            copyImageUrlLongClickListener: CopyImageUrlLongClickListener){
             binding.image = image
             binding.removeImageClickListener = removeImageClickListener
+            binding.copyImageUrlLongClickListener = copyImageUrlLongClickListener
 
             Glide
                 .with(context)
@@ -52,10 +55,14 @@ class GalleryListAdapter (
         fun onClick(image: Image) = clickListener(image)
     }
 
+    class CopyImageUrlLongClickListener(val clickListener: (image: Image) -> Boolean) {
+        fun onClick(image: Image) = clickListener(image)
+    }
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val image = getItem(position)
 
-        holder.bind(image, removeImageClickListener)
+        holder.bind(image, removeImageClickListener, copyImageUrlLongClickListener)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
