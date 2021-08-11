@@ -63,7 +63,7 @@ class BottomSheetSubredditSearchFragment(
 
     private fun setupBinding(view: View) {
         binding = BottomsheetFragmentSubredditSearchBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
         binding.subredditListPager.adapter = PagerAdapter(this)
         binding.subredditListPager.isUserInputEnabled = false // prevent swiping navigation ref: https://stackoverflow.com/a/55193815/2445763
     }

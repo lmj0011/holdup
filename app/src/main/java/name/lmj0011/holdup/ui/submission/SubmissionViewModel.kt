@@ -358,13 +358,14 @@ class SubmissionViewModel(
 
         subredditFlair.value?.let { submission.subredditFlair = it }
 
-        submissionSelfText.value?.let { submission.body = it }
+        if(kind == SubmissionKind.Self) submissionSelfText.value?.let { submission.body = it }
 
         submissionLinkText.value?.let { submission.url = it }
 
         submissionImageGallery.value?.let { submission.imgGallery = it }
 
-        submissionPollBodyText.value?.let { submission.body = it }
+        if(kind == SubmissionKind.Poll) submissionPollBodyText.value?.let { submission.body = it }
+
         submissionPollOptions.value?.let { submission.pollOptions = it.toMutableList() }
         submissionPollDuration.value?.let { submission.pollDuration = it }
 
@@ -385,14 +386,17 @@ class SubmissionViewModel(
 
         subredditFlair.value?.let { submission.subredditFlair = it }
 
-        // submission.body gets set in SubmissionFragmentChild
-//        submissionSelfText.value?.let { submission.body = it }
+        /**
+         * We save this Submission when it's updated in TestSubmissionFragment to avoid a weird bug where
+         * this property doesn't ever update beyond it's initial value
+         */
+//        if(submission.kind == SubmissionKind.Self) submissionSelfText.value?.let { submission.body = it }
 
         submissionLinkText.value?.let { submission.url = it }
 
         submissionImageGallery.value?.let { submission.imgGallery = it }
 
-//        submissionPollBodyText.value?.let { submission.body = it }
+        if(submission.kind == SubmissionKind.Poll) submissionPollBodyText.value?.let { submission.body = it }
 
         submissionPollOptions.value?.let { submission.pollOptions = it.toMutableList() }
         submissionPollDuration.value?.let { submission.pollDuration = it }
@@ -424,9 +428,12 @@ class SubmissionViewModel(
         submissionTitle.postValue(sub.title)
         subredditFlair.postValue(sub.subredditFlair)
         submissionLinkText.postValue(sub.url)
-        submissionSelfText.postValue(sub.body)
+
+        if(sub.kind == SubmissionKind.Self) submissionSelfText.postValue(sub.body)
+
         submissionImageGallery.postValue(sub.imgGallery)
-        submissionPollBodyText.postValue(sub.body)
+
+        if(sub.kind == SubmissionKind.Poll) submissionPollBodyText.postValue(sub.body)
         submissionPollOptions.postValue(sub.pollOptions)
         submissionPollDuration.postValue(sub.pollDuration)
         submissionVideo.postValue(sub.video)

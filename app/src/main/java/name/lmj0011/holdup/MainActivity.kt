@@ -14,6 +14,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -40,6 +41,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dataStoreHelper: DataStoreHelper
     lateinit var navController: NavController
     lateinit var appBarConfiguration: AppBarConfiguration
+    lateinit var mediaPlayer: SimpleExoPlayer
+
     private val  viewModel by viewModels<AccountsViewModel> {
         ViewModelFactory(AppDatabase.getInstance(application).sharedDao, application)
     }
@@ -48,7 +51,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        dataStoreHelper = (this.applicationContext as App).kodein.instance()
+        mediaPlayer = SimpleExoPlayer.Builder(this).build()
+
+        dataStoreHelper = (applicationContext as App).kodein.instance()
         navController = findNavController(R.id.nav_host_fragment)
         appBarConfiguration = AppBarConfiguration(setOf(R.id.homeFragment))
         setSupportActionBar(binding.toolbar)
@@ -62,8 +67,19 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    override fun onResume() {
+        mediaPlayer = SimpleExoPlayer.Builder(this).build()
+        super.onResume()
+    }
+
+    override fun onStop() {
+        mediaPlayer.release()
+        super.onStop()
+    }
+
     private fun setupNavigationListener(){
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
+            mediaPlayer.stop()
             when(destination.id){
                 R.id.homeFragment -> {
                     launchIO {
@@ -105,6 +121,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
+        mediaPlayer.stop()
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 

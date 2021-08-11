@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "172520609305",
+    "project_id": "holdup-fafa0",
+    "storage_bucket": "holdup-fafa0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:172520609305:android:00da80d120f61d93567c88",
+        "android_client_info": {
+          "package_name": "name.lmj0011.holdup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "172520609305-5j3a7vgte81l6fs3t2ndeop748kmhom5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJdEpr8OwvDIIV708s_e3Ks5TlZ1v2cbA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "172520609305-5j3a7vgte81l6fs3t2ndeop748kmhom5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:172520609305:android:20bcda5e4262fec9567c88",
+        "android_client_info": {
+          "package_name": "name.lmj0011.holdup.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "172520609305-5j3a7vgte81l6fs3t2ndeop748kmhom5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJdEpr8OwvDIIV708s_e3Ks5TlZ1v2cbA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "172520609305-5j3a7vgte81l6fs3t2ndeop748kmhom5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

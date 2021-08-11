@@ -15,4 +15,6 @@
     <string name="github_repo_url">https://github.com/lmj0011</string>
     <string name="app_tagline">A Post scheduler for Reddit</string>
     <string name="dev_email">holdupapp@protonmail.com</string>
+    <string name="submissions_display_option_compact_list">Compact List</string>
+    <string name="submissions_display_option_full_list">Full List</string>
 </resources>

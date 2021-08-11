@@ -49,7 +49,7 @@ class BottomSheetAccountsFragment(private val setAccountForSubmission: (account:
 
     private fun setupBinding(view: View) {
         binding = BottomsheetFragmentAccountsBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
     }
 
     private fun setupRecyclerView() {

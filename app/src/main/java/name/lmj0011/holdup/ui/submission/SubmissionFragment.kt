@@ -12,18 +12,22 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatCheckedTextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
+import name.lmj0011.holdup.MainActivity
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.databinding.FragmentSubmissionBinding
@@ -35,6 +39,7 @@ import name.lmj0011.holdup.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.holdup.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.holdup.helpers.models.Subreddit
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
@@ -356,7 +361,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     @SuppressLint("UseCompatLoadingForDrawables")
     override fun setupBinding(view: View) {
         binding = FragmentSubmissionBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
         binding.submissionPager.adapter = TabCollectionAdapterDefault(this)
         binding.submissionPager.isUserInputEnabled = false // prevent swiping navigation ref: https://stackoverflow.com/a/55193815/2445763
         tabLayoutMediator = TabLayoutMediator(binding.submissionTabLayout, binding.submissionPager) { tab, position ->
@@ -374,7 +379,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)
                 }
                 3 -> {
-                    tab.text = "Text"
+                    tab.text = "Self"
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)
                 }
                 4 -> {
@@ -383,6 +388,22 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                 }
             }
         }
+
+        binding.submissionPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                val actionBarTitle = when(position) {
+                    0 -> "Link Submission"
+                    1 -> "Image Submission"
+                    2 -> "Video Submission"
+                    3 -> "Self Submission"
+                    4 -> "Poll Submission"
+                    else -> ""
+                }
+                (requireActivity() as AppCompatActivity).supportActionBar?.title = actionBarTitle
+
+                super.onPageSelected(position)
+            }
+        })
 
         tabLayoutMediator.attach()
 
@@ -467,7 +488,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             Triple(
                 "Link",
                 requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
-                LinkSubmissionFragment(viewModel)
+                LinkSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
             )
         )
 
@@ -476,7 +497,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                 Triple(
                     "Image",
                     requireContext().getDrawable(R.drawable.ic_baseline_image_24)!!,
-                    ImageSubmissionFragment(viewModel)
+                    ImageSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
                 )
             )
 
@@ -487,16 +508,16 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                 Triple(
                     "Video",
                     requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)!!,
-                    VideoSubmissionFragment(viewModel)
+                    VideoSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
                 ),
             )
         }
 
         listOfTriples.add(
             Triple(
-                "Text",
+                "Self",
                 requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)!!,
-                TextSubmissionFragment(viewModel)
+                TextSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
             ),
         )
 
@@ -505,7 +526,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                 Triple(
                     "Poll",
                     requireContext().getDrawable(R.drawable.ic_baseline_poll_24)!!,
-                    PollSubmissionFragment(viewModel)
+                    PollSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
                 ),
             )
         }
@@ -545,7 +566,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             "Video" -> {
                 SubmissionKind.Video
             }
-            "Text" -> {
+            "Self" -> {
                 SubmissionKind.Self
             }
             "Poll" -> {
@@ -576,7 +597,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                         "Video" -> {
                             viewModel.postSubmission(SubmissionKind.Video)
                         }
-                        "Text" -> {
+                        "Self" -> {
                             viewModel.postSubmission(SubmissionKind.Self)
                         }
                         "Poll" -> {
@@ -632,7 +653,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                             "Video" -> {
                                 viewModel.saveSubmission(SubmissionKind.Video, cal.timeInMillis, alarmRequestCode)
                             }
-                            "Text" -> {
+                            "Self" -> {
                                 viewModel.saveSubmission(SubmissionKind.Self, cal.timeInMillis, alarmRequestCode)
                             }
                             "Poll" -> {
@@ -659,11 +680,21 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
         override fun createFragment(position: Int): Fragment {
             // Return a NEW fragment instance
             return when(position) {
-                0 -> LinkSubmissionFragment(viewModel)
-                1 -> ImageSubmissionFragment(viewModel)
-                2 -> VideoSubmissionFragment(viewModel)
-                3 -> TextSubmissionFragment(viewModel)
-                4 -> PollSubmissionFragment(viewModel)
+                0 -> {
+                    LinkSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                }
+                1 -> {
+                    ImageSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                }
+                2 -> {
+                    VideoSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
+                }
+                3 -> {
+                    TextSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                }
+                4 -> {
+                    PollSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                }
                 else -> throw Exception("Unknown Tab Position!")
             }
         }

@@ -9,8 +9,8 @@
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/imageCard"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
+        android:layout_width="@dimen/submission_list_item_layout_width"
+        android:layout_height="@dimen/submission_list_item_layout_height"
         android:layout_margin="8dp"
         android:onClick="@{() -> addImageClickListener.onClick()}">
 

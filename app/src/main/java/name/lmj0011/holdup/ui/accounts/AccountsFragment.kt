@@ -53,7 +53,7 @@ class AccountsFragment: Fragment(R.layout.fragment_accounts)  {
 
     private fun setupBinding(view: View) {
         binding = FragmentAccountsBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
         binding.accountsViewModel = accountsViewModel
     }
 

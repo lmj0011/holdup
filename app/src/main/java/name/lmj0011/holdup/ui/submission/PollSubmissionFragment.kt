@@ -1,5 +1,6 @@
 package name.lmj0011.holdup.ui.submission
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -9,27 +10,61 @@ import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TableRow
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import name.lmj0011.holdup.FullscreenTextEntryActivity
 import name.lmj0011.holdup.R
+import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentPollSubmissionBinding
 import name.lmj0011.holdup.helpers.SubmissionValidatorHelper.Companion.MAX_POLL_OPTIONS
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
-import name.lmj0011.holdup.helpers.util.launchUI
 
-class PollSubmissionFragment(
-    override var viewModel:  SubmissionViewModel,
-    override val submission: Submission? = null,
-    override val actionBarTitle: String? = "Poll Submission"
-): Fragment(R.layout.fragment_poll_submission),
+class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
     BaseFragmentInterface, SubmissionFragmentChild {
+    override lateinit var parentContext: Context
+    override lateinit var viewModel: SubmissionViewModel
+    override var submission: Submission? = null
+    override val actionBarTitle: String = "Poll Submission"
+    override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
+
     private lateinit var binding: FragmentPollSubmissionBinding
     private val defaultSpinnerPosition = 2
+
+    companion object {
+        fun newInstance(submission: Submission?, mode: Int): PollSubmissionFragment {
+            val fragment = PollSubmissionFragment()
+
+            val args = Bundle().apply {
+                putParcelable("submission", submission)
+                putInt("mode", mode)
+            }
+
+            fragment.arguments = args
+
+            return fragment
+        }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        parentContext = context
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = SubmissionViewModel.getInstance(
+            AppDatabase.getInstance(requireActivity().application).sharedDao,
+            requireActivity().application
+        )
+
+        submission = requireArguments().getParcelable("submission") as? Submission
+        mode = requireArguments().getInt("mode")
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -40,7 +75,6 @@ class PollSubmissionFragment(
             binding.pollEditTextTextMultiLine.setText(it.body)
             restoreOptions(it)
             binding.pollDurationSpinner.setSelection(it.pollDuration - 1)
-
         }
     }
 
@@ -66,17 +100,27 @@ class PollSubmissionFragment(
 
     override fun setupBinding(view: View) {
         binding = FragmentPollSubmissionBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
 
 
         binding.pollDurationSpinner.setSelection(defaultSpinnerPosition) // 3 Days
+
+        if (mode == SubmissionFragmentChild.VIEW_MODE) {
+            binding.pollEditTextTextMultiLine
+                .setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
+            binding.pollEditTextTextMultiLine.isEnabled = false
+
+            binding.pollDurationSpinner.isEnabled = false
+
+            binding.addOptionImageButton.visibility = View.GONE
+        }
     }
 
     override fun setupObservers() {
         binding.addOptionImageButton.setOnClickListener { addOption() }
 
         binding.pollEditTextTextMultiLine.setOnClickListener {
-            val intent = Intent(requireContext(), FullscreenTextEntryActivity::class.java)
+            val intent = Intent(parentContext, FullscreenTextEntryActivity::class.java)
             intent.putExtra("start_text",  binding.pollEditTextTextMultiLine.text.toString());
             intent.putExtra("start_position",  binding.pollEditTextTextMultiLine.selectionStart);
             startActivityForResult(intent, FullscreenTextEntryActivity.FULLSCREEN_TEXT_ENTRY_REQUEST_CODE)
@@ -94,6 +138,9 @@ class PollSubmissionFragment(
             ) {
                 val item = parent.getItemAtPosition(position) as String
                 val duration = item.split(" ")[0].toInt()
+
+                (parent.getChildAt(0) as? TextView)
+                    ?.setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
 
                 viewModel.submissionPollDuration.postValue(duration)
             }
@@ -123,13 +170,7 @@ class PollSubmissionFragment(
         viewModel.submissionPollDuration.postValue(null)
     }
 
-    override fun updateActionBarTitle() {
-        actionBarTitle?.let {
-            launchUI {
-                (requireActivity() as AppCompatActivity).supportActionBar?.title = it
-            }
-        }
-    }
+    override fun updateActionBarTitle() {}
 
     /**
      * add a new TableRow in the TableLayout containing poll options
@@ -160,6 +201,12 @@ class PollSubmissionFragment(
             if(tableRowView is TableRow) {
                 val editText = tableRowView.findViewWithTag<EditText>("optionEditText")
                 editText.setText(option)
+
+                if (mode == SubmissionFragmentChild.VIEW_MODE) {
+                    editText
+                        .setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
+                    editText.isEnabled = false
+                }
             }
         }
 
@@ -169,10 +216,19 @@ class PollSubmissionFragment(
             val editText = tableRowView.findViewWithTag<EditText>("optionEditText")
             editText.setText(option)
 
-            tableRowView.findViewWithTag<ImageView?>("removeOptionImageView")?.let { imgView ->
-                imgView.setOnClickListener {
-                    binding.pollOptionsTableLayout.removeView(tableRowView)
-                    pollOptionsTableRefresh()
+            if (mode == SubmissionFragmentChild.VIEW_MODE) {
+                editText
+                    .setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
+                editText.isEnabled = false
+                tableRowView.findViewWithTag<ImageView?>("removeOptionImageView")?.let { imgView ->
+                    imgView.visibility = View.GONE
+                }
+            } else {
+                tableRowView.findViewWithTag<ImageView?>("removeOptionImageView")?.let { imgView ->
+                    imgView.setOnClickListener {
+                        binding.pollOptionsTableLayout.removeView(tableRowView)
+                        pollOptionsTableRefresh()
+                    }
                 }
             }
 
@@ -223,7 +279,7 @@ class PollSubmissionFragment(
             view = binding.pollOptionsTableLayout.getChildAt(idx)
         }
 
-        if(position > MAX_POLL_OPTIONS) {
+        if(position > MAX_POLL_OPTIONS || mode == SubmissionFragmentChild.VIEW_MODE) {
             binding.addOptionImageButton.visibility = View.GONE
         } else binding.addOptionImageButton.visibility = View.VISIBLE
     }

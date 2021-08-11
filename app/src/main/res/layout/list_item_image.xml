@@ -6,13 +6,12 @@
     <data>
         <variable name="image" type="name.lmj0011.holdup.helpers.models.Image"/>
         <variable name="removeImageClickListener" type="name.lmj0011.holdup.helpers.adapters.GalleryListAdapter.RemoveImageClickListener"/>
-        <variable name="copyImageUrlLongClickListener" type="name.lmj0011.holdup.helpers.adapters.GalleryListAdapter.CopyImageUrlLongClickListener"/>
     </data>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/imageCard"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
+        android:layout_width="@dimen/submission_list_item_layout_width"
+        android:layout_height="@dimen/submission_list_item_layout_height"
         android:layout_margin="8dp">
 
         <RelativeLayout
@@ -24,7 +23,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:onLongClick="@{() -> copyImageUrlLongClickListener.onClick(image)}"
                 tools:srcCompat="@tools:sample/avatars" />
 
             <com.google.android.material.imageview.ShapeableImageView

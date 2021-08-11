@@ -72,7 +72,7 @@ class BottomSheetSubredditFlairFragment(
 
     private fun setupBinding(view: View) {
         binding = BottomsheetFragmentSubredditFlairBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
     }
 
     private fun setupRecyclerView() {

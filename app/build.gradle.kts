@@ -9,6 +9,8 @@ plugins {
     id("kotlin-kapt")
     id("kotlin-parcelize")
     id("androidx.navigation.safeargs.kotlin")
+    id("com.google.firebase.crashlytics")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -154,6 +156,14 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:$glideVersion")
     kapt("com.github.bumptech.glide:compiler:$glideVersion")
 
+    val exoPlayerVersion = "2.14.1"
+    implementation("com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion")
+    implementation("com.google.android.exoplayer:exoplayer-dash:$exoPlayerVersion")
+    implementation("com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion")
+
+    implementation(platform("com.google.firebase:firebase-bom:28.3.1"))
+    implementation ("com.google.firebase:firebase-crashlytics-ktx")
+    implementation ("com.google.firebase:firebase-analytics-ktx")
 
     implementation("org.jsoup:jsoup:1.13.1")
     implementation("com.kroegerama:bottomsheet-imagepicker:1.1.2")

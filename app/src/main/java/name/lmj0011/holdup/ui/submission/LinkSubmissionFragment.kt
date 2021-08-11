@@ -1,13 +1,14 @@
 package name.lmj0011.holdup.ui.submission
 
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
+import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentLinkSubmissionBinding
 import name.lmj0011.holdup.helpers.RedditApiHelper
@@ -15,24 +16,54 @@ import name.lmj0011.holdup.helpers.RedditAuthHelper
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
-import name.lmj0011.holdup.helpers.util.launchUI
 import org.kodein.di.instance
+import java.net.URL
 
 
-class LinkSubmissionFragment(
-    override var viewModel:  SubmissionViewModel,
-    override val submission: Submission? = null,
-    override val actionBarTitle: String? = "Link Submission"
-): Fragment(R.layout.fragment_link_submission),
+class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
     BaseFragmentInterface, SubmissionFragmentChild {
+    override lateinit var parentContext: Context
+    override lateinit var viewModel: SubmissionViewModel
+    override var submission: Submission? = null
+    override val actionBarTitle: String = "Link Submission"
+    override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
+
     private lateinit var binding: FragmentLinkSubmissionBinding
     private lateinit var redditAuthHelper: RedditAuthHelper
     private lateinit var redditApiHelper: RedditApiHelper
 
+    companion object {
+        fun newInstance(submission: Submission?, mode: Int): LinkSubmissionFragment {
+            val fragment = LinkSubmissionFragment()
+
+            val args = Bundle().apply {
+                putParcelable("submission", submission)
+                putInt("mode", mode)
+            }
+
+            fragment.arguments = args
+
+            return fragment
+        }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        parentContext = context
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
-        redditApiHelper = (requireContext().applicationContext as App).kodein.instance()
+        redditAuthHelper = (parentContext.applicationContext as App).kodein.instance()
+        redditApiHelper = (parentContext.applicationContext as App).kodein.instance()
+
+        viewModel = SubmissionViewModel.getInstance(
+            AppDatabase.getInstance(requireActivity().application).sharedDao,
+            requireActivity().application
+        )
+
+        submission = requireArguments().getParcelable("submission") as? Submission
+        mode = requireArguments().getInt("mode")
     }
 
     override fun onResume() {
@@ -45,23 +76,22 @@ class LinkSubmissionFragment(
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
-
-        submission?.let {
-            binding.linkTextView.setText(it.url)
-        }
     }
 
-    override fun updateActionBarTitle() {
-        actionBarTitle?.let {
-            launchUI {
-                (requireActivity() as AppCompatActivity).supportActionBar?.title = it
-            }
-        }
-    }
+    override fun updateActionBarTitle() {}
 
     override fun setupBinding(view: View) {
         binding = FragmentLinkSubmissionBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
+
+        val url = submission?.url
+
+        if (mode == SubmissionFragmentChild.VIEW_MODE) {
+            binding.linkTextView.isEnabled = false
+            binding.linkTextView.setText(URL(url).host)
+        } else {
+            binding.linkTextView.setText(url)
+        }
     }
 
     override fun setupObservers() {

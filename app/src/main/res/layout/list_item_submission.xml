@@ -19,7 +19,7 @@
             android:id="@+id/subredditIconImageView"
             android:layout_width="75dp"
             android:layout_height="75dp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/listItemSubmissionContentPreviewViewPager"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_baseline_image_24" />
@@ -87,6 +87,15 @@
             app:layout_constraintStart_toEndOf="@+id/accountIconImageView"
             app:layout_constraintTop_toBottomOf="@+id/submissionKindIconImageView"
             tools:text="u/appleEater352" />
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/listItemSubmissionContentPreviewViewPager"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/submission_list_item_layout_height"
+            android:padding="5dp"
+            app:layout_constraintStart_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/accountUsernameTextView" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

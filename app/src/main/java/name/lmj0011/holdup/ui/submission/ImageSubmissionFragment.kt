@@ -1,12 +1,9 @@
 package name.lmj0011.holdup.ui.submission
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
@@ -16,6 +13,7 @@ import com.kroegerama.imgpicker.ButtonType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import name.lmj0011.holdup.R
+import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentImageSubmissionBinding
 import name.lmj0011.holdup.helpers.adapters.AddImageListAdapter
@@ -27,46 +25,79 @@ import name.lmj0011.holdup.helpers.models.Image
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.helpers.util.showSnackBar
+import name.lmj0011.holdup.helpers.util.withUIContext
 import timber.log.Timber
 import java.lang.Exception
 
-class ImageSubmissionFragment(
-    override var viewModel:  SubmissionViewModel,
-    override val submission: Submission? = null,
-    override val actionBarTitle: String? = "Image Submission"
-): Fragment(R.layout.fragment_image_submission),
+class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
     BaseFragmentInterface, SubmissionFragmentChild, BottomSheetImagePicker.OnImagesSelectedListener {
+    override lateinit var parentContext: Context
+    override lateinit var viewModel: SubmissionViewModel
+    override var submission: Submission? = null
+    override val actionBarTitle: String = "Image Submission"
+    override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
+
     private lateinit var binding: FragmentImageSubmissionBinding
     private lateinit var listAdapter: GalleryListAdapter
     private lateinit var footerAdapter: AddImageListAdapter
 
+    companion object {
+        fun newInstance(submission: Submission?, mode: Int): ImageSubmissionFragment {
+            val fragment = ImageSubmissionFragment()
+
+            val args = Bundle().apply {
+                putParcelable("submission", submission)
+                putInt("mode", mode)
+            }
+
+            fragment.arguments = args
+
+            return fragment
+        }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        parentContext = context
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = SubmissionViewModel.getInstance(
+            AppDatabase.getInstance(requireActivity().application).sharedDao,
+            requireActivity().application
+        )
+
+        submission = requireArguments().getParcelable("submission") as? Submission
+        mode = requireArguments().getInt("mode")
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
         setupRecyclerView()
+    }
 
-        submission?.let {
-            listAdapter.submitList(it.imgGallery)
-            listAdapter.notifyDataSetChanged()
+    override fun onResume() {
+        super.onResume()
+        updateActionBarTitle()
+
+        submission?.imgGallery.let {
+            listAdapter.submitList(it)
 
             // scroll to end of List
             binding.imageGalleryList.adapter?.let { recyclerView ->
                 binding.imageGalleryList.scrollToPosition(recyclerView.itemCount - 1)
             }
         }
-    }
 
-    override fun onResume() {
-        super.onResume()
-        updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Image)
     }
 
     override fun setupBinding(view: View) {
         binding = FragmentImageSubmissionBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
     }
 
     override fun setupObservers() {
@@ -76,35 +107,17 @@ class ImageSubmissionFragment(
             }
         })
 
-        viewModel.submissionImageGallery.observe(viewLifecycleOwner, { list ->
-            list?.let {
-                listAdapter.submitList(it)
-                listAdapter.notifyDataSetChanged()
-            }
-
-            // scroll to end of List
-            binding.imageGalleryList.adapter?.let {
-                binding.imageGalleryList.scrollToPosition(it.itemCount - 1)
-            }
-        })
+//        viewModel.submissionImageGallery.observe(viewLifecycleOwner, { list -> })
     }
 
     override fun setupRecyclerView() {
         listAdapter = GalleryListAdapter(
             GalleryListAdapter.RemoveImageClickListener  { img ->
-                viewModel.submissionImageGallery.value?.let { list ->
+                listAdapter.currentList.toMutableList().let { list ->
                     list.remove(img)
                     viewModel.submissionImageGallery.postValue(list)
+                    updateImageGallery(list)
                 }
-            },
-
-            GalleryListAdapter.CopyImageUrlLongClickListener { img ->
-                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip: ClipData = ClipData.newPlainText("image url", img.url)
-                clipboard.setPrimaryClip(clip)
-
-                showSnackBar(binding.root, "copied image url")
-                true
             }
         )
 
@@ -118,16 +131,22 @@ class ImageSubmissionFragment(
             }
         )
 
-        val decor = DividerItemDecoration(requireContext(), DividerItemDecoration.HORIZONTAL)
+        val decor = DividerItemDecoration(parentContext, DividerItemDecoration.HORIZONTAL)
         binding.imageGalleryList.addItemDecoration(decor)
-        binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, footerAdapter)
+
+        if (mode == SubmissionFragmentChild.VIEW_MODE) {
+            binding.imageGalleryList.adapter = ConcatAdapter(listAdapter)
+        } else binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, footerAdapter)
+
     }
 
     /**
      *  clear any User input data from this Fragment
      */
     override fun clearUserInputViews() {
-        viewModel.submissionImageGallery.postValue(mutableListOf())
+        val emptyList = mutableListOf<Image>()
+        viewModel.submissionImageGallery.postValue(emptyList)
+        updateImageGallery(emptyList)
     }
 
     override fun onImagesSelected(uris: List<Uri>, tag: String?) {
@@ -160,11 +179,14 @@ class ImageSubmissionFragment(
                         outboundUrl = ""
                     )
 
-                    val list = viewModel.submissionImageGallery.value ?: mutableListOf()
+                    val list = listAdapter.currentList.toMutableList()
                     list.add(img)
 
-                    viewModel.submissionImageGallery.postValue(list)
-                    viewModel.validateSubmission(SubmissionKind.Image)
+                    withUIContext {
+                        updateImageGallery(list)
+                        viewModel.submissionImageGallery.postValue(list)
+                        viewModel.validateSubmission(SubmissionKind.Image)
+                    }
                 } catch (ex: Exception) {
                     Timber.e(ex)
                 }
@@ -179,10 +201,15 @@ class ImageSubmissionFragment(
         }
     }
 
-    override fun updateActionBarTitle() {
-        actionBarTitle?.let {
-            launchUI {
-                (requireActivity() as AppCompatActivity).supportActionBar?.title = it
+    override fun updateActionBarTitle() {}
+
+    private fun updateImageGallery(list: MutableList<Image>) {
+        listAdapter.submitList(list)
+
+        launchUI {
+            // scroll to end of List
+            binding.imageGalleryList.adapter?.let {
+                binding.imageGalleryList.scrollToPosition(it.itemCount - 1)
             }
         }
     }

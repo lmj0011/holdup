@@ -18,25 +18,25 @@ import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
+import name.lmj0011.holdup.MainActivity
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
-import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentEditSubmissionBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.DateTimeHelper.getElapsedTimeUntilFutureTime
-import name.lmj0011.holdup.helpers.DateTimeHelper.getLocalDateFromUtcMillis
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.UniqueRuntimeNumberHelper
 import name.lmj0011.holdup.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.holdup.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.holdup.helpers.models.SubredditFlair
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
@@ -67,12 +67,11 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
     lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
     lateinit var enableInboxReplies: AppCompatCheckedTextView
-
     private var optionsMenu: Menu? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = SubmissionViewModel.getNewInstance(
+        viewModel = SubmissionViewModel.getInstance(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
             requireActivity().application
         )
@@ -86,6 +85,8 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
 
     override fun onResume() {
         super.onResume()
+        viewModel.setAccount()
+
         launchIO {
             viewModel.populateFromSubmissionThenPost(args.submission, false)
 
@@ -95,7 +96,6 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
             }
         }
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -302,7 +302,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
 
     override fun setupBinding(view: View) {
         binding = FragmentEditSubmissionBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
         binding.submissionPager.adapter = TabCollectionAdapterDefault(this)
         binding.submissionPager.isUserInputEnabled = false // prevent swiping navigation ref: https://stackoverflow.com/a/55193815/2445763
 
@@ -458,13 +458,12 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
         override fun createFragment(position: Int): Fragment {
             // Return a NEW fragment instance
             return when (args.submission.kind) {
-                SubmissionKind.Link -> LinkSubmissionFragment(viewModel, args.submission, null)
-                SubmissionKind.Image -> ImageSubmissionFragment(viewModel, args.submission, null)
-                SubmissionKind.Video ->  VideoSubmissionFragment(viewModel, args.submission, null)
-                SubmissionKind.VideoGif -> VideoSubmissionFragment(viewModel, args.submission, null)
-                SubmissionKind.Self -> TextSubmissionFragment(viewModel, args.submission, null)
-                SubmissionKind.Poll -> PollSubmissionFragment(viewModel, args.submission, null)
-                else ->  TextSubmissionFragment(viewModel, args.submission, null)
+                SubmissionKind.Link -> LinkSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                SubmissionKind.Image -> ImageSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                SubmissionKind.Video, SubmissionKind.VideoGif ->  VideoSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
+                SubmissionKind.Self -> TextSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                SubmissionKind.Poll -> PollSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                else ->  TextSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
             }
         }
     }

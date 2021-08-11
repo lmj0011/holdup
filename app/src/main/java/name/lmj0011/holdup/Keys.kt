@@ -16,4 +16,6 @@ object Keys {
     val NEXT_RUNTIME_UNIQUE_INT = intPreferencesKey("pref_next_runtime_unique_int")
     val NEXT_RUNTIME_UNIQUE_LONG = longPreferencesKey("pref_next_runtime_unique_long")
     val ENABLE_INBOX_REPLIES = booleanPreferencesKey("pref_enable_inbox_replies")
+    val IS_MEDIA_PLAYER_MUTED = booleanPreferencesKey("pref_is_media_player_muted")
+    val SUBMISSIONS_DISPLAY_OPTION = stringPreferencesKey("pref_submissions_display_option")
 }

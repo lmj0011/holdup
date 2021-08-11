@@ -50,7 +50,7 @@ class RecentSubredditFragment(val searchView: SearchView,
 
     private fun setupBinding(view: View) {
         binding = FragmentRecentSubredditBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
     }
 
     private fun setupRecyclerView() {

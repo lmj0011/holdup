@@ -1,15 +1,17 @@
 package name.lmj0011.holdup.helpers
 
 import android.content.Context
-import androidx.annotation.Keep
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.createDataStore
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapLatest
 import name.lmj0011.holdup.Keys
+import name.lmj0011.holdup.R
 
+@ExperimentalCoroutinesApi
 class DataStoreHelper(val context: Context) {
     val dataStore: DataStore<Preferences> = context.createDataStore(
         name = "preferences"
@@ -58,4 +60,33 @@ class DataStoreHelper(val context: Context) {
             prefs[Keys.ENABLE_INBOX_REPLIES] = enable
         }
     }
+
+    fun getIsMediaPlayerMuted(): Flow<Boolean> {
+        return dataStore.data.mapLatest { prefs ->
+            prefs[Keys.IS_MEDIA_PLAYER_MUTED] ?: false
+        }
+    }
+    suspend fun setIsMediaPlayerMuted(enable: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[Keys.IS_MEDIA_PLAYER_MUTED] = enable
+        }
+    }
+
+
+    /**
+     * Submission filter options
+     */
+    fun getSubmissionsDisplayOption(): Flow<String> {
+        return dataStore.data.mapLatest { prefs ->
+            prefs[Keys.SUBMISSIONS_DISPLAY_OPTION] ?: context.resources.getString(R.string.submissions_display_option_full_list)
+        }
+    }
+    suspend fun setSubmissionsDisplayOption(option: String) {
+        dataStore.edit { prefs ->
+            prefs[Keys.SUBMISSIONS_DISPLAY_OPTION] = option
+        }
+    }
+    /**
+     *
+     */
 }

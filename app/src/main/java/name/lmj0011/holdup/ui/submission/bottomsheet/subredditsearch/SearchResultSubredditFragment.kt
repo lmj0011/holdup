@@ -69,7 +69,7 @@ class SearchResultSubredditFragment(val searchView: SearchView,
 
     private fun setupBinding(view: View) {
         binding = FragmentSearchResultSubredditBinding.bind(view)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
     }
 
     private fun setupObservers() {}
