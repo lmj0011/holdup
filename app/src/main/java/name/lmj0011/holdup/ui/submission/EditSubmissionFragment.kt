@@ -40,6 +40,8 @@ import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.holdup.helpers.models.SubredditFlair
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
+import name.lmj0011.holdup.helpers.util.extractOpenGraphImageFromUrl
+import name.lmj0011.holdup.helpers.util.extractTitleFromUrl
 import name.lmj0011.holdup.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
@@ -236,8 +238,26 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
             viewModel.validateSubmission(args.submission.kind!!)
         })
 
-        viewModel.getSubmissionLinkText().observe(viewLifecycleOwner, {
-            viewModel.validateSubmission(args.submission.kind!!)
+        viewModel.getSubmissionLinkText().observe(viewLifecycleOwner, { url ->
+            launchIO {
+                try {
+                    // update og:image
+                    val imageUrl = extractOpenGraphImageFromUrl(url.toString())
+
+                    if (imageUrl.isNotBlank()) {
+                        withUIContext {
+                            viewModel.submissionLinkImageUrl.postValue(imageUrl)
+                        }
+                    }
+                } catch (ex: Exception) {
+                    // If there's an Exception, we'll ignore it.
+                } finally {
+                    withUIContext {
+                        viewModel.validateSubmission(args.submission.kind!!)
+                    }
+                }
+            }
+
         })
 
         viewModel.submissionSelfText.observe(viewLifecycleOwner, {

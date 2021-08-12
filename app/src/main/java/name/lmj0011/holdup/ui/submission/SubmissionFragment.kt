@@ -43,6 +43,7 @@ import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.holdup.helpers.models.Subreddit
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
+import name.lmj0011.holdup.helpers.util.extractOpenGraphImageFromUrl
 import name.lmj0011.holdup.helpers.util.extractTitleFromUrl
 import name.lmj0011.holdup.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.holdup.helpers.util.launchIO
@@ -295,12 +296,22 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
         viewModel.getSubmissionLinkText().observe(viewLifecycleOwner, { url ->
             launchIO {
                 try {
+                    // get og:title
                     val title = extractTitleFromUrl(url.toString())
 
                     if (title.isNotBlank()) {
                         withUIContext {
                             binding.titleEditTextView.setText(title)
                             viewModel.submissionTitle.postValue(title)
+                        }
+                    }
+
+                    // get og:image
+                    val imageUrl = extractOpenGraphImageFromUrl(url.toString())
+
+                    if (imageUrl.isNotBlank()) {
+                        withUIContext {
+                            viewModel.submissionLinkImageUrl.postValue(imageUrl)
                         }
                     }
                 } catch (ex: Exception) {

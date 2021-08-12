@@ -152,3 +152,43 @@ suspend fun extractTitleFromUrl(url: String): String {
 
     return title
 }
+
+/**
+ * tries to fetch the og:image of a webpage
+ */
+suspend fun extractOpenGraphImageFromUrl(url: String): String {
+    var imageUrl = ""
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    if(Patterns.WEB_URL.matcher(url).matches()) {
+        val doc = Jsoup.connect(url).get()
+        val metaTags = doc.getElementsByTag("meta")
+
+        for (metaTag in metaTags) {
+            val content = metaTag.attr("content")
+            val name = metaTag.attr("property")
+
+            if ("og:image" == name && content.isNotBlank()) {
+                imageUrl = content
+            }
+
+            if ("og:image:secure_url" == name && content.isNotBlank()) {
+                imageUrl = content
+                break
+            }
+        }
+    }
+
+    return imageUrl
+}
+
+/**
+ * Open a Url in Web browser
+ */
+fun openUrlInWebBrowser(context: Context, url: String) {
+    val webpage: Uri = Uri.parse(url)
+    val intent = Intent(Intent.ACTION_VIEW, webpage)
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    }
+}

@@ -39,6 +39,7 @@ class SubmissionValidatorHelper(val context: Context) {
         var text: String = "",
         var title: String = "",
         var url: String = "",
+        var linkImageUrl: String = "",
         var video_poster_url: String = "",
         var images: List<Image> = listOf(),
         var submit_type: String = "subreddit",

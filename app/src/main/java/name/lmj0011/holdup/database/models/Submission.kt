@@ -38,6 +38,9 @@ data class Submission (
     @ColumnInfo(name = "url")
     var url: String = "", // for link submissions
 
+    @ColumnInfo(name = "linkImageUrl")
+    var linkImageUrl: String = "", // the og:image extracted for a link submission
+
     @ColumnInfo(name = "kind")
     var kind: SubmissionKind? = null,
 

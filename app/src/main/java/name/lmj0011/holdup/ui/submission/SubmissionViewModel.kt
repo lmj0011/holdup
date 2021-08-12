@@ -70,7 +70,11 @@ class SubmissionViewModel(
     var subredditFlair = MutableLiveData<SubredditFlair?>()
         private set
 
-    private var submissionLinkText = MutableLiveData<String?>()
+    var submissionLinkText = MutableLiveData<String?>()
+        private set
+
+    var submissionLinkImageUrl = MutableLiveData<String?>()
+        private set
 
     var submissionSelfText = MutableLiveData<String?>()
         private set
@@ -361,6 +365,7 @@ class SubmissionViewModel(
         if(kind == SubmissionKind.Self) submissionSelfText.value?.let { submission.body = it }
 
         submissionLinkText.value?.let { submission.url = it }
+        submissionLinkImageUrl.value?.let { submission.linkImageUrl = it }
 
         submissionImageGallery.value?.let { submission.imgGallery = it }
 
@@ -393,6 +398,7 @@ class SubmissionViewModel(
 //        if(submission.kind == SubmissionKind.Self) submissionSelfText.value?.let { submission.body = it }
 
         submissionLinkText.value?.let { submission.url = it }
+        submissionLinkImageUrl.value?.let { submission.linkImageUrl = it }
 
         submissionImageGallery.value?.let { submission.imgGallery = it }
 
@@ -428,6 +434,7 @@ class SubmissionViewModel(
         submissionTitle.postValue(sub.title)
         subredditFlair.postValue(sub.subredditFlair)
         submissionLinkText.postValue(sub.url)
+        submissionLinkImageUrl.postValue(sub.linkImageUrl)
 
         if(sub.kind == SubmissionKind.Self) submissionSelfText.postValue(sub.body)
 
@@ -456,6 +463,7 @@ class SubmissionViewModel(
                 form.kind = SubmissionKind.Link.kind
                 submissionTitle.value?.let { form.title = it }
                 submissionLinkText.value?.let { form.url = it }
+                submissionLinkImageUrl.value?.let { form.linkImageUrl = it }
             }
             SubmissionKind.Self -> {
                 form.kind = SubmissionKind.Self.kind

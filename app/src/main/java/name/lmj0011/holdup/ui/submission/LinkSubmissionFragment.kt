@@ -6,6 +6,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
@@ -16,6 +17,7 @@ import name.lmj0011.holdup.helpers.RedditAuthHelper
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.util.openUrlInWebBrowser
 import org.kodein.di.instance
 import java.net.URL
 
@@ -52,8 +54,14 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
         parentContext = context
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onResume() {
+        super.onResume()
+        updateActionBarTitle()
+        viewModel.validateSubmission(SubmissionKind.Link)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         redditAuthHelper = (parentContext.applicationContext as App).kodein.instance()
         redditApiHelper = (parentContext.applicationContext as App).kodein.instance()
 
@@ -64,16 +72,6 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
 
         submission = requireArguments().getParcelable("submission") as? Submission
         mode = requireArguments().getInt("mode")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        updateActionBarTitle()
-        viewModel.validateSubmission(SubmissionKind.Link)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
     }
@@ -85,12 +83,29 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
         binding.lifecycleOwner = viewLifecycleOwner
 
         val url = submission?.url
+        val linkImageUrl = submission?.linkImageUrl
 
         if (mode == SubmissionFragmentChild.VIEW_MODE) {
-            binding.linkTextView.isEnabled = false
-            binding.linkTextView.setText(URL(url).host)
+            binding.linkTextView.visibility = View.GONE
         } else {
             binding.linkTextView.setText(url)
+        }
+
+        if (linkImageUrl.isNullOrBlank() || url.isNullOrBlank()) {
+            if (mode == SubmissionFragmentChild.CREATE_AND_EDIT_MODE) {
+                binding.imageCard.visibility = View.GONE
+            }
+        } else {
+            binding.linkCaptionTextView.text = URL(url).host
+
+            binding.imageCard.setOnClickListener {
+                openUrlInWebBrowser(requireContext(), url)
+            }
+
+            Glide
+                .with(parentContext)
+                .load(linkImageUrl)
+                .into(binding.backgroundImageView)
         }
     }
 
