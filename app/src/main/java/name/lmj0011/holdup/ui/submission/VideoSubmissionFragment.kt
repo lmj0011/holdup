@@ -43,7 +43,6 @@ import kotlin.Exception
 @ExperimentalCoroutinesApi
 class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
     BaseFragmentInterface, SubmissionFragmentChild {
-    override lateinit var parentContext: Context
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
     override val actionBarTitle: String = "Video Submission"
@@ -72,13 +71,10 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
         }
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        parentContext = context
-    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        dataStoreHelper= (requireContext().applicationContext as App).kodein.instance()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         viewModel = SubmissionViewModel.getInstance(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
             requireActivity().application
@@ -86,11 +82,6 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
 
         submission = requireArguments().getParcelable("submission") as? Submission
         mode = requireArguments().getInt("mode")
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        dataStoreHelper= (parentContext.applicationContext as App).kodein.instance()
 
         setupBinding(view)
         setupObservers()
@@ -130,7 +121,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
             GET_VIDEO_REQUEST_CODE -> {
                 binding.progressBar.isIndeterminate = true
                 binding.progressBar.isVisible = true
-                mediaPlayer = SimpleExoPlayer.Builder(parentContext).build()
+                mediaPlayer = SimpleExoPlayer.Builder(requireContext()).build()
 
                 launchIO {
                     try {
@@ -150,14 +141,14 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
                          */
                         try {
                             val thumbNail = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                parentContext.contentResolver.loadThumbnail(Uri.parse(uri.toString()),
+                                requireContext().contentResolver.loadThumbnail(Uri.parse(uri.toString()),
                                     Size(1280, 720), null)
                             } else {
                                 createVideoThumbnail(uri.toString(), MediaStore.Images.Thumbnails.MINI_KIND)
                             }
 
                             thumbNail?.let { bitmap ->
-                                val file = File(parentContext.cacheDir, "${videoInfo.first}.png")
+                                val file = File(requireContext().cacheDir, "${videoInfo.first}.png")
                                 file.createNewFile()
                                 val fileOut = FileOutputStream(file)
 
@@ -269,7 +260,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
 
         val initVolumeIcon: () -> Unit = {
             /// show correct volume icon
-            val contextForCoroutine = parentContext
+            val contextForCoroutine = requireContext()
             launchUI {
                 val isMuted = dataStoreHelper.getIsMediaPlayerMuted().first()
 
@@ -289,7 +280,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
         mediaPlayer
         .also { exoPlayer ->
             Glide
-                .with(parentContext)
+                .with(requireContext())
                 .load(video.posterUrl)
                 .into(binding.videoViewArtworkImageView)
 
@@ -341,7 +332,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
     }
 
     private fun toggleMediaPlayerVolume() {
-        val contextForCoroutine = parentContext
+        val contextForCoroutine = requireContext()
         launchUI {
             val isMuted = dataStoreHelper.getIsMediaPlayerMuted().first()
 

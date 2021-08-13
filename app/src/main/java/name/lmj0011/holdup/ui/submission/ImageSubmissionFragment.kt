@@ -31,7 +31,6 @@ import java.lang.Exception
 
 class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
     BaseFragmentInterface, SubmissionFragmentChild, BottomSheetImagePicker.OnImagesSelectedListener {
-    override lateinit var parentContext: Context
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
     override val actionBarTitle: String = "Image Submission"
@@ -56,13 +55,8 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
         }
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        parentContext = context
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         viewModel = SubmissionViewModel.getInstance(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
             requireActivity().application
@@ -70,14 +64,11 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
 
         submission = requireArguments().getParcelable("submission") as? Submission
         mode = requireArguments().getInt("mode")
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
         setupRecyclerView()
-        
+
         submission?.imgGallery.let { list ->
             list?.let { updateImageGallery(it) }
         }
@@ -86,7 +77,6 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
     override fun onResume() {
         super.onResume()
         updateActionBarTitle()
-
         viewModel.validateSubmission(SubmissionKind.Image)
     }
 
@@ -126,7 +116,7 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
             }
         )
 
-        val decor = DividerItemDecoration(parentContext, DividerItemDecoration.HORIZONTAL)
+        val decor = DividerItemDecoration(requireContext(), DividerItemDecoration.HORIZONTAL)
         binding.imageGalleryList.addItemDecoration(decor)
 
         if (mode == SubmissionFragmentChild.VIEW_MODE) {

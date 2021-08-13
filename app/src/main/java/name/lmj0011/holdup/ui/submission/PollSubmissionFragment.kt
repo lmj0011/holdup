@@ -26,7 +26,6 @@ import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
 
 class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
     BaseFragmentInterface, SubmissionFragmentChild {
-    override lateinit var parentContext: Context
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
     override val actionBarTitle: String = "Poll Submission"
@@ -50,13 +49,8 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
         }
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        parentContext = context
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         viewModel = SubmissionViewModel.getInstance(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
             requireActivity().application
@@ -64,10 +58,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
 
         submission = requireArguments().getParcelable("submission") as? Submission
         mode = requireArguments().getInt("mode")
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
 
@@ -107,7 +98,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
 
         if (mode == SubmissionFragmentChild.VIEW_MODE) {
             binding.pollEditTextTextMultiLine
-                .setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
+                .setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.edit_text_no_disabled_selector))
             binding.pollEditTextTextMultiLine.isEnabled = false
 
             binding.pollDurationSpinner.isEnabled = false
@@ -120,7 +111,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
         binding.addOptionImageButton.setOnClickListener { addOption() }
 
         binding.pollEditTextTextMultiLine.setOnClickListener {
-            val intent = Intent(parentContext, FullscreenTextEntryActivity::class.java)
+            val intent = Intent(requireContext(), FullscreenTextEntryActivity::class.java)
             intent.putExtra("start_text",  binding.pollEditTextTextMultiLine.text.toString());
             intent.putExtra("start_position",  binding.pollEditTextTextMultiLine.selectionStart);
             startActivityForResult(intent, FullscreenTextEntryActivity.FULLSCREEN_TEXT_ENTRY_REQUEST_CODE)
@@ -140,7 +131,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
                 val duration = item.split(" ")[0].toInt()
 
                 (parent.getChildAt(0) as? TextView)
-                    ?.setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
+                    ?.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.edit_text_no_disabled_selector))
 
                 viewModel.submissionPollDuration.postValue(duration)
             }
@@ -204,7 +195,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
 
                 if (mode == SubmissionFragmentChild.VIEW_MODE) {
                     editText
-                        .setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
+                        .setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.edit_text_no_disabled_selector))
                     editText.isEnabled = false
                 }
             }
@@ -218,7 +209,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
 
             if (mode == SubmissionFragmentChild.VIEW_MODE) {
                 editText
-                    .setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
+                    .setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.edit_text_no_disabled_selector))
                 editText.isEnabled = false
                 tableRowView.findViewWithTag<ImageView?>("removeOptionImageView")?.let { imgView ->
                     imgView.visibility = View.GONE

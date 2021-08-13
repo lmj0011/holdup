@@ -20,7 +20,6 @@ import timber.log.Timber
 
 class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
     BaseFragmentInterface, SubmissionFragmentChild {
-    override lateinit var parentContext: Context
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
     override val actionBarTitle: String = "Self Submission"
@@ -43,13 +42,8 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
         }
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        parentContext = context
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         viewModel = SubmissionViewModel.getInstance(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
             requireActivity().application
@@ -57,10 +51,7 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
 
         submission = requireArguments().getParcelable("submission") as? Submission
         mode = requireArguments().getInt("mode")
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         view.findViewById<EditText>(R.id.textEditTextTextMultiLine).setText(submission?.body)
         setupBinding(view)
         setupObservers()
@@ -98,14 +89,14 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
 
         if (mode == SubmissionFragmentChild.VIEW_MODE) {
             binding.textEditTextTextMultiLine
-                .setTextColor(ContextCompat.getColorStateList(parentContext, R.color.edit_text_no_disabled_selector))
+                .setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.edit_text_no_disabled_selector))
             binding.textEditTextTextMultiLine.isEnabled = false
         }
     }
 
     override fun setupObservers() {
         binding.textEditTextTextMultiLine.setOnClickListener {
-            val intent = Intent(parentContext, FullscreenTextEntryActivity::class.java)
+            val intent = Intent(requireContext(), FullscreenTextEntryActivity::class.java)
             intent.putExtra("start_text", binding.textEditTextTextMultiLine.text.toString())
             intent.putExtra("start_position", binding.textEditTextTextMultiLine.selectionStart)
             startActivityForResult(intent, FullscreenTextEntryActivity.FULLSCREEN_TEXT_ENTRY_REQUEST_CODE)

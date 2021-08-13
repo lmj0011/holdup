@@ -10,7 +10,6 @@ interface SubmissionFragmentChild {
      const val CREATE_AND_EDIT_MODE = 1 // the default
     }
 
-    val parentContext: Context
     val viewModel:  SubmissionViewModel
     val submission: Submission?
     val actionBarTitle: String?

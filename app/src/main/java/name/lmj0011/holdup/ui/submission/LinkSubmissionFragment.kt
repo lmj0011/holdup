@@ -24,7 +24,6 @@ import java.net.URL
 
 class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
     BaseFragmentInterface, SubmissionFragmentChild {
-    override lateinit var parentContext: Context
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
     override val actionBarTitle: String = "Link Submission"
@@ -49,21 +48,10 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
         }
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        parentContext = context
-    }
-
-    override fun onResume() {
-        super.onResume()
-        updateActionBarTitle()
-        viewModel.validateSubmission(SubmissionKind.Link)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        redditAuthHelper = (parentContext.applicationContext as App).kodein.instance()
-        redditApiHelper = (parentContext.applicationContext as App).kodein.instance()
+        redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
+        redditApiHelper = (requireContext().applicationContext as App).kodein.instance()
 
         viewModel = SubmissionViewModel.getInstance(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
@@ -75,6 +63,13 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
         setupBinding(view)
         setupObservers()
     }
+
+    override fun onResume() {
+        super.onResume()
+        updateActionBarTitle()
+        viewModel.validateSubmission(SubmissionKind.Link)
+    }
+
 
     override fun updateActionBarTitle() {}
 
@@ -103,7 +98,7 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
             }
 
             Glide
-                .with(parentContext)
+                .with(requireContext())
                 .load(linkImageUrl)
                 .into(binding.backgroundImageView)
         }
