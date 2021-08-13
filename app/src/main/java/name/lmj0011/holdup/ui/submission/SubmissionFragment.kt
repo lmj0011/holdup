@@ -76,7 +76,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = SubmissionViewModel.getInstance(
+        viewModel = SubmissionViewModel.getNewInstance(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
             requireActivity().application
         )

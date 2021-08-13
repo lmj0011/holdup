@@ -53,7 +53,11 @@ class SubmissionViewModel(
             return instance
         }
 
-        fun getNewInstance(database: SharedDao, application: Application): SubmissionViewModel = SubmissionViewModel(database, application)
+        @MainThread
+        fun getNewInstance(database: SharedDao, application: Application): SubmissionViewModel {
+            instance = SubmissionViewModel(database, application)
+            return instance
+        }
     }
 
     private var redditAuthHelper: RedditAuthHelper = (application as App).kodein.instance()

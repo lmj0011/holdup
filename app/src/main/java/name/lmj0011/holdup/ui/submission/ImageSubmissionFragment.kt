@@ -77,20 +77,15 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
         setupBinding(view)
         setupObservers()
         setupRecyclerView()
+        
+        submission?.imgGallery.let { list ->
+            list?.let { updateImageGallery(it) }
+        }
     }
 
     override fun onResume() {
         super.onResume()
         updateActionBarTitle()
-
-        submission?.imgGallery.let {
-            listAdapter.submitList(it)
-
-            // scroll to end of List
-            binding.imageGalleryList.adapter?.let { recyclerView ->
-                binding.imageGalleryList.scrollToPosition(recyclerView.itemCount - 1)
-            }
-        }
 
         viewModel.validateSubmission(SubmissionKind.Image)
     }
