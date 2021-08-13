@@ -22,17 +22,6 @@ import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubmissionsFilterOptionsFragment
 import org.kodein.di.instance
 
-// extension function for LiveData
-// ref: https://stackoverflow.com/a/54969114/2445763
-fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
-    observeForever(object : Observer<T> {
-        override fun onChanged(t: T?) {
-            observer.onChanged(t)
-            removeObserver(this)
-        }
-    })
-}
-
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private lateinit var binding: FragmentHomeBinding
@@ -49,6 +38,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
 
         setHasOptionsMenu(true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshRecyclerView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -90,37 +84,37 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupRecyclerView() {
-        val submissionViewModel = SubmissionViewModel.getNewInstance(
-            AppDatabase.getInstance(requireActivity().application).sharedDao,
-            requireActivity().application
-        )
-
         listAdapter = SubmissionListAdapter(
             SubmissionListAdapter.ClickListener  {
                 val action = HomeFragmentDirections.actionHomeFragmentToEditSubmissionFragment(it)
                 findNavController().navigate(action)
             },
-            submissionViewModel,
             this
         )
 
         val decor = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         binding.subredditList.addItemDecoration(decor)
 
-        homeViewModel.submissions.observeOnce{ submissions ->
-            listAdapter.submitList(submissions)
-            listAdapter.notifyItemRangeChanged(0,100)
-        }
+        refreshRecyclerView()
 
         binding.subredditList.adapter = listAdapter
     }
 
     private fun setupSwipeToRefresh() {
         binding.swipeRefresh.setOnRefreshListener {
-            findNavController().navigate(R.id.homeFragment)
+            refreshRecyclerView()
             binding.swipeRefresh.isRefreshing = false
         }
     }
 
-    private fun setupObservers() {}
+    private fun refreshRecyclerView() {
+        homeViewModel.submissions.refresh()
+    }
+
+    private fun setupObservers() {
+        homeViewModel.submissions.observe(viewLifecycleOwner, { submissions ->
+            listAdapter.submitList(submissions)
+            listAdapter.notifyItemRangeChanged(0,100)
+        })
+    }
 }

@@ -27,17 +27,14 @@ import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.ui.submission.ImageSubmissionFragment
 import name.lmj0011.holdup.ui.submission.LinkSubmissionFragment
 import name.lmj0011.holdup.ui.submission.PollSubmissionFragment
-import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import name.lmj0011.holdup.ui.submission.TextSubmissionFragment
 import name.lmj0011.holdup.ui.submission.VideoSubmissionFragment
 import org.kodein.di.instance
-import timber.log.Timber
 
-class SubmissionListAdapter(private val clickListener: ClickListener, private val viewModel: SubmissionViewModel, private val parentFragment: Fragment): ListAdapter<Submission, SubmissionListAdapter.ViewHolder>(SubmissionDiffCallback()) {
+class SubmissionListAdapter(private val clickListener: ClickListener, private val parentFragment: Fragment): ListAdapter<Submission, SubmissionListAdapter.ViewHolder>(SubmissionDiffCallback()) {
     class ViewHolder private constructor(
         val binding: ListItemSubmissionBinding,
         val context: Context,
-        val viewModel: SubmissionViewModel,
         ) : RecyclerView.ViewHolder(binding.root){
         var fragment: Fragment? = null
 
@@ -88,10 +85,10 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
         }
 
         companion object {
-            fun from(parent: ViewGroup, viewModel: SubmissionViewModel): ViewHolder {
+            fun from(parent: ViewGroup): ViewHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = ListItemSubmissionBinding.inflate(layoutInflater, parent, false)
-                return ViewHolder(binding, parent.context, viewModel)
+                return ViewHolder(binding, parent.context)
             }
         }
     }
@@ -184,7 +181,7 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder.from(parent, viewModel)
+        return ViewHolder.from(parent)
     }
 
     override fun submitList(list: MutableList<Submission>?) {
