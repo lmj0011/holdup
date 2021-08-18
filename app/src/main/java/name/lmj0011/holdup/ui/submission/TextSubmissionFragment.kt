@@ -52,7 +52,6 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
         submission = requireArguments().getParcelable("submission") as? Submission
         mode = requireArguments().getInt("mode")
 
-        view.findViewById<EditText>(R.id.textEditTextTextMultiLine).setText(submission?.body)
         setupBinding(view)
         setupObservers()
     }
@@ -75,7 +74,6 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
 
                     submission?.apply {
                         body = text
-                        Timber.d("body: $body")
                         launchIO { viewModel.updateSubmission(this@apply) }
                     }
                 }
@@ -86,6 +84,10 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
     override fun setupBinding(view: View) {
         binding = FragmentTextSubmissionBinding.bind(view)
         binding.lifecycleOwner = viewLifecycleOwner
+
+        submission?.body?.let{ text ->
+            binding.textEditTextTextMultiLine.setText(text)
+        }
 
         if (mode == SubmissionFragmentChild.VIEW_MODE) {
             binding.textEditTextTextMultiLine

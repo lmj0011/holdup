@@ -1,14 +1,12 @@
 package name.lmj0011.holdup.ui.home
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import name.lmj0011.holdup.App
@@ -17,7 +15,6 @@ import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.databinding.FragmentHomeBinding
 import name.lmj0011.holdup.helpers.RedditAuthHelper
 import name.lmj0011.holdup.helpers.adapters.SubmissionListAdapter
-import name.lmj0011.holdup.helpers.factories.ViewModelFactory
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubmissionsFilterOptionsFragment
 import org.kodein.di.instance
@@ -25,16 +22,17 @@ import org.kodein.di.instance
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private lateinit var binding: FragmentHomeBinding
-    private val  homeViewModel by viewModels<HomeViewModel> {
-        ViewModelFactory(AppDatabase.getInstance(requireActivity().application).sharedDao,
-        requireActivity().application)
-    }
+    private lateinit var homeViewModel: HomeViewModel
     private lateinit var redditAuthHelper: RedditAuthHelper
     private lateinit var listAdapter: SubmissionListAdapter
     private lateinit var bottomSheetSubmissionsFilterOptionsFragment: BottomSheetSubmissionsFilterOptionsFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        homeViewModel = HomeViewModel(
+            AppDatabase.getInstance(requireActivity().application).sharedDao,
+            requireActivity().application
+        )
         redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
 
         setHasOptionsMenu(true)
@@ -42,6 +40,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     override fun onResume() {
         super.onResume()
+        // make new instance of the SubmissionViewModel used by the SubmissionFragmentChild Fragments
+        SubmissionViewModel.getNewInstance(
+            AppDatabase.getInstance(requireActivity().application).sharedDao,
+            requireActivity().application
+        )
         refreshRecyclerView()
     }
 
@@ -76,7 +79,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun setupBinding(view: View) {
         binding = FragmentHomeBinding.bind(view)
         binding.lifecycleOwner = viewLifecycleOwner
-        binding.homeViewModel = homeViewModel
 
         bottomSheetSubmissionsFilterOptionsFragment = BottomSheetSubmissionsFilterOptionsFragment {
             findNavController().navigate(R.id.homeFragment)
@@ -111,10 +113,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         homeViewModel.submissions.refresh()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun setupObservers() {
         homeViewModel.submissions.observe(viewLifecycleOwner, { submissions ->
             listAdapter.submitList(submissions)
-            listAdapter.notifyItemRangeChanged(0,100)
+            listAdapter.notifyDataSetChanged()
         })
     }
 }

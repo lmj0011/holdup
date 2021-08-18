@@ -25,11 +25,11 @@ class TestHelper(val context: Context) {
         val submissions = mutableListOf<Submission>()
 
         val account = Account(
-            id=1,
-            createdAt="2021-01-29T06:26:55.182Z",
-            updatedAt="2021-01-29T06:26:55.837Z",
-            name="u/Ok-Piglet8858",
-            iconImage="https://styles.redditmedia.com/t5_34soea/styles/profileIcon_obvwm5h1v3r51.jpg"
+            id=7,
+            createdAt="2021-08-17T01:31:08.882Z",
+            updatedAt="2021-08-17T01:31:09.332Z",
+            name="u/0x69733",
+            iconImage="https://www.redditstatic.com/avatars/avatar_default_08_D4E815.png"
          )
 
         val subreddit = Subreddit(

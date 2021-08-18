@@ -41,7 +41,6 @@ import name.lmj0011.holdup.helpers.models.SubredditFlair
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
 import name.lmj0011.holdup.helpers.util.extractOpenGraphImageFromUrl
-import name.lmj0011.holdup.helpers.util.extractTitleFromUrl
 import name.lmj0011.holdup.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
@@ -50,6 +49,7 @@ import name.lmj0011.holdup.helpers.util.withUIContext
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetAccountsFragment
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
+import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
 import java.lang.Exception
@@ -110,6 +110,8 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
         binding.flagsChipGroup.isVisible = args.submission.isNsfw || args.submission.isSpoiler
         binding.nsfwChip.isChecked = args.submission.isNsfw
         binding.spoilerChip.isChecked = args.submission.isSpoiler
+
+        (requireActivity() as MainActivity).hideFab()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -415,20 +417,24 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
             }
             .setNeutralButton("Now") {_, _ ->
                 launchIO {
-                    val responsePair = viewModel.postSubmission(args.submission.kind!!)
+                    try {
+                        val responsePair = args.submission.kind?.let { viewModel.postSubmission(it) }
 
-                    responsePair.first?.let { _ ->
-                        viewModel.deleteSubmission(args.submission)
-                    }
-
-                    withUIContext {
-                        responsePair.first?.let { _ ->
-                            findNavController().navigateUp()
+                        responsePair?.first?.let { _ ->
+                            viewModel.deleteSubmission(args.submission)
                         }
 
-                        responsePair.second?.let { msg ->
-                            showSnackBar(binding.root, msg)
+                        withUIContext {
+                            responsePair?.first?.let { _ ->
+                                findNavController().navigateUp()
+                            }
+
+                            responsePair?.second?.let { msg ->
+                                showSnackBar(binding.root, msg)
+                            }
                         }
+                    } catch(ex: HttpStatusException) {
+                        showSnackBar(binding.root, requireContext().getString(R.string.reddit_api_http_error_msg, ex.statusCode, ex.message))
                     }
                 }
             }
@@ -440,8 +446,13 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
 
                         withUIContext {
                             val alarmIntent = Intent(context, PublishScheduledSubmissionReceiver::class.java).let { intent ->
+                                intent.action = sub.alarmRequestCode.toString()
                                 intent.putExtra("alarmRequestCode", sub.alarmRequestCode)
-                                PendingIntent.getBroadcast(context, sub.alarmRequestCode, intent, 0)
+                                PendingIntent.getBroadcast(
+                                    context,
+                                    sub.alarmRequestCode,
+                                    intent,
+                                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                             }
 
                             val futureElapsedTime = getElapsedTimeUntilFutureTime(cal.timeInMillis)

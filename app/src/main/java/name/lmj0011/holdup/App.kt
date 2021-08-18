@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.work.*
 import com.jakewharton.threetenabp.AndroidThreeTen
 import name.lmj0011.holdup.helpers.*
+import name.lmj0011.holdup.helpers.workers.RefreshAlarmsWorker
 import org.kodein.di.*
 import timber.log.Timber
 
@@ -23,6 +24,7 @@ class App: Application(), Configuration.Provider {
         Timber.plant(Timber.DebugTree())
         AndroidThreeTen.init(this)
         NotificationHelper.init(this)
+        enqueueOneTimeWorkers()
         enqueuePeriodicWorkers()
     }
 
@@ -34,7 +36,7 @@ class App: Application(), Configuration.Provider {
     }
 
     private fun enqueuePeriodicWorkers() {
-        val workManager = WorkManager.getInstance(applicationContext)
+//        val workManager = WorkManager.getInstance(applicationContext)
 //        val requestCodeHelper: UniqueRuntimeNumberHelper  = (applicationContext as App).kodein.instance()
 //
 //        val scheduledDraftServiceCallerWorkRequest = PeriodicWorkRequestBuilder<ScheduledSubmissionServiceCallerWorker>(
@@ -45,5 +47,9 @@ class App: Application(), Configuration.Provider {
 //            .build()
 //
 //        workManager.enqueueUniquePeriodicWork(Keys.SCHEDULED_DRAFT_SERVICE_CALLER_WORKER_TAG, ExistingPeriodicWorkPolicy.REPLACE, scheduledDraftServiceCallerWorkRequest)
+    }
+
+    private fun enqueueOneTimeWorkers() {
+        WorkManager.getInstance(applicationContext).enqueue(OneTimeWorkRequestBuilder<RefreshAlarmsWorker>().build())
     }
 }

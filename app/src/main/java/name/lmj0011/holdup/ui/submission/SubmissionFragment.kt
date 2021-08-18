@@ -21,7 +21,6 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
@@ -53,6 +52,7 @@ import name.lmj0011.holdup.helpers.util.withUIContext
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetAccountsFragment
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
+import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
 
@@ -94,6 +94,9 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 
         /**
          * TEST CODE
+         *
+         * Creates 10 scheduled Self Submissions, the first posting X time from the current time
+         * and each sequential Submission X time after the previous one.
          */
 //        val dao = AppDatabase.getInstance(requireActivity().application).sharedDao
 //        val tHelper = TestHelper(requireContext())
@@ -101,19 +104,21 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 //        launchIO {
 //            dao.deleteAllSubmissionId() // clear submissions table
 //
-//            val postAtUtcMillis = 1612916400602
+//            val currentMillis = System.currentTimeMillis()
+//            val offsetInMillis = 300000L // 5 minutes
+//
 //            val submissions = tHelper.generateSubmissions(
 //                listOf(
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
-//                    Pair(SubmissionKind.Self, postAtUtcMillis),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 1))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 2))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 3))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 4))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 5))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 6))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 7))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 8))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 9))),
+//                    Pair(SubmissionKind.Self, (currentMillis + (offsetInMillis * 10))),
 //                )
 //            )
 //
@@ -123,22 +128,25 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 //
 //                submissions.forEach { sub ->
 //                    val alarmIntent = Intent(context, PublishScheduledSubmissionReceiver::class.java).let { intent ->
+//                        intent.action = sub.alarmRequestCode.toString()
 //                        intent.putExtra("alarmRequestCode", sub.alarmRequestCode)
-//                        PendingIntent.getBroadcast(context, sub.alarmRequestCode, intent, 0)
+//                        PendingIntent.getBroadcast(
+//                            context,
+//                            sub.alarmRequestCode,
+//                            intent,
+//                            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 //                    }
 //
 //
-//            val futureElapsedTime = getElapsedTimeUntilFutureTime(sub.timeInMillis)
+//                val futureElapsedTime = getElapsedTimeUntilFutureTime(sub.postAtMillis)
 //
-//            alarmMgr.setExactAndAllowWhileIdle(
-//                AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//                futureElapsedTime,
-//                alarmIntent
-//            )
-//                        Timber.d("alarm set for Submission: ${getPostAtDateForListLayout(sub)}")
-//                    } else {
-//                        Timber.e("failed to set alarm!")
-//                    }
+//                    alarmMgr.setExactAndAllowWhileIdle(
+//                        AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                        futureElapsedTime,
+//                        alarmIntent
+//                    )
+//
+//                  Timber.d("alarm set for ${sub.kind?.name} Submission \"${sub.title}\" @ ${DateTimeHelper.getPostAtDateForListLayout(sub)}")
 //                }
 //
 //            }
@@ -598,37 +606,23 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             }
             .setNeutralButton("Now") {_, _ ->
                 launchIO {
-                    val responsePair = when (kind) {
-                        "Link" -> {
-                            viewModel.postSubmission(SubmissionKind.Link)
+                    try {
+                        val responsePair = viewModel.postSubmission(SubmissionKind.from(kind))
+
+                        withUIContext {
+                            // Post was successful
+                            responsePair.first?.let { _ ->
+                                findNavController().navigateUp()
+                            }
+
+                            // Post failed
+                            responsePair.second?.let { msg ->
+                                showSnackBar(binding.root, msg)
+                            }
                         }
-                        "Image" -> {
-                            viewModel.postSubmission(SubmissionKind.Image)
-                        }
-                        "Video" -> {
-                            viewModel.postSubmission(SubmissionKind.Video)
-                        }
-                        "Self" -> {
-                            viewModel.postSubmission(SubmissionKind.Self)
-                        }
-                        "Poll" -> {
-                            viewModel.postSubmission(SubmissionKind.Poll)
-                        }
-                        else -> Pair(null, null)
+                    } catch(ex: HttpStatusException) {
+                        showSnackBar(binding.root, requireContext().getString(R.string.reddit_api_http_error_msg, ex.statusCode, ex.message))
                     }
-
-                    withUIContext {
-                        // Post was successful
-                        responsePair.first?.let { _ ->
-                            findNavController().navigateUp()
-                        }
-
-                        // Post failed
-                        responsePair.second?.let { msg ->
-                            showSnackBar(binding.root, msg)
-                        }
-                    }
-
                 }
 
             }
@@ -640,8 +634,13 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 
                         withUIContext {
                             val alarmIntent = Intent(context, PublishScheduledSubmissionReceiver::class.java).let { intent ->
+                                intent.action = alarmRequestCode.toString()
                                 intent.putExtra("alarmRequestCode", alarmRequestCode)
-                                PendingIntent.getBroadcast(context, alarmRequestCode, intent, 0)
+                                PendingIntent.getBroadcast(
+                                    context,
+                                    alarmRequestCode,
+                                    intent,
+                                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                             }
 
                             val futureElapsedTime = getElapsedTimeUntilFutureTime(cal.timeInMillis)
@@ -651,7 +650,8 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                                 futureElapsedTime,
                                 alarmIntent
                             )
-                            Timber.d("alarm set for new Submission")
+
+                            Timber.d("alarm set for new $kind Submission")
                         }
 
                         when (kind) {

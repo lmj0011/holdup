@@ -34,9 +34,8 @@ import org.kodein.di.instance
 class SubmissionListAdapter(private val clickListener: ClickListener, private val parentFragment: Fragment): ListAdapter<Submission, SubmissionListAdapter.ViewHolder>(SubmissionDiffCallback()) {
     class ViewHolder private constructor(
         val binding: ListItemSubmissionBinding,
-        val context: Context,
+        val context: Context
         ) : RecyclerView.ViewHolder(binding.root){
-        var fragment: Fragment? = null
 
         fun bind(clickListener: ClickListener, submission: Submission){
             binding.submission = submission
@@ -125,36 +124,33 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
                     val mediaPlayer = (holder.context as MainActivity).mediaPlayer
 
                     holder.binding.submission?.let{ submission ->
-                        if (holder.fragment == null) {
-                            holder.fragment = when (submission.kind) {
-                                SubmissionKind.Link -> {
-                                    LinkSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
-                                }
-                                SubmissionKind.Image -> {
-                                    ImageSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
-                                }
-                                SubmissionKind.Video, SubmissionKind.VideoGif  -> {
-                                    VideoSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE, mediaPlayer)
-                                }
-                                SubmissionKind.Self -> {
-                                    TextSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
-                                }
-                                SubmissionKind.Poll -> {
-                                    PollSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
-                                }
-                                else -> null
+                        val fragment = when (submission.kind) {
+                            SubmissionKind.Link -> {
+                                LinkSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
                             }
+                            SubmissionKind.Image -> {
+                                ImageSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
+                            }
+                            SubmissionKind.Video, SubmissionKind.VideoGif  -> {
+                                VideoSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE, mediaPlayer)
+                            }
+                            SubmissionKind.Self -> {
+                                TextSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
+                            }
+                            SubmissionKind.Poll -> {
+                                PollSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
+                            }
+                            else -> throw Exception("invalid submission.kind!")
                         }
 
-                        holder.fragment?.let { frag ->
-                            holder.binding.listItemSubmissionContentPreviewViewPager.adapter = object: FragmentStateAdapter(parentFragment) {
-                                override fun createFragment(position: Int): Fragment {
-                                    return frag
-                                }
+                        holder.binding.listItemSubmissionContentPreviewViewPager.adapter = object: FragmentStateAdapter(parentFragment) {
+                            override fun createFragment(position: Int): Fragment {
+                                parentFragment.childFragmentManager.beginTransaction().remove(fragment).commitNow()
+                                return fragment
+                            }
 
-                                override fun getItemCount(): Int {
-                                    return 10
-                                }
+                            override fun getItemCount(): Int {
+                                return 10
                             }
                         }
                     }
@@ -169,15 +165,6 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
         }
 
         super.onViewAttachedToWindow(holder)
-    }
-
-    override fun onViewDetachedFromWindow(holder: ViewHolder) {
-        holder.fragment?.let { frag ->
-            parentFragment.childFragmentManager.beginTransaction().remove(frag).commitNow()
-        }
-
-        holder.fragment = null
-        super.onViewDetachedFromWindow(holder)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

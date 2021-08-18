@@ -1,6 +1,5 @@
 package name.lmj0011.holdup.ui.submission
 
-import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher

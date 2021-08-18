@@ -11,10 +11,15 @@
     <string name="too_early_submission">Scheduled Submission is trying to post too early, this may have been caused by an older Alarm that was set for this Submission before it was updated.</string>
     <string name="enable_inbox_replies">Enable inbox replies</string>
     <string name="when_would_you_like_to_post">When would you like to post?</string>
+    <string name="unknown_error_msg">An unknown error occurred; %1$s</string>
+    <string name="scheduled_submission_publish_unknown_error_msg">Your submission titled &lt;b>%1$s&lt;/b> failed to publish to the subreddit &lt;b>%2$s&lt;/b>; %3$s</string>
+    <string name="scheduled_submission_publish_api_error_msg">Your submission titled &lt;b>%1$s&lt;/b> failed to publish to the subreddit &lt;b>%2$s&lt;/b>, HTTP error %3$d: %4$s</string>
+    <string name="reddit_api_http_error_msg">Reddit is unable to process this request, HTTP error %1$d: %2$s</string>
+    <string name="reddit_upload_media_error_msg">Media upload to Reddit failed, HTTP error %1$d: %2$s</string>
 
-    <string name="github_repo_url">https://github.com/lmj0011</string>
+    <string name="github_repo_url" translatable="false">https://github.com/lmj0011</string>
     <string name="app_tagline">A Post scheduler for Reddit</string>
-    <string name="dev_email">holdupapp@protonmail.com</string>
+    <string name="dev_email" translatable="false">holdupapp@protonmail.com</string>
     <string name="submissions_display_option_compact_list">Compact List</string>
     <string name="submissions_display_option_full_list">Full List</string>
 </resources>

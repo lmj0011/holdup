@@ -34,6 +34,7 @@ import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.helpers.util.showSnackBar
 import name.lmj0011.holdup.helpers.util.withUIContext
+import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
 import java.io.File
@@ -159,8 +160,8 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
                                 val thumbNailInfo = viewModel.uploadMedia(file, "image/png")
                                 vid.posterUrl = thumbNailInfo.second
                             }
-                        } catch (ex: Exception) {
-                            Timber.e(ex)
+                        } catch(ex: HttpStatusException) {
+                            showSnackBar(binding.root, requireContext().getString(R.string.reddit_upload_media_error_msg, ex.statusCode, ex.message))
                         }
                         /**
                          *
@@ -214,11 +215,6 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
     }
 
     override fun setupObservers() {
-//        viewModel.submissionVideo.observe(viewLifecycleOwner, { video ->
-//            Timber.d("class named: ${this::class.simpleName}")
-//        })
-
-
         viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
             if (it) {
                 clearUserInputViews()

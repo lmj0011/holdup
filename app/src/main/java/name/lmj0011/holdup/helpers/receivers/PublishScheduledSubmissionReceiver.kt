@@ -18,6 +18,8 @@ class PublishScheduledSubmissionReceiver : BroadcastReceiver() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
+        Timber.d("intentAction: ${intent.action}")
+
         val alarmRequestCode = intent.getIntExtra("alarmRequestCode", -1)
         Timber.d("alarmRequestCode: $alarmRequestCode")
         val data = Data.Builder()
@@ -25,13 +27,13 @@ class PublishScheduledSubmissionReceiver : BroadcastReceiver() {
             .build()
 
         /**
-         * Adding a random delay (some time within 1 min)
+         * Adding a random delay (some time within 30 seconds)
          * to prevent multiple PublishScheduledSubmissionWorkers running
          * at the same exact time and possibly spamming Reddit servers
          */
         val randGen = SecureRandom.getInstanceStrong()
         randGen.setSeed((Long.MIN_VALUE..Long.MAX_VALUE).random())
-        val jitterTime = (randGen.nextInt(60) + 1).toLong() // 1-60 seconds
+        val jitterTime = (randGen.nextInt(30) + 1).toLong() // 1-30 seconds
         Timber.d(" added jitter time is $jitterTime secs")
         /**
          *

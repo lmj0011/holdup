@@ -26,8 +26,7 @@ import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.helpers.util.showSnackBar
 import name.lmj0011.holdup.helpers.util.withUIContext
-import timber.log.Timber
-import java.lang.Exception
+import org.jsoup.HttpStatusException
 
 class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
     BaseFragmentInterface, SubmissionFragmentChild, BottomSheetImagePicker.OnImagesSelectedListener {
@@ -172,8 +171,8 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
                         viewModel.submissionImageGallery.postValue(list)
                         viewModel.validateSubmission(SubmissionKind.Image)
                     }
-                } catch (ex: Exception) {
-                    Timber.e(ex)
+                } catch(ex: HttpStatusException) {
+                    showSnackBar(binding.root, requireContext().getString(R.string.reddit_upload_media_error_msg, ex.statusCode, ex.message))
                 }
 
             }

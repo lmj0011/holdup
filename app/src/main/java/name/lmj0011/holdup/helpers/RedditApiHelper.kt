@@ -17,10 +17,10 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
-import okio.IOException
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import org.jsoup.HttpStatusException
 import timber.log.Timber
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -81,7 +81,7 @@ class RedditApiHelper(val context: Context) {
 
         val response = client.newCall(request).execute()
 
-        return if (!response.isSuccessful) throw IOException("$response")
+        return if (!response.isSuccessful) throw HttpStatusException(response.message, response.code, response.request.url.toString())
         else response
     }
 
@@ -94,7 +94,7 @@ class RedditApiHelper(val context: Context) {
 
         val response = client.newCall(request).execute()
 
-        return if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        return if (!response.isSuccessful) throw HttpStatusException(response.message, response.code, response.request.url.toString())
         else response
     }
 
@@ -107,7 +107,7 @@ class RedditApiHelper(val context: Context) {
 
         val response = client.newCall(request).execute()
 
-        return if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        return if (!response.isSuccessful) throw HttpStatusException(response.message, response.code, response.request.url.toString())
         else response
     }
 
@@ -415,7 +415,7 @@ class RedditApiHelper(val context: Context) {
                     Timber.d("mediaUrl: $mediaUrl")
                     Timber.d("mediaId: $mediaId")
                 }
-                else -> throw IOException("Unexpected code: $uploadResponse")
+                else -> throw HttpStatusException(uploadResponse.message, uploadResponse.code, uploadResponse.request.url.toString())
             }
 
         }
@@ -474,7 +474,7 @@ class RedditApiHelper(val context: Context) {
                     Timber.d("mediaUrl: $mediaUrl")
                     Timber.d("mediaId: $mediaId")
                 }
-                else -> throw IOException("Unexpected code: $uploadResponse")
+                else -> throw HttpStatusException(uploadResponse.message, uploadResponse.code, uploadResponse.request.url.toString())
             }
         return Pair(mediaId, mediaUrl)
     }

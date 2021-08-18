@@ -5,10 +5,13 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.Settings
+import android.text.Spanned
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavDeepLinkBuilder
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.MainActivity
 import name.lmj0011.holdup.R
@@ -88,18 +91,24 @@ object NotificationHelper {
         }
     }
 
-    fun showSubmissionPublishedErrorNotification(submission: Submission, errorMessage: String) {
-        val intent = Intent(application, MainActivity::class.java)
-        val defaultContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+    fun showSubmissionPublishedErrorNotification(submission: Submission, errorMessage: Spanned) {
+
+        val pendingIntent = NavDeepLinkBuilder(application)
+            .setGraph(R.navigation.mobile_navigation)
+            .setDestination(R.id.editSubmissionFragment)
+            .setArguments(Bundle().apply {
+                putParcelable("submission", submission)
+            })
+            .createPendingIntent()
 
         val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_app_notification_icon)
             .setAutoCancel(true)
-            .setContentTitle("Submission failed to publish to ${submission.subreddit?.displayNamePrefixed}")
+            .setContentTitle("Your scheduled ${submission.kind?.name} Submission failed to publish.")
             .setContentText(submission.title)
             .setStyle(NotificationCompat.BigTextStyle().bigText(errorMessage))
             .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
-            .setContentIntent(defaultContentPendingIntent)
+            .setContentIntent(pendingIntent)
 
         launchIO {
             NotificationManagerCompat.from(application)

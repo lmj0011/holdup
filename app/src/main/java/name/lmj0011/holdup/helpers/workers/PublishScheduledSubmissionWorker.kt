@@ -1,6 +1,7 @@
 package name.lmj0011.holdup.helpers.workers
 
 import android.content.Context
+import android.text.Html
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -12,8 +13,10 @@ import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
+import name.lmj0011.holdup.helpers.DateTimeHelper
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
+import org.jsoup.HttpStatusException
 import timber.log.Timber
 import java.util.*
 
@@ -42,6 +45,8 @@ class PublishScheduledSubmissionWorker (private val appContext: Context, private
                     return@withContext Result.failure(outputData)
                 }
 
+                Timber.d("Preparing to publish ${sub.kind?.name} Submission \"${sub.title}\"; scheduled time was ${DateTimeHelper.getPostAtDateForListLayout(sub)}")
+
                 setForeground(createForegroundInfo(sub))
 
                 /**
@@ -61,24 +66,35 @@ class PublishScheduledSubmissionWorker (private val appContext: Context, private
                  *
                  */
 
-                val responsePair = viewModel.populateFromSubmissionThenPost(sub)
+                val responsePair = viewModel.populateFromSubmissionThenPost(sub, true)
+                val errMsg =  responsePair?.second
 
-                responsePair?.first?.let {
-                    dao.deleteBySubmissionId(sub.id)
-                }
-
-                responsePair?.second?.let { msg ->
+                if (errMsg != null) {
+                    val msg = Html.fromHtml(errMsg, Html.FROM_HTML_MODE_LEGACY)
                     NotificationHelper.showSubmissionPublishedErrorNotification(sub, msg)
                     val outputData = workDataOf("error" to msg)
                     return@withContext Result.failure(outputData)
+                } else {
+                    responsePair?.first?.let {
+                        dao.deleteBySubmissionId(sub.id)
+                    }
                 }
             }
-
             return@withContext Result.success()
         } catch (ex: Exception) {
-            val outputData = workDataOf("error" to ex.message)
+            submission?.let { sub ->
+                val errMsg = if (ex is HttpStatusException) {
+                    appContext.getString(R.string.scheduled_submission_publish_api_error_msg, sub.title, sub.subreddit?.displayNamePrefixed, ex.statusCode, ex.message)
+                } else {
+                    appContext.getString(R.string.scheduled_submission_publish_unknown_error_msg, sub.title, sub.subreddit?.displayNamePrefixed, ex.message)
+                }
+
+                val styledErrMsg = Html.fromHtml(errMsg, Html.FROM_HTML_MODE_LEGACY)
+                NotificationHelper.showSubmissionPublishedErrorNotification(sub, styledErrMsg)
+            }
+
             Timber.e(ex)
-            return@withContext Result.failure(outputData)
+            return@withContext Result.failure(workDataOf("error" to ex.message))
         }
     }
 

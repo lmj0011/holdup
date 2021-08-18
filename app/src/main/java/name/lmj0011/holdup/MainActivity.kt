@@ -36,7 +36,6 @@ import org.kodein.di.instance
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainBinding
     private lateinit var dataStoreHelper: DataStoreHelper
     lateinit var navController: NavController
@@ -70,11 +69,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         mediaPlayer = SimpleExoPlayer.Builder(this).build()
         super.onResume()
-    }
-
-    override fun onStop() {
-        mediaPlayer.release()
-        super.onStop()
     }
 
     private fun setupNavigationListener(){

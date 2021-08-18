@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.helpers.DateTimeHelper.getElapsedTimeUntilFutureTime
-import name.lmj0011.holdup.helpers.DateTimeHelper.getLocalDateFromUtcMillis
 import name.lmj0011.holdup.helpers.DateTimeHelper.getPostAtDateForListLayout
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
@@ -54,8 +53,13 @@ class RefreshAlarmsWorker (private val appContext: Context, parameters: WorkerPa
         submissions
             .forEach {
                 val newAlarmIntent = Intent(appContext, PublishScheduledSubmissionReceiver::class.java).let { intent ->
+                    intent.action = it.alarmRequestCode.toString()
                     intent.putExtra("alarmRequestCode", it.alarmRequestCode)
-                    PendingIntent.getBroadcast(appContext, it.alarmRequestCode, intent, 0)
+                    PendingIntent.getBroadcast(
+                        appContext,
+                        it.alarmRequestCode,
+                        intent,
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT) // https://stackoverflow.com/a/67046334/2445763
                 }
 
                 val futureElapsedTime = getElapsedTimeUntilFutureTime(it.postAtMillis)
@@ -65,7 +69,7 @@ class RefreshAlarmsWorker (private val appContext: Context, parameters: WorkerPa
                     futureElapsedTime, // I have yet to understand how this coming up with the correct number
                     newAlarmIntent
                 )
-                Timber.d("alarm set for Submission: ${getPostAtDateForListLayout(it)}")
+                Timber.d("alarm set for ${it.kind?.name} Submission \"${it.title}\" @ ${getPostAtDateForListLayout(it)}")
 
                 dao.update(it)
             }
