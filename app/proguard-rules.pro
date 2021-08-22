@@ -12,15 +12,25 @@
 #   public *;
 #}
 
+# ref: https://stackoverflow.com/questions/9651703/using-proguard-with-android-without-obfuscation
+-dontobfuscate
+-optimizationpasses 5
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-dontpreverify
+-verbose
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*,!code/allocation/variable
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
--keepattributes SourceFile,LineNumberTable
+-keepattributes Signature,SourceFile,LineNumberTable
+#-keep public class * extends android.app.Application
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
--renamesourcefileattribute SourceFile
+#-renamesourcefileattribute SourceFile
 
 # ref: https://stackoverflow.com/a/46333633/2445763
--keep class androidx.dynamicanimation.animation.FloatPropertyCompat
--keepclasseswithmembernames class * { @androidx.dynamicanimation.animation.FloatPropertyCompat <methods>; }
--keepclasseswithmembernames class * { @androidx.dynamicanimation.animation.FloatPropertyCompat <fields>; }
+#-keep class androidx.dynamicanimation.animation.FloatPropertyCompat
+#-keepclasseswithmembernames class * { @androidx.dynamicanimation.animation.FloatPropertyCompat <methods>; }
+#-keepclasseswithmembernames class * { @androidx.dynamicanimation.animation.FloatPropertyCompat <fields>; }

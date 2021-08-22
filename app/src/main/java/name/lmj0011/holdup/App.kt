@@ -3,25 +3,28 @@ package name.lmj0011.holdup
 import android.app.Application
 import androidx.work.*
 import com.jakewharton.threetenabp.AndroidThreeTen
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import name.lmj0011.holdup.helpers.*
 import name.lmj0011.holdup.helpers.workers.RefreshAlarmsWorker
 import name.lmj0011.holdup.helpers.workers.UploadSubmissionMediaWorker
-import org.kodein.di.*
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.singleton
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 class App: Application(), Configuration.Provider {
-    lateinit var kodein: DirectDI
+    @ExperimentalCoroutinesApi
+    val kodein = DI.direct {
+        bind<RedditApiHelper>() with singleton { RedditApiHelper(this@App) }
+        bind<RedditAuthHelper>() with singleton { RedditAuthHelper(this@App) }
+        bind<SubmissionValidatorHelper>() with singleton { SubmissionValidatorHelper(this@App) }
+        bind<DataStoreHelper>() with singleton { DataStoreHelper(this@App) }
+        bind<UniqueRuntimeNumberHelper>() with singleton { UniqueRuntimeNumberHelper(this@App) }
+    }
 
     override fun onCreate() {
         super.onCreate()
-        kodein = DI.direct {
-            bind<RedditApiHelper>() with singleton { RedditApiHelper(this@App) }
-            bind<RedditAuthHelper>() with singleton { RedditAuthHelper(this@App) }
-            bind<SubmissionValidatorHelper>() with singleton { SubmissionValidatorHelper(this@App) }
-            bind<DataStoreHelper>() with singleton { DataStoreHelper(this@App) }
-            bind<UniqueRuntimeNumberHelper>() with singleton { UniqueRuntimeNumberHelper(this@App) }
-        }
 
         Timber.plant(Timber.DebugTree())
         AndroidThreeTen.init(this)
