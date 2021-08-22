@@ -607,21 +607,32 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             .setNeutralButton("Now") {_, _ ->
                 launchIO {
                     try {
-                        val responsePair = viewModel.postSubmission(SubmissionKind.from(kind))
+                        when (SubmissionKind.from(kind)) {
+                            SubmissionKind.Image, SubmissionKind.Video, SubmissionKind.VideoGif -> {
+                                val alarmRequestCode = requestCodeHelper.nextInt()
+                                viewModel.saveSubmission(SubmissionKind.from(kind), System.currentTimeMillis(), alarmRequestCode)
+                                enqueueUploadSubmissionMediaWorkerThenPublish(alarmRequestCode)
+                                withUIContext { findNavController().navigateUp() }
+                            } else -> {
+                                val responsePair = viewModel.postSubmission(SubmissionKind.from(kind))
 
-                        withUIContext {
-                            // Post was successful
-                            responsePair.first?.let { _ ->
-                                findNavController().navigateUp()
-                            }
+                                withUIContext {
+                                    // Post was successful
+                                    responsePair.first?.let { _ ->
+                                        findNavController().navigateUp()
+                                    }
 
-                            // Post failed
-                            responsePair.second?.let { msg ->
-                                showSnackBar(binding.root, msg)
+                                    // Post failed
+                                    responsePair.second?.let { msg ->
+                                        showSnackBar(binding.root, msg)
+                                    }
+                                }
                             }
                         }
                     } catch(ex: HttpStatusException) {
-                        showSnackBar(binding.root, requireContext().getString(R.string.reddit_api_http_error_msg, ex.statusCode, ex.message))
+                        withUIContext {
+                            showSnackBar(binding.root, requireContext().getString(R.string.reddit_api_http_error_msg, ex.statusCode, ex.message))
+                        }
                     }
                 }
 
@@ -671,6 +682,8 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                                 viewModel.saveSubmission(SubmissionKind.Poll, cal.timeInMillis, alarmRequestCode)
                             }
                         }
+
+                        enqueueUploadSubmissionMediaWorker()
 
                         launchUI {
                             if(!isIgnoringBatteryOptimizations(requireContext())) {

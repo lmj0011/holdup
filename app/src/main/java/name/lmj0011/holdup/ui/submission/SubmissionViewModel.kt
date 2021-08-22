@@ -128,15 +128,17 @@ class SubmissionViewModel(
                 it.name == username
             }
 
-            when {
-                lastSelected.isNotEmpty() -> account.postValue(lastSelected.first())
-                accounts.isNotEmpty() -> account.postValue(accounts.first())
+            val acct = when {
+                lastSelected.isNotEmpty() -> lastSelected.first()
+                accounts.isNotEmpty() -> accounts.first()
+                else -> throw Exception("There's no signed in Reddit Accounts")
             }
+
+            account.postValue(acct)
         }
     }
 
     fun setAccount(acct: Account) {
-        Timber.d("account: $acct")
         account.postValue(acct)
     }
 
@@ -497,7 +499,7 @@ class SubmissionViewModel(
                 submissionTitle.value?.let { form.title = it }
                 submissionVideo.value?.let {
                     form.url = it.url
-                    form.video_poster_url = it.posterUrl
+                    form.video_poster_url = it.posterSourceUri
                 }
             }
             SubmissionKind.VideoGif -> {

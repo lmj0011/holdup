@@ -2,13 +2,22 @@ package name.lmj0011.holdup
 
 import android.text.format.DateFormat
 import androidx.fragment.app.Fragment
+import androidx.work.Constraints
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import name.lmj0011.holdup.helpers.workers.PublishScheduledSubmissionWorker
+import name.lmj0011.holdup.helpers.workers.UploadSubmissionMediaWorker
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 open class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
     protected fun pickDateAndTime(callBack: (cal: Calendar) -> Unit) {
@@ -39,7 +48,7 @@ open class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
 
     }
 
-    private fun  askForTime(cal: Calendar, callback: (cal: Calendar) -> Unit) {
+    private fun askForTime(cal: Calendar, callback: (cal: Calendar) -> Unit) {
         @TimeFormat val clockFormat = when(DateFormat.is24HourFormat(context)) {
             true -> TimeFormat.CLOCK_24H
             else -> TimeFormat.CLOCK_12H
@@ -56,5 +65,47 @@ open class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
         }
 
         timePicker.show(parentFragmentManager, "time_picker_tag")
+    }
+
+    protected fun enqueueUploadSubmissionMediaWorkerThenPublish(alarmRequestCode: Int) {
+        val workManager = WorkManager.getInstance(requireContext())
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val uploadSubmissionMediaWorkRequest = OneTimeWorkRequestBuilder<UploadSubmissionMediaWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        val publishScheduledSubmissionWorkerData = Data.Builder()
+            .putInt("alarmRequestCode", alarmRequestCode)
+            .build()
+
+        val publishScheduledSubmissionWorkRequest = OneTimeWorkRequestBuilder<PublishScheduledSubmissionWorker>()
+            .setConstraints(constraints)
+            .setInputData(publishScheduledSubmissionWorkerData)
+            .build()
+
+        workManager
+            .beginUniqueWork(Keys.UPLOAD_SUBMISSION_MEDIA_WORKER_TAG, ExistingWorkPolicy.REPLACE, uploadSubmissionMediaWorkRequest)
+            .then(publishScheduledSubmissionWorkRequest)
+            .enqueue()
+    }
+
+    protected fun enqueueUploadSubmissionMediaWorker() {
+        val workManager = WorkManager.getInstance(requireContext())
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val uploadSubmissionMediaWorkRequest = OneTimeWorkRequestBuilder<UploadSubmissionMediaWorker>()
+            .setInitialDelay(10, TimeUnit.SECONDS)
+            .setConstraints(constraints)
+            .build()
+
+        workManager
+            .enqueueUniqueWork(Keys.UPLOAD_SUBMISSION_MEDIA_WORKER_TAG, ExistingWorkPolicy.REPLACE, uploadSubmissionMediaWorkRequest)
     }
 }

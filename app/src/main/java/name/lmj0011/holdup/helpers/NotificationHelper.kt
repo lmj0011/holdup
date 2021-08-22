@@ -26,9 +26,11 @@ import java.net.URL
 object NotificationHelper {
     const val SUBMISSION_PUBLISHED_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#submissionPublished"
     const val POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#scheduledSubmissionService"
-    const val POSTING_SCHEDULED_SUBMISSION_SERVICE_NOTIFICATION_ID = 100
+    const val UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#uploadingSubmissionMediaService"
     const val BATTERY_OPTIMIZATION_INFO_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#batteryOptimizationInfo"
+    const val POSTING_SCHEDULED_SUBMISSION_SERVICE_NOTIFICATION_ID = 100
     const val BATTERY_OPTIMIZATION_INFO_NOTIFICATION_ID = 101
+    const val UPLOADING_SUBMISSION_MEDIA_NOTIFICATION_ID = 102
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
     private lateinit var application: Application
 
@@ -38,19 +40,20 @@ object NotificationHelper {
     fun init(application: Application) {
         this.application = application
         requestCodeHelper = (application as App).kodein.instance()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-            val chn1 = NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH)
+        val chn1 = NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH)
 
-            val chn2 = NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_DEFAULT)
-            chn2.setSound(null, null)
+        val chn2 = NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_DEFAULT)
+        chn2.setSound(null, null)
 
-            val chn3 = NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN)
-            chn3.setSound(null, null)
+        val chn3 = NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN)
+        chn3.setSound(null, null)
 
-            val list = mutableListOf(chn1,chn2,chn3)
-            NotificationManagerCompat.from(application).createNotificationChannels(list)
-        }
+        val chn4 = NotificationChannel(UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID, "Upload Submission Media Service", NotificationManager.IMPORTANCE_MIN)
+        chn4.setSound(null, null)
+
+        val list = mutableListOf(chn1, chn2, chn3, chn4)
+        NotificationManagerCompat.from(application).createNotificationChannels(list)
     }
 
     fun showSubmissionPublishedNotification(subreddit: Subreddit, account: Account, form: SubmissionValidatorHelper.SubmissionForm, postUrl: String?) {
@@ -159,6 +162,26 @@ object NotificationHelper {
             .setContentText("${submission.title}")
             .setContentIntent(pendingIntent)
             .color = ContextCompat.getColor(application, R.color.colorPrimary)
+
+        return builder.build()
+    }
+
+    fun getUploadingSubmissionMediaForegroundServiceNotification(progress: Int = 0): Notification {
+        val intent = Intent(application, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(application, 0, intent, 0)
+
+        val builder = NotificationCompat.Builder(application, UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID)
+
+        builder
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
+            .setShowWhen(false)
+            .setContentTitle("Uploading Submission Media")
+            .setContentIntent(pendingIntent)
+            .color = ContextCompat.getColor(application, R.color.colorPrimary)
+
+        if (progress > 0) {
+            builder.setProgress(100, progress, false)
+        }
 
         return builder.build()
     }

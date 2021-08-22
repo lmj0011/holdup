@@ -24,6 +24,8 @@ import org.jsoup.HttpStatusException
 import timber.log.Timber
 import java.io.File
 import java.util.concurrent.TimeUnit
+import java.util.logging.Level
+import java.util.logging.Logger
 
 class RedditApiHelper(val context: Context) {
     companion object {
@@ -34,6 +36,7 @@ class RedditApiHelper(val context: Context) {
         }
 
         init {
+            Logger.getLogger(OkHttpClient::class.java.name).level = Level.FINE
             okHttpLogging.setLevel(HttpLoggingInterceptor.Level.BASIC)
             okHttpLogging.redactHeader("Authorization")
         }

@@ -22,8 +22,6 @@ import java.util.*
 
 /**
  * This Worker publishes a scheduled Submission to Reddit
- *
- * TODO - need some way to let the user know if the Submission failed to post
  */
 class PublishScheduledSubmissionWorker (private val appContext: Context, private val parameters: WorkerParameters) :
     CoroutineWorker(appContext, parameters) {
@@ -46,6 +44,7 @@ class PublishScheduledSubmissionWorker (private val appContext: Context, private
                 }
 
                 Timber.d("Preparing to publish ${sub.kind?.name} Submission \"${sub.title}\"; scheduled time was ${DateTimeHelper.getPostAtDateForListLayout(sub)}")
+                Timber.d("submission: $sub")
 
                 setForeground(createForegroundInfo(sub))
 
@@ -72,7 +71,7 @@ class PublishScheduledSubmissionWorker (private val appContext: Context, private
                 if (errMsg != null) {
                     val msg = Html.fromHtml(errMsg, Html.FROM_HTML_MODE_LEGACY)
                     NotificationHelper.showSubmissionPublishedErrorNotification(sub, msg)
-                    val outputData = workDataOf("error" to msg)
+                    val outputData = workDataOf("error" to msg.toString())
                     return@withContext Result.failure(outputData)
                 } else {
                     responsePair?.first?.let {

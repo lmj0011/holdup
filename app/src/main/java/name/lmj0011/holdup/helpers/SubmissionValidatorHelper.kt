@@ -143,10 +143,7 @@ class SubmissionValidatorHelper(val context: Context) {
     }
 
     private fun videoValidate(form: SubmissionForm, reqs: PostRequirements): Boolean {
-        return when {
-            form.url.isBlank() || !Patterns.WEB_URL.matcher(form.url).matches() -> false
-            form.video_poster_url.isNotBlank() && !Patterns.WEB_URL.matcher(form.video_poster_url).matches() -> false
-            else -> true
-        }
+        // can't validate the video since it's uploaded later in a Worker
+        return true
     }
 }

@@ -6,7 +6,7 @@
     <string name="connect_reddit_btn">Connect Reddit</string>
     <string name="notification_battery_optimization_info_content_text">Battery Optimization can cause scheduled Submissions not to post. Consider turning off Battery Optimization for this app in Settings.</string>
 
-    <string name="file_provider" translatable="false">name.lmj0011.holdup.fileprovider</string>
+    <string name="file_provider_authorities" translatable="false">name.lmj0011.holdup.fileprovider</string>
     <string name="image_picker_pick_single">Select an Image</string>
     <string name="too_early_submission">Scheduled Submission is trying to post too early, this may have been caused by an older Alarm that was set for this Submission before it was updated.</string>
     <string name="enable_inbox_replies">Enable inbox replies</string>
@@ -18,6 +18,7 @@
     <string name="reddit_upload_media_error_msg">Media upload to Reddit failed, HTTP error %1$d: %2$s</string>
 
     <string name="github_repo_url" translatable="false">https://github.com/lmj0011</string>
+    <string name="default_video_thumbnail_url" translatable="false">https://lj-public.s3.amazonaws.com/img/default-video-thumbnail.png</string>
     <string name="app_tagline">A Post scheduler for Reddit</string>
     <string name="dev_email" translatable="false">holdupapp@protonmail.com</string>
     <string name="submissions_display_option_compact_list">Compact List</string>

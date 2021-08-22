@@ -18,10 +18,10 @@ android {
 
     defaultConfig {
         applicationId = "name.lmj0011.holdup"
-        minSdk = 26
+        minSdk = 28
         targetSdk = 30
         versionCode = getCommitCount().toInt()
-        versionName = "0.1.1"
+        versionName = "0.2.0"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -44,6 +44,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = false
+            versionNameSuffix = " (production)"
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
         }
 
@@ -51,7 +52,7 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
             isDebuggable = true
-            versionNameSuffix = "+debug.${getGitSha().take(8)}"
+            versionNameSuffix = " (debug ${getGitSha().take(8)})"
             applicationIdSuffix = ".debug"
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
         }
@@ -123,7 +124,7 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
 
     // WorkManager
-    val workVersion = "2.4.0"
+    val workVersion = "2.5.0"
     implementation("androidx.work:work-runtime-ktx:$workVersion")
 
     // Coroutines

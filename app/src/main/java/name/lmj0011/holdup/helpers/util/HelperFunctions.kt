@@ -1,9 +1,11 @@
 package name.lmj0011.holdup.helpers.util
 
+import android.annotation.SuppressLint
 import name.lmj0011.holdup.R
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import androidx.datastore.preferences.core.Preferences
@@ -12,11 +14,15 @@ import android.util.Patterns
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.RequestManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import name.lmj0011.holdup.BuildConfig
 import name.lmj0011.holdup.Keys
 import name.lmj0011.holdup.database.SharedDao
+import name.lmj0011.holdup.helpers.models.Image
+import name.lmj0011.holdup.helpers.models.Video
 import org.jsoup.Jsoup
 import java.util.UUID
 import java.util.TimeZone
@@ -191,4 +197,18 @@ fun openUrlInWebBrowser(context: Context, url: String) {
     if (intent.resolveActivity(context.packageManager) != null) {
         context.startActivity(intent)
     }
+}
+
+
+@SuppressLint("CheckResult")
+fun getGlideImageLoadSourceCompat(image: Image, builder: RequestManager): RequestBuilder<Drawable> {
+    return if (image.url.isBlank()) {
+        builder.load(Uri.parse(image.sourceUri))
+    } else builder.load(Uri.parse(image.url))
+}
+
+fun getVideoSourceCompat(video: Video): Uri {
+    return if (video.url.isBlank()) {
+        Uri.parse(video.sourceUri)
+    } else Uri.parse(video.url)
 }

@@ -33,7 +33,12 @@ class PublishScheduledSubmissionReceiver : BroadcastReceiver() {
          */
         val randGen = SecureRandom.getInstanceStrong()
         randGen.setSeed((Long.MIN_VALUE..Long.MAX_VALUE).random())
-        val jitterTime = (randGen.nextInt(30) + 1).toLong() // 1-30 seconds
+
+        /**
+         * 1-25 seconds plus another 5 seconds for PublishScheduledSubmissionWorker
+         * to start publishing the Submission; see comment in PublishScheduledSubmissionWorker.doWork()
+         */
+        val jitterTime = (randGen.nextInt(25) + 1).toLong()
         Timber.d(" added jitter time is $jitterTime secs")
         /**
          *

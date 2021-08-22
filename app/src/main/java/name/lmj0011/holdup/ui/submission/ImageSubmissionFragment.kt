@@ -1,6 +1,5 @@
 package name.lmj0011.holdup.ui.submission
 
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -107,7 +106,7 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
 
         footerAdapter = AddImageListAdapter(
             AddImageListAdapter.AddImageClickListener {
-                BottomSheetImagePicker.Builder(getString(R.string.file_provider))
+                BottomSheetImagePicker.Builder(getString(R.string.file_provider_authorities))
                     .cameraButton(ButtonType.None)
                     .galleryButton(ButtonType.Button)
                     .singleSelectTitle(R.string.image_picker_pick_single)
@@ -153,12 +152,10 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
 
             uris.forEach {
                 try {
-                    val mediaInfo = viewModel.uploadMedia(Uri.parse(it.toString()))
-
                     val img = Image(
                         sourceUri = it.toString(),
-                        mediaId = mediaInfo.first,
-                        url = mediaInfo.second,
+                        mediaId = "",
+                        url = "",
                         caption = "",
                         outboundUrl = ""
                     )

@@ -10,9 +10,11 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import name.lmj0011.holdup.databinding.ListItemImageBinding
 import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.holdup.helpers.models.Image
+import name.lmj0011.holdup.helpers.util.getGlideImageLoadSourceCompat
 import name.lmj0011.holdup.ui.submission.ImageSubmissionFragment
 
 class GalleryListAdapter (
@@ -26,9 +28,10 @@ class GalleryListAdapter (
             binding.image = image
             binding.removeImageClickListener = removeImageClickListener
 
-            Glide
-                .with(context)
-                .load(image.url)
+            val reqManager = Glide.with(context)
+
+            getGlideImageLoadSourceCompat(image, reqManager)
+                .transition(DrawableTransitionOptions.withCrossFade())
                 .into(binding.backgroundImageView)
 
             binding.executePendingBindings()
