@@ -18,4 +18,14 @@
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-renamesourcefileattribute SourceFile
+
+##---------------Begin: proguard configuration for Gson  ----------
+# Application classes that will be serialized/deserialized over Gson
+#noinspection ShrinkerUnresolvedReference
+-keep class name.lmj0011.holdup.database.** { *; }
+
+# ref: https://stackoverflow.com/a/46333633/2445763
+-keep class androidx.dynamicanimation.animation.FloatPropertyCompat
+-keepclasseswithmembernames class * { @androidx.dynamicanimation.animation.FloatPropertyCompat <methods>; }
+-keepclasseswithmembernames class * { @androidx.dynamicanimation.animation.FloatPropertyCompat <fields>; }
