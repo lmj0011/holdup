@@ -15,6 +15,7 @@ plugins {
 
 android {
     compileSdk =30
+    ndkVersion = "21.3.6528147"
 
     defaultConfig {
         applicationId = "name.lmj0011.holdup"
@@ -42,9 +43,12 @@ android {
     buildTypes {
         named("release") {
             isMinifyEnabled = true
-            isShrinkResources = true
+            isShrinkResources = false
             isDebuggable = false
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
 
         named("debug") {
