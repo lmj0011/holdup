@@ -3,16 +3,10 @@ package name.lmj0011.holdup.ui.submission
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
-import android.media.ThumbnailUtils.createVideoThumbnail
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Size
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.content.FileProvider
-import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
@@ -142,36 +136,31 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
 
                 launchIO {
                     try {
-                        requireContext().contentResolver.takePersistableUriPermission(Uri.parse(uri.toString()), Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        requireContext().contentResolver.takePersistableUriPermission(uri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
                         /**
                          * Generate a video thumbnail
                          */
-                        val thumbNail = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            requireContext().contentResolver.loadThumbnail(Uri.parse(uri.toString()),
-                                Size(1280, 720), null)
-                        } else {
-                            createVideoThumbnail(uri.toString(), MediaStore.Images.Thumbnails.MINI_KIND)
-                        }
+                        val thumbNail = Glide.with(requireContext())
+                            .asBitmap().thumbnail(0.5F)
+                            .load(uri).submit().get()
 
-                        thumbNail?.let { bitmap ->
-                            val file = File.createTempFile("${randomUUID()}", ".png", requireContext().cacheDir)
-                            file.createNewFile()
+                        val file = File.createTempFile("${randomUUID()}", ".png", requireContext().cacheDir)
+                        file.createNewFile()
 
-                            val fileOut = FileOutputStream(file)
+                        val fileOut = FileOutputStream(file)
 
-                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
-                            fileOut.flush()
-                            fileOut.close()
+                        thumbNail.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
+                        fileOut.flush()
+                        fileOut.close()
 
-                            val thumbNailUri = FileProvider.getUriForFile(
-                                requireContext(),
-                                requireContext().getString(R.string.file_provider_authorities),
-                                file
-                            )
+                        val thumbNailUri = FileProvider.getUriForFile(
+                            requireContext(),
+                            requireContext().getString(R.string.file_provider_authorities),
+                            file
+                        )
 
-                            vid.posterSourceUri = thumbNailUri.toString()
-                        }
+                        vid.posterSourceUri = thumbNailUri.toString()
                         /**
                          *
                          */

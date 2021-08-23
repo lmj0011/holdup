@@ -21,7 +21,7 @@ android {
         applicationId = "name.lmj0011.holdup"
         minSdk = 28
         targetSdk = 30
-        versionCode = 44
+        versionCode = 45
         versionName = "0.2.1"
 
         vectorDrawables {
@@ -54,14 +54,27 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
             isDebuggable = true
-            versionNameSuffix = "+${getGitSha().take(8)}"
+        }
+
+        /**
+         * Debug with shrinking, obfuscation, and optimization applied
+         */
+        create("debugR8") {
+            initWith(getByName("debug"))
+            isShrinkResources = true
+            isMinifyEnabled = true
+            isDebuggable = false
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
 
     buildTypes.forEach {
         it.resValue("string", "reddit_app_clientId", "${project.findProperty("reddit.app.clientId")}")
         it.resValue("string", "reddit_app_redirectUri", "${project.findProperty("reddit.app.redirectUri")}")
+        it.resValue("string", "file_provider_authorities", "${android.defaultConfig.applicationId}.fileprovider")
 
         it.resValue("string", "git_commit_count", getCommitCount())
         it.resValue("string", "git_commit_sha", getGitSha())
@@ -74,14 +87,15 @@ android {
         create("main") {
             dimension = "default"
             resValue("string", "app_name", "Holdup")
-            resValue("string", "file_provider_authorities", "${android.defaultConfig.applicationId}.fileprovider")
         }
 
-        create("preview") { // an early release
+        /**
+         *  A flavor intended for app testing distribution
+         */
+        create("preview") {
             dimension = "default"
-            applicationIdSuffix = ".preview"
-            resValue("string", "app_name", "Holdup (preview ${getCommitCount()})")
-            resValue("string", "file_provider_authorities", "${android.defaultConfig.applicationId}${applicationIdSuffix}.fileprovider")
+            versionNameSuffix = ".${getCommitCount()}"
+            resValue("string", "app_name", "Holdup (preview)")
         }
     }
 
