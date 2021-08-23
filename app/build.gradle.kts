@@ -21,8 +21,8 @@ android {
         applicationId = "name.lmj0011.holdup"
         minSdk = 28
         targetSdk = 30
-        versionCode = getCommitCount().toInt()
-        versionName = "0.2.0"
+        versionCode = 44
+        versionName = "0.2.1"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -44,7 +44,6 @@ android {
         named("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            isDebuggable = false
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
             ndk {
                 debugSymbolLevel = "FULL"
@@ -55,8 +54,7 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
             isDebuggable = true
-            versionNameSuffix = " (debug ${getGitSha().take(8)})"
-            applicationIdSuffix = ".debug"
+            versionNameSuffix = "+${getGitSha().take(8)}"
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
         }
     }
@@ -70,6 +68,22 @@ android {
         it.resValue("string", "app_buildtime", getBuildTime())
     }
 
+    flavorDimensions.add("default")
+
+    productFlavors {
+        create("main") {
+            dimension = "default"
+            resValue("string", "app_name", "Holdup")
+            resValue("string", "file_provider_authorities", "${android.defaultConfig.applicationId}.fileprovider")
+        }
+
+        create("preview") { // an early release
+            dimension = "default"
+            applicationIdSuffix = ".preview"
+            resValue("string", "app_name", "Holdup (preview ${getCommitCount()})")
+            resValue("string", "file_provider_authorities", "${android.defaultConfig.applicationId}${applicationIdSuffix}.fileprovider")
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -139,7 +153,7 @@ dependencies {
     implementation("androidx.preference:preference-ktx:1.1.1")
 
     // dependency injection
-    implementation("org.kodein.di:kodein-di:7.0.0")
+    implementation("org.kodein.di:kodein-di:7.7.0")
 
     // An adaptation of the JSR-310 backport for Android.
     implementation("com.jakewharton.threetenabp:threetenabp:1.2.1")

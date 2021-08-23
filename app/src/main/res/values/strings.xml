@@ -1,12 +1,10 @@
 <resources>
-    <string name="app_name">Holdup</string>
     <string name="title_home">Scheduled</string>
 
     <string name="go_to_reddit_btn">Go to reddit.com</string>
     <string name="connect_reddit_btn">Connect Reddit</string>
     <string name="notification_battery_optimization_info_content_text">Battery Optimization can cause scheduled Submissions not to post. Consider turning off Battery Optimization for this app in Settings.</string>
 
-    <string name="file_provider_authorities" translatable="false">name.lmj0011.holdup.fileprovider</string>
     <string name="image_picker_pick_single">Select an Image</string>
     <string name="too_early_submission">Scheduled Submission is trying to post too early, this may have been caused by an older Alarm that was set for this Submission before it was updated.</string>
     <string name="enable_inbox_replies">Enable inbox replies</string>
