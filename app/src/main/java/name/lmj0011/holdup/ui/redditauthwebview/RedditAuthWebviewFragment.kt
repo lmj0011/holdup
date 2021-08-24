@@ -7,7 +7,10 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
@@ -23,6 +26,8 @@ import name.lmj0011.holdup.helpers.RedditApiHelper
 import name.lmj0011.holdup.helpers.RedditAuthHelper
 import name.lmj0011.holdup.helpers.factories.ViewModelFactory
 import name.lmj0011.holdup.helpers.util.launchIO
+import name.lmj0011.holdup.helpers.util.showSnackBar
+import name.lmj0011.holdup.BuildConfig
 import org.json.JSONObject
 import org.kodein.di.instance
 import timber.log.Timber
@@ -50,8 +55,26 @@ class RedditAuthWebviewFragment : Fragment() {
         redditApiHelper = (requireContext().applicationContext as App).kodein.instance()
         setHasOptionsMenu(true)
 
-        browser.settings.javaScriptEnabled = true
-        browser.webChromeClient = WebChromeClient()
+        browser.webChromeClient = object : WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                consoleMessage?.let{ consoleMsg ->
+                    when(consoleMsg.messageLevel()) {
+                        ConsoleMessage.MessageLevel.ERROR -> {
+                            val msg = "webChromeClient JS error: ${consoleMsg.message()}"
+                            showSnackBar(root, msg)
+                        }
+                        else -> {
+                            if (BuildConfig.FLAVOR == "preview") {
+                                val msg = "webChromeClient console message: ${consoleMsg.message()}"
+                                showSnackBar(root, msg)
+                            }
+
+                        }
+                    }
+                }
+                return super.onConsoleMessage(consoleMessage)
+            }
+        }
 
         browser.webViewClient = object : WebViewClient(){
             override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
@@ -77,11 +100,11 @@ class RedditAuthWebviewFragment : Fragment() {
                                       if (!snooImg.isNullOrBlank()) account.iconImage = snooImg.split("?")[0]
                                   }
                                   catch (ex: org.json.JSONException) {
-                                      Timber.i("No snoovatar for this Account: $account")
+                                      showSnackBar(root, "No snoovatar found for ${account.name}")
                                   }
                               }
                               catch (ex: org.json.JSONException) {
-                                  Timber.w("Unable to set icon_img on this Account: $account")
+                                  showSnackBar(root, "Unable to set icon_img on this Account: ${account.name}")
                               }
                               finally {
                                   viewModel.updateAccount(account)
@@ -92,7 +115,7 @@ class RedditAuthWebviewFragment : Fragment() {
                                 redditAuthHelper.authClient(it).getSavedBearer().revokeToken()
                                 viewModel.deleteAccount(it)
                             }
-                            Timber.e(ex)
+                            showSnackBar(root, ex.message.toString())
                         }
 
                         withContext(Dispatchers.Main){
@@ -109,6 +132,19 @@ class RedditAuthWebviewFragment : Fragment() {
                     Timber.d("queryResult: $queryResult")
                     if(queryResult != "null") username = queryResult.replaceFirst("\"", "u/").replace("\"", "")
                 }
+            }
+
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: WebResourceError?
+            ) {
+                val msg = error?.description.toString()
+
+                if(msg.isNotBlank()) showSnackBar(root, msg)
+                else showSnackBar(root, "WebViewClient encountered an error, errorCode: ${error?.errorCode}")
+
+                super.onReceivedError(view, request, error)
             }
         }
 

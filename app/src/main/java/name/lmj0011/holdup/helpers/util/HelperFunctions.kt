@@ -13,6 +13,7 @@ import android.os.PowerManager
 import android.util.Patterns
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.view.children
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.RequestManager
@@ -73,10 +74,28 @@ fun buildOneColorStateList(color: Int /* Color.parseColor("#FFFF") */): ColorSta
 }
 
 /**
+ * Extension function for Snackbar
+ * ref: https://stackoverflow.com/a/59472972/2445763
+ */
+fun Snackbar.allowInfiniteLines(): Snackbar {
+    return apply { (view.findViewById<View?>(com.google.android.material.R.id.snackbar_text) as? TextView?)?.isSingleLine = false }
+}
+
+/**
  * displays a vanilla snackBar
  */
 fun showSnackBar(view: View, message: String) {
-    val snackBar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+    val snackBar = if (BuildConfig.FLAVOR == "preview") {
+        Snackbar.make(view, message, Snackbar.LENGTH_INDEFINITE)
+            .allowInfiniteLines()
+    } else Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+
+    if (BuildConfig.FLAVOR == "preview") {
+        snackBar.setAction("Dismiss"){
+            snackBar.dismiss()
+        }
+    }
+
     snackBar.show()
 }
 
