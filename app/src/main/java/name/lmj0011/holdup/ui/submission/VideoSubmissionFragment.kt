@@ -129,7 +129,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
                     sourceUri = uri.toString(),
                     mediaId = "",
                     url = "",
-                    posterSourceUri = ""
+                    posterUrl = ""
                 )
 
                 Timber.d("vid: $vid")
@@ -160,7 +160,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
                             file
                         )
 
-                        vid.posterSourceUri = thumbNailUri.toString()
+                        vid.posterUrl = thumbNailUri.toString()
                         /**
                          *
                          */
@@ -170,7 +170,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
                         Timber.e(ex)
                     }
                     catch(ex: ImageDecoder.DecodeException) {
-                        vid.posterSourceUri = requireContext().getString(R.string.default_video_thumbnail_url)
+                        vid.posterUrl = requireContext().getString(R.string.default_video_thumbnail_url)
                         showSnackBar(binding.root, ex.message.toString())
                         Timber.e(ex)
                     }
@@ -281,7 +281,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
         .also { exoPlayer ->
             Glide
                 .with(requireContext())
-                .load(video.posterSourceUri)
+                .load(video.posterUrl)
                 .into(binding.videoViewArtworkImageView)
 
             when(mode) {

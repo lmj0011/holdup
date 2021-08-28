@@ -499,7 +499,7 @@ class SubmissionViewModel(
                 submissionTitle.value?.let { form.title = it }
                 submissionVideo.value?.let {
                     form.url = it.url
-                    form.video_poster_url = it.posterSourceUri
+                    form.video_poster_url = it.posterUrl
                 }
             }
             SubmissionKind.VideoGif -> {

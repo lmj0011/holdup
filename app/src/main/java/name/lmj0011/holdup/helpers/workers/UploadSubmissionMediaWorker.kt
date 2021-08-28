@@ -2,9 +2,7 @@ package name.lmj0011.holdup.helpers.workers
 
 import android.content.Context
 import android.net.Uri
-import android.util.Patterns
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -13,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import name.lmj0011.holdup.App
-import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.RedditApiHelper
@@ -23,9 +20,7 @@ import name.lmj0011.holdup.helpers.models.Image
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import org.kodein.di.instance
 import timber.log.Timber
-import java.io.File
 import java.util.*
-import java.util.regex.Pattern
 
 /**
  * This Worker publishes a scheduled Submission to Reddit
@@ -160,17 +155,17 @@ class UploadSubmissionMediaWorker (private val appContext: Context, private val 
                                 }
 
 
-                                val isVideoThumbNailUploaded = video.posterSourceUri.take(8) == "https://"
+                                val isVideoThumbNailUploaded = video.posterUrl.take(8) == "https://"
                                 Timber.d("isVideoThumbNailUploaded: $isVideoThumbNailUploaded")
 
                                 if (!isVideoThumbNailUploaded) {
                                     val videoPosterMediaInfo = redditApiHelper.uploadMedia(
-                                        Uri.parse(video.posterSourceUri),
+                                        Uri.parse(video.posterUrl),
                                         redditAuthHelper.authClient(sub.account).getSavedBearer().getAccessToken()!!
                                     )
                                     Timber.d("videoPosterMediaInfo: $videoPosterMediaInfo")
 
-                                    video.posterSourceUri = videoPosterMediaInfo.second
+                                    video.posterUrl = videoPosterMediaInfo.second
                                 }
 
                                 this.video = video
