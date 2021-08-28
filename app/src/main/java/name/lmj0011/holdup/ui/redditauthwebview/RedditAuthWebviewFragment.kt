@@ -61,12 +61,12 @@ class RedditAuthWebviewFragment : Fragment() {
                     when(consoleMsg.messageLevel()) {
                         ConsoleMessage.MessageLevel.ERROR -> {
                             val msg = "webChromeClient JS error: ${consoleMsg.message()}"
-                            showSnackBar(root, msg)
+                            Timber.e(msg)
                         }
                         else -> {
                             if (BuildConfig.FLAVOR == "preview") {
                                 val msg = "webChromeClient console message: ${consoleMsg.message()}"
-                                showSnackBar(root, msg)
+                                Timber.d(msg)
                             }
 
                         }

@@ -60,10 +60,6 @@ class MainActivity : AppCompatActivity() {
         binding.navView.setupWithNavController(navController)
         binding.navView.visibility = View.GONE
         setupNavigationListener()
-        showFabAndSetListener(
-            { navController.navigate(R.id.action_homeFragment_to_submissionFragment) },
-            R.drawable.ic_baseline_edit_24
-        )
     }
 
     override fun onResume() {
@@ -83,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                             showFabAndSetListener(
                                 {
                                     if (accountsSize > 0) {
-                                        navController.navigate(R.id.submissionFragment)
+                                        navController.navigate(R.id.action_homeFragment_to_submissionFragment)
                                     } else {
                                         MaterialAlertDialogBuilder(this@MainActivity)
                                             .setMessage("Log into your Reddit account to start scheduling Submissions")
@@ -165,7 +161,12 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.action_about -> {
                 val aboutDialog = DialogAboutBinding.inflate(layoutInflater)
-                aboutDialog.versionTextView.text = "Version: ${BuildConfig.VERSION_NAME}"
+                aboutDialog.versionTextView.text = "v${BuildConfig.VERSION_NAME}"
+                if(BuildConfig.DEBUG) {
+                    aboutDialog.appNameTextView.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.ic_baseline_bug_report_24, 0)
+                    aboutDialog.versionTextView.append(" (${BuildConfig.VERSION_CODE})")
+                }
+
                 MaterialAlertDialogBuilder(this@MainActivity).setView(aboutDialog.root).show()
                 true
             }

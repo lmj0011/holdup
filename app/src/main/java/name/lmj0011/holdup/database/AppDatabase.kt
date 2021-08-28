@@ -1,6 +1,7 @@
 package name.lmj0011.holdup.database
 
 import android.content.Context
+import android.database.sqlite.SQLiteException
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -18,8 +19,15 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // alter Submissions table; add linkImageUrl column
-                database.execSQL("ALTER TABLE `submissions_table` ADD COLUMN `linkImageUrl` TEXT NOT NULL DEFAULT ''")
+                try {
+                    // alter Submissions table; add linkImageUrl column
+                    database.execSQL("ALTER TABLE `submissions_table` ADD COLUMN `linkImageUrl` TEXT NOT NULL DEFAULT ''")
+                } catch(ex: SQLiteException) {
+                    val errMsg = ex.message?.trim()
+                    if (errMsg != null && errMsg.contains("duplicate column name: linkImageUrl")) {
+                        // ignore
+                    } else throw ex
+                }
             }
         }
 

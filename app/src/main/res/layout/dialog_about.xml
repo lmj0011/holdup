@@ -44,7 +44,6 @@
         android:textSize="14sp"
         app:layout_constraintBottom_toTopOf="@+id/gitHubLinkTextView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appTagLineTextView"
         tools:text="v0.0.0 (sdf3ee3t)" />
@@ -60,4 +59,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
