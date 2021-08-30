@@ -135,7 +135,14 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
         super.onPrepareOptionsMenu(menu)
         optionsMenu = menu
         viewModel.readyToPost().value!!.let {
-            menu.getItem(1).isEnabled = it
+            menu.getItem(2).isEnabled = it
+        }
+
+
+        // Only show option to save Submission if it's been scheduled
+        if(args.submission.postAtMillis == Keys.UNIX_EPOCH_MILLIS) {
+            menu.getItem(0).isEnabled = false
+            menu.getItem(0).isVisible = false
         }
     }
 
@@ -146,6 +153,10 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
         return when (item.itemId) {
             R.id.action_delete_submission -> {
                 showDeleteConfirmationDialog()
+                true
+            }
+            R.id.action_save_submission -> {
+                saveSubmission()
                 true
             }
             R.id.action_post_submission -> {
@@ -395,9 +406,16 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
             }
             binding.addFlairChip.setTextColor(Color.BLACK)
         }
-        catch (ex: java.lang.Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
+        catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
 
         viewModel.subredditFlair.postValue(null)
+    }
+
+    private fun saveSubmission() {
+        launchIO {
+            viewModel.updateSubmission(args.submission)
+            withUIContext { showSnackBar(binding.root, "Submission saved.") }
+        }
     }
 
     private fun showDeleteConfirmationDialog() {

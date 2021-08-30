@@ -85,16 +85,8 @@ fun Snackbar.allowInfiniteLines(): Snackbar {
  * displays a vanilla snackBar
  */
 fun showSnackBar(view: View, message: String) {
-    val snackBar = if (BuildConfig.FLAVOR == "preview") {
-        Snackbar.make(view, message, Snackbar.LENGTH_INDEFINITE)
-            .allowInfiniteLines()
-    } else Snackbar.make(view, message, Snackbar.LENGTH_LONG)
-
-    if (BuildConfig.FLAVOR == "preview") {
-        snackBar.setAction("Dismiss"){
-            snackBar.dismiss()
-        }
-    }
+    val snackBar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+        .allowInfiniteLines()
 
     snackBar.show()
 }
