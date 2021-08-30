@@ -83,13 +83,10 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
             binding.linkTextView.visibility = View.GONE
         } else {
             binding.linkTextView.setText(url)
+            binding.imageCard.visibility = View.GONE
         }
 
-        if (linkImageUrl.isNullOrBlank() || url.isNullOrBlank()) {
-            if (mode == SubmissionFragmentChild.CREATE_AND_EDIT_MODE) {
-                binding.imageCard.visibility = View.GONE
-            }
-        } else {
+        if (!linkImageUrl.isNullOrBlank() && !url.isNullOrBlank()) {
             binding.linkCaptionTextView.text = URL(url).host
 
             binding.imageCard.setOnClickListener {
