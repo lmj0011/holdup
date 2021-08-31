@@ -141,8 +141,8 @@ class RedditAuthWebviewFragment : Fragment() {
             ) {
                 val msg = error?.description.toString()
 
-                if(msg.isNotBlank()) showSnackBar(root, msg)
-                else showSnackBar(root, "WebViewClient encountered an error, errorCode: ${error?.errorCode}")
+                if(msg.isNotBlank()) Timber.e(msg)
+                else Timber.e("WebViewClient encountered an error, errorCode: ${error?.errorCode}")
 
                 super.onReceivedError(view, request, error)
             }
