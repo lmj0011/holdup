@@ -7,6 +7,7 @@ import android.view.View
 import android.webkit.CookieManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -24,8 +25,10 @@ import name.lmj0011.holdup.databinding.ActivityMainBinding
 import name.lmj0011.holdup.databinding.DialogAboutBinding
 import name.lmj0011.holdup.databinding.DialogFeedbackBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
+import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.factories.ViewModelFactory
 import name.lmj0011.holdup.helpers.util.getDebugDump
+import name.lmj0011.holdup.helpers.util.isIgnoringBatteryOptimizations
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.helpers.util.sendBugReport
@@ -64,6 +67,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         mediaPlayer = SimpleExoPlayer.Builder(this).build()
+
+        if(isIgnoringBatteryOptimizations(this)) {
+            NotificationManagerCompat.from(this).cancel(NotificationHelper.BATTERY_OPTIMIZATION_INFO_NOTIFICATION_ID)
+        }
+
         super.onResume()
     }
 
@@ -97,6 +105,10 @@ class MainActivity : AppCompatActivity() {
                             )
                         }
                     }
+                }
+                R.id.submissionFragment, R.id.editSubmissionFragment -> {
+                    supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_action_clear)
+                    hideFab()
                 }
                 R.id.accountsFragment -> {
                     CookieManager.getInstance().removeAllCookies{

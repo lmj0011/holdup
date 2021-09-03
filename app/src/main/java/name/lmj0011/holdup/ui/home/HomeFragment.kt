@@ -9,12 +9,14 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
+import kotlinx.coroutines.delay
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.databinding.FragmentHomeBinding
 import name.lmj0011.holdup.helpers.RedditAuthHelper
 import name.lmj0011.holdup.helpers.adapters.SubmissionListAdapter
+import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubmissionsFilterOptionsFragment
 import org.kodein.di.instance
@@ -36,16 +38,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
 
         setHasOptionsMenu(true)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // make new instance of the SubmissionViewModel used by the SubmissionFragmentChild Fragments
-        SubmissionViewModel.getNewInstance(
-            AppDatabase.getInstance(requireActivity().application).sharedDao,
-            requireActivity().application
-        )
-        refreshRecyclerView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -13,12 +13,16 @@
         <action
             android:id="@+id/action_homeFragment_to_submissionFragment"
             app:destination="@id/submissionFragment"
+            app:enterAnim="@anim/slide_in_bottom_to_top"
             app:launchSingleTop="false"
+            app:popEnterAnim="@anim/slide_out_top_to_bottom"
             app:popUpTo="@id/homeFragment"
             app:popUpToInclusive="false" />
         <action
             android:id="@+id/action_homeFragment_to_editSubmissionFragment"
-            app:destination="@id/editSubmissionFragment" />
+            app:destination="@id/editSubmissionFragment"
+            app:enterAnim="@anim/slide_in_bottom_to_top"
+            app:popEnterAnim="@anim/slide_out_top_to_bottom" />
     </fragment>
 
     <fragment

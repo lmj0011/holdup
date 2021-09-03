@@ -93,8 +93,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="@dimen/submission_list_item_layout_height"
-            app:layout_constraintHeight_max="@dimen/submission_list_item_layout_height"
             android:padding="5dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_max="@dimen/submission_list_item_layout_height"
             app:layout_constraintStart_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/accountUsernameTextView" />
 

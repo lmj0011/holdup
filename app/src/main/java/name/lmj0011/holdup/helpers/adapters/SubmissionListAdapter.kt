@@ -145,7 +145,11 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
 
                         holder.binding.listItemSubmissionContentPreviewViewPager.adapter = object: FragmentStateAdapter(parentFragment) {
                             override fun createFragment(position: Int): Fragment {
-                                parentFragment.childFragmentManager.beginTransaction().remove(fragment).commitNow()
+                                parentFragment.childFragmentManager.beginTransaction()
+                                    .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
+                                    .remove(fragment)
+                                    .commitNow()
+
                                 return fragment
                             }
 
