@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import name.lmj0011.holdup.databinding.ListItemSubredditFlairBinding
 import name.lmj0011.holdup.helpers.models.SubredditFlair
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
+import timber.log.Timber
 import java.lang.Exception
 
 class SubredditFlairListAdapter(val itemClickListener: FlairItemClickListener): ListAdapter<SubredditFlair, SubredditFlairListAdapter.ViewHolder>(DiffCallback()) {
@@ -20,17 +21,20 @@ class SubredditFlairListAdapter(val itemClickListener: FlairItemClickListener): 
             binding.clickListener = itemClickListener
             binding.selectableFlairChip.text = flair.text
 
-            try {
-                buildOneColorStateList(Color.parseColor(flair.backGroundColor))?.let {
-                    binding.selectableFlairChip.chipBackgroundColor = it
-                }
-            }
-            catch (ex: Exception) { /* flair.backGroundColor was either null or not a recognizable color */}
 
-            when(flair.textColor) {
-                "light" -> binding.selectableFlairChip.setTextColor(Color.WHITE)
-                else -> binding.selectableFlairChip.setTextColor(Color.DKGRAY)
-            }
+            try {
+                if (flair.backGroundColor.isNotBlank() && flair.textColor.isNotBlank()) {
+                    buildOneColorStateList(Color.parseColor(flair.backGroundColor))?.let {
+                        binding.selectableFlairChip.chipBackgroundColor = it
+                    }
+
+                    when(flair.textColor) {
+                        "light" -> binding.selectableFlairChip.setTextColor(Color.WHITE)
+                        "dark" -> binding.selectableFlairChip.setTextColor(Color.DKGRAY)
+                    }
+                }
+            } catch (ex: Exception) {/* flair.backGroundColor was either null or not a recognizable color */}
+
 
             binding.executePendingBindings()
         }

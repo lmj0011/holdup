@@ -218,17 +218,19 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             bottomSheetSubredditFlairFragment = BottomSheetSubredditFlairFragment(
                 SubredditFlairListAdapter.FlairItemClickListener { flair ->
                     binding.addFlairChip.text = flair.text
-                    try {
-                        buildOneColorStateList(Color.parseColor(flair.backGroundColor))?.let {
-                            binding.addFlairChip.chipBackgroundColor = it
-                        }
-                    } catch (ex: java.lang.Exception) { /* flair.backGroundColor was either null or not a recognizable color */
-                    }
 
-                    when (flair.textColor) {
-                        "light" -> binding.addFlairChip.setTextColor(Color.WHITE)
-                        else -> binding.addFlairChip.setTextColor(Color.DKGRAY)
-                    }
+                    try {
+                        if (flair.backGroundColor.isNotBlank() && flair.textColor.isNotBlank()) {
+                            buildOneColorStateList(Color.parseColor(flair.backGroundColor))?.let {
+                                binding.addFlairChip.chipBackgroundColor = it
+                            }
+
+                            when(flair.textColor) {
+                                "light" ->  binding.addFlairChip.setTextColor(Color.WHITE)
+                                "dark" ->  binding.addFlairChip.setTextColor(Color.DKGRAY)
+                            }
+                        }
+                    } catch (ex: java.lang.Exception) {/* flair.backGroundColor was either null or not a recognizable color */}
 
                     viewModel.subredditFlair.postValue(flair)
                     viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
