@@ -9,25 +9,33 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
-import kotlinx.coroutines.delay
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.databinding.FragmentHomeBinding
+import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.RedditAuthHelper
 import name.lmj0011.holdup.helpers.adapters.SubmissionListAdapter
-import name.lmj0011.holdup.helpers.util.launchUI
+import name.lmj0011.holdup.helpers.util.launchIO
+import name.lmj0011.holdup.helpers.util.withUIContext
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubmissionsFilterOptionsFragment
 import org.kodein.di.instance
+import java.util.*
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private lateinit var binding: FragmentHomeBinding
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var redditAuthHelper: RedditAuthHelper
+    private lateinit var dataStoreHelper: DataStoreHelper
     private lateinit var listAdapter: SubmissionListAdapter
     private lateinit var bottomSheetSubmissionsFilterOptionsFragment: BottomSheetSubmissionsFilterOptionsFragment
+    private var publishSubmissionObserverJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,8 +44,34 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             requireActivity().application
         )
         redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
+        dataStoreHelper = (requireContext().applicationContext as App).kodein.instance()
 
         setHasOptionsMenu(true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        refreshRecyclerView()
+
+        publishSubmissionObserverJob = launchIO {
+            val id = dataStoreHelper.getPublishScheduledSubmissionWorkerId().first()
+
+            withUIContext {
+                WorkManager.getInstance(requireContext())
+                    .getWorkInfoByIdLiveData(UUID.fromString(id))
+                    .observe(viewLifecycleOwner) { workInfo: WorkInfo ->
+                        if (workInfo.state.isFinished) {
+                            refreshRecyclerView()
+                        }
+                    }
+            }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        publishSubmissionObserverJob?.cancel()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -102,6 +136,19 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun refreshRecyclerView() {
+        /**
+         * Haven't figured out why yet, but calling a new instance of this viewModel prevents the
+         * recyclerview's viewholders from showing an empty ViewPager where there should be content
+         * whenever the user
+         */
+        SubmissionViewModel.getNewInstance(
+            AppDatabase.getInstance(requireActivity().application).sharedDao,
+            requireActivity().application
+        )
+        /**
+         *
+         */
+
         homeViewModel.submissions.refresh()
     }
 

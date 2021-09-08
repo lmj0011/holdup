@@ -13,13 +13,16 @@ import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import name.lmj0011.holdup.helpers.DataStoreHelper
+import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.workers.PublishScheduledSubmissionWorker
 import name.lmj0011.holdup.helpers.workers.UploadSubmissionMediaWorker
-import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-open class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
+abstract class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
+    protected abstract var dataStoreHelper: DataStoreHelper
+
     protected fun pickDateAndTime(callBack: (cal: Calendar) -> Unit) {
         // see https://github.com/material-components/material-components-android/issues/882#issuecomment-638983598
         val cal = Calendar.getInstance()
@@ -86,6 +89,8 @@ open class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
             .setConstraints(constraints)
             .setInputData(publishScheduledSubmissionWorkerData)
             .build()
+
+        launchIO { dataStoreHelper.setPublishScheduledSubmissionWorkerId(publishScheduledSubmissionWorkRequest.id.toString()) }
 
         workManager
             .beginUniqueWork(Keys.UPLOAD_SUBMISSION_MEDIA_WORKER_TAG, ExistingWorkPolicy.REPLACE, uploadSubmissionMediaWorkRequest)

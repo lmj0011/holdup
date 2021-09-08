@@ -16,15 +16,8 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.work.Constraints
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -53,8 +46,6 @@ import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.helpers.util.showSnackBar
 import name.lmj0011.holdup.helpers.util.withUIContext
-import name.lmj0011.holdup.helpers.workers.PublishScheduledSubmissionWorker
-import name.lmj0011.holdup.helpers.workers.UploadSubmissionMediaWorker
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetAccountsFragment
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
@@ -62,7 +53,6 @@ import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
 import java.lang.Exception
-import java.util.concurrent.TimeUnit
 
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
@@ -70,7 +60,7 @@ import java.util.concurrent.TimeUnit
 class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), BaseFragmentInterface {
     private lateinit var binding: FragmentEditSubmissionBinding
     private lateinit var viewModel: SubmissionViewModel
-    private lateinit var dataStoreHelper: DataStoreHelper
+    override lateinit var dataStoreHelper: DataStoreHelper
     private lateinit var alarmMgr: AlarmManager
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
     private val args: EditSubmissionFragmentArgs by navArgs()

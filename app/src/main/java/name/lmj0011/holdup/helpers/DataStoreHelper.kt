@@ -89,4 +89,16 @@ class DataStoreHelper(val context: Context) {
     /**
      *
      */
+
+
+    fun getPublishScheduledSubmissionWorkerId(): Flow<String> {
+        return dataStore.data.mapLatest { prefs ->
+            prefs[Keys.PUBLISH_SCHEDULED_SUBMISSION_WORKER_ID] ?: ""
+        }
+    }
+    suspend fun setPublishScheduledSubmissionWorkerId(id: String) {
+        dataStore.edit { prefs ->
+            prefs[Keys.PUBLISH_SCHEDULED_SUBMISSION_WORKER_ID] = id
+        }
+    }
 }

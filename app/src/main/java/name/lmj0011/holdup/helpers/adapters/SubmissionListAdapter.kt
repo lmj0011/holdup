@@ -123,6 +123,9 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
                 holder.context.resources.getString(R.string.submissions_display_option_full_list) -> {
                     val mediaPlayer = (holder.context as MainActivity).mediaPlayer
 
+                    holder.binding.listItemSubmissionContentPreviewViewPager.visibility = View.VISIBLE
+                    holder.binding.listItemSubmissionContentPreviewViewPager.isUserInputEnabled = false
+
                     holder.binding.submission?.let{ submission ->
                         val fragment = when (submission.kind) {
                             SubmissionKind.Link -> {
@@ -158,14 +161,13 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
                             }
                         }
                     }
-
-                    holder.binding.listItemSubmissionContentPreviewViewPager.visibility = View.VISIBLE
-                    holder.binding.listItemSubmissionContentPreviewViewPager.isUserInputEnabled = false
                 }
                 else -> {
                     holder.binding.listItemSubmissionContentPreviewViewPager.visibility = View.GONE
                 }
             }
+
+            holder.binding.executePendingBindings()
         }
 
         super.onViewAttachedToWindow(holder)

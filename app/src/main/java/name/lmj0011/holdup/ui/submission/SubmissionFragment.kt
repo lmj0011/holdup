@@ -63,7 +63,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     private lateinit var binding: FragmentSubmissionBinding
     private lateinit var tabLayoutMediator: TabLayoutMediator
     private lateinit var viewModel: SubmissionViewModel
-    private lateinit var dataStoreHelper: DataStoreHelper
+    override lateinit var dataStoreHelper: DataStoreHelper
     private lateinit var alarmMgr: AlarmManager
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
 

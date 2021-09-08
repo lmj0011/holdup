@@ -13,10 +13,12 @@ import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
+import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.DateTimeHelper
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import org.jsoup.HttpStatusException
+import org.kodein.di.instance
 import timber.log.Timber
 import java.util.*
 
@@ -31,10 +33,13 @@ class PublishScheduledSubmissionWorker (private val appContext: Context, private
         appContext.applicationContext as App
     )
     private val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    private val dataStoreHelper: DataStoreHelper = (appContext.applicationContext as App).kodein.instance()
+    private var outputData = workDataOf()
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val alarmRequestCode = parameters.inputData.getInt("alarmRequestCode", -1)
         val submission = dao.getSubmissionByAlarmRequestCode(alarmRequestCode)
+        dataStoreHelper.setPublishScheduledSubmissionWorkerId(parameters.id.toString())
 
         try {
             submission?.let { sub ->
@@ -78,8 +83,15 @@ class PublishScheduledSubmissionWorker (private val appContext: Context, private
                         dao.deleteBySubmissionId(sub.id)
                     }
                 }
+
+                outputData = workDataOf(
+                    "submissionTitle" to sub.title,
+                    "submissionKind" to sub.kind?.name
+                )
             }
-            return@withContext Result.success()
+
+            dataStoreHelper.setPublishScheduledSubmissionWorkerId("")
+            return@withContext Result.success(outputData)
         } catch (ex: Exception) {
             submission?.let { sub ->
                 val errMsg = if (ex is HttpStatusException) {
@@ -93,6 +105,7 @@ class PublishScheduledSubmissionWorker (private val appContext: Context, private
             }
 
             Timber.e(ex)
+            dataStoreHelper.setPublishScheduledSubmissionWorkerId("")
             return@withContext Result.failure(workDataOf("error" to ex.message))
         }
     }
