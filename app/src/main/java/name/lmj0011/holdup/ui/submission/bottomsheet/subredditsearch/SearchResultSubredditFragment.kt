@@ -7,8 +7,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.viewpager2.widget.ViewPager2
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
@@ -18,6 +16,7 @@ import name.lmj0011.holdup.helpers.RedditAuthHelper
 import name.lmj0011.holdup.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.holdup.helpers.factories.ViewModelFactory
 import name.lmj0011.holdup.helpers.util.launchIO
+import name.lmj0011.holdup.helpers.util.withUIContext
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import org.kodein.di.instance
 import timber.log.Timber
@@ -88,7 +87,7 @@ class SearchResultSubredditFragment(val searchView: SearchView,
             launchIO {
 
                 // clear list
-                withContext(Dispatchers.Main) {
+                withUIContext {
                     listAdapter.submitList(mutableListOf())
                     listAdapter.notifyDataSetChanged()
                 }
@@ -97,7 +96,7 @@ class SearchResultSubredditFragment(val searchView: SearchView,
                 viewModel.getAccounts().first()?.let {
                     val list = redditApiHelper.submitSubredditQuery(queryText, redditAuthHelper.authClient(it).getSavedBearer().getAccessToken()!!)
 
-                    withContext(Dispatchers.Main) {
+                    withUIContext {
                         listAdapter.submitList(list)
                         listAdapter.notifyDataSetChanged()
                     }

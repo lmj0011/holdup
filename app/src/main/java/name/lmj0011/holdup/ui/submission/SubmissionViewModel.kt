@@ -2,6 +2,7 @@ package name.lmj0011.holdup.ui.submission
 
 import android.app.Application
 import android.net.Uri
+import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -112,6 +113,13 @@ class SubmissionViewModel(
     init {
         launchIO {
             sendReplies.postValue(dataStoreHelper.getEnableInboxReplies().first())
+        }
+
+        if(Looper.getMainLooper().isCurrentThread) {
+            // Doing this so the user's recent and joined subreddits are loaded early
+            account.observeForever {
+                recentAndJoinedSubredditPair = MutableLiveData(Pair(getRecentSubredditListFlow(), getJoinedSubredditListFlow()))
+            }
         }
     }
 

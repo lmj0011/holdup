@@ -4,15 +4,18 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.viewpager2.widget.ViewPager2
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.databinding.FragmentRecentSubredditBinding
+import name.lmj0011.holdup.helpers.adapters.JoinedSubsHeaderListAdapter
+import name.lmj0011.holdup.helpers.adapters.RecentSubsHeaderListAdapter
 import name.lmj0011.holdup.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.holdup.helpers.models.Subreddit
-import name.lmj0011.holdup.helpers.util.launchUI
+import name.lmj0011.holdup.helpers.util.launchIO
+import name.lmj0011.holdup.helpers.util.withUIContext
 
 class RecentSubredditFragment(val searchView: SearchView,
                               val viewPager: ViewPager2,
@@ -54,27 +57,44 @@ class RecentSubredditFragment(val searchView: SearchView,
     }
 
     private fun setupRecyclerView() {
+        val concatAdapter = ConcatAdapter()
+        val recentSubsHeaderListAdapter = RecentSubsHeaderListAdapter()
+        val joinedSubsHeaderListAdapter = JoinedSubsHeaderListAdapter()
         recentsListAdapter = SubredditSearchListAdapter(setSubredditForSubmission)
         joinedListAdapter = SubredditSearchListAdapter(setSubredditForSubmission)
 
-        val decor = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
-        binding.recentSubredditList.addItemDecoration(decor)
-        binding.joinedSubredditList.addItemDecoration(decor)
+        concatAdapter.apply {
+            addAdapter(recentSubsHeaderListAdapter)
+            addAdapter(recentsListAdapter)
+            addAdapter(joinedSubsHeaderListAdapter)
+            addAdapter(joinedListAdapter)
+        }
 
-        binding.recentSubredditList.adapter = recentsListAdapter
-        binding.joinedSubredditList.adapter = joinedListAdapter
+        binding.recentAndJoinedSubredditList.adapter = concatAdapter
 
-        launchUI {
-            recentAndJoinedSubredditPair.first.collectLatest {
-                recentsListAdapter.submitList(it)
-                recentsListAdapter.notifyDataSetChanged()
+        launchIO {
+            recentAndJoinedSubredditPair.first.collectLatest { list ->
+                withUIContext {
+                    if(list.isEmpty()) {
+                        concatAdapter.apply {
+                            concatAdapter.removeAdapter(recentSubsHeaderListAdapter)
+                            concatAdapter.removeAdapter(recentsListAdapter)
+                        }
+                    }  else recentsListAdapter.submitList(list)
+                }
             }
         }
 
-        launchUI {
-            recentAndJoinedSubredditPair.second.collectLatest {
-                joinedListAdapter.submitList(it)
-                joinedListAdapter.notifyDataSetChanged()
+        launchIO {
+            recentAndJoinedSubredditPair.second.collectLatest { list ->
+                withUIContext {
+                    if(list.isEmpty()) {
+                        concatAdapter.apply {
+                            removeAdapter(joinedSubsHeaderListAdapter)
+                            removeAdapter(joinedListAdapter)
+                        }
+                    }  else joinedListAdapter.submitList(list)
+                }
             }
         }
     }

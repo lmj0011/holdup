@@ -233,7 +233,7 @@ class RedditApiHelper(val context: Context) {
             subredditIdSet.add(obj.getJSONObject("data").getString("subreddit_id"))
         }
 
-        val res2 = get("api/info?id=${subredditIdSet.take(5).joinToString(",")}", oauthToken)
+        val res2 = get("api/info?id=${subredditIdSet.joinToString(",")}", oauthToken)
         return parseSubredditListingResponse(JSONObject(res2.body!!.source().readUtf8()))
     }
 

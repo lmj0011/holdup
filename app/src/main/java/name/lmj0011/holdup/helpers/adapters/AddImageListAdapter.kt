@@ -47,6 +47,8 @@ class AddImageListAdapter (
     /**
      * Returns the total number of items in the data set held by the adapter.
      *
+     * must be set, for this "list adapter header" to be visible
+     *
      * @return The total number of items in this adapter.
      */
     override fun getItemCount(): Int = 1

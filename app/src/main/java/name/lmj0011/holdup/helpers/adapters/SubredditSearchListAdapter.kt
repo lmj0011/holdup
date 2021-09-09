@@ -30,7 +30,7 @@ class SubredditSearchListAdapter(val clickListener: SubredditSearchClickListener
             val subCount = CompactDecimalFormat
                 .getInstance(Locale.getDefault(), CompactDecimalFormat.CompactStyle.SHORT)
                 .format(subreddit.subscribers)
-            binding.subscribersCountTextView.text = "${subCount.toLowerCase()} members"
+            binding.subscribersCountTextView.text = "${subCount.lowercase()} members"
 
             binding.executePendingBindings()
         }
