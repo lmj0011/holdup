@@ -17,5 +17,6 @@ data class Subreddit (
     val allowVideos: Boolean,
     val allowVideoGifs: Boolean,
     val allowPolls: Boolean,
-    val linkFlairEnabled: Boolean
+    val linkFlairEnabled: Boolean,
+    val over18: Boolean
 ) : Parcelable

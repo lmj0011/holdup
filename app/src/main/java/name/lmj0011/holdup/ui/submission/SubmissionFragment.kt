@@ -513,7 +513,13 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             )
         )
 
-        if (subreddit.allowImages) {
+        /**
+         * NSFW subs only allow media hosted from 3rd party sources apparently
+         *
+         * ref: https://www.reddit.com/r/ModSupport/comments/i3dcqr/cant_post_images_to_my_nsfw_subreddit_from_reddit/
+         * ref: https://www.reddit.com/r/help/comments/b0sd0x/posting_nsfw_images/
+         */
+        if (subreddit.allowImages && !subreddit.over18) {
             listOfTriples.add(
                 Triple(
                     "Image",
@@ -524,7 +530,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 
         }
 
-        if (subreddit.allowVideos) {
+        if (subreddit.allowVideos && !subreddit.over18) {
             listOfTriples.add(
                 Triple(
                     "Video",

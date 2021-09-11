@@ -43,7 +43,8 @@ class TestHelper(val context: Context) {
             allowVideos=true,
             allowVideoGifs=true,
             allowPolls=true,
-            linkFlairEnabled=true
+            linkFlairEnabled=true,
+            over18 = false
         )
 
         val listOfFlairs = listOf(

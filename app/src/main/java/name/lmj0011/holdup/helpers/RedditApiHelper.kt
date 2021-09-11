@@ -148,7 +148,8 @@ class RedditApiHelper(val context: Context) {
                         allowVideos = dataObj.getBoolean("allow_videos"),
                         allowVideoGifs = dataObj.getBoolean("allow_videogifs"),
                         allowPolls = dataObj.getBoolean("allow_polls"),
-                        linkFlairEnabled = dataObj.getBoolean("link_flair_enabled")
+                        linkFlairEnabled = dataObj.getBoolean("link_flair_enabled"),
+                        over18 = dataObj.getBoolean("over18")
                     )
                     subredditSet.add(sub)
                 } catch(ex: JSONException) {
