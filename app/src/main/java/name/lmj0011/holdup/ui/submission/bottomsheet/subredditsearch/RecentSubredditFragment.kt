@@ -7,7 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.viewpager2.widget.ViewPager2
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.databinding.FragmentRecentSubredditBinding
 import name.lmj0011.holdup.helpers.adapters.JoinedSubsHeaderListAdapter
@@ -63,37 +63,30 @@ class RecentSubredditFragment(val searchView: SearchView,
         recentsListAdapter = SubredditSearchListAdapter(setSubredditForSubmission)
         joinedListAdapter = SubredditSearchListAdapter(setSubredditForSubmission)
 
-        concatAdapter.apply {
-            addAdapter(recentSubsHeaderListAdapter)
-            addAdapter(recentsListAdapter)
-            addAdapter(joinedSubsHeaderListAdapter)
-            addAdapter(joinedListAdapter)
-        }
-
         binding.recentAndJoinedSubredditList.adapter = concatAdapter
 
         launchIO {
-            recentAndJoinedSubredditPair.first.collectLatest { list ->
-                withUIContext {
-                    if(list.isEmpty()) {
-                        concatAdapter.apply {
-                            concatAdapter.removeAdapter(recentSubsHeaderListAdapter)
-                            concatAdapter.removeAdapter(recentsListAdapter)
-                        }
-                    }  else recentsListAdapter.submitList(list)
+            val recents = recentAndJoinedSubredditPair.first.first()
+
+            withUIContext {
+                if(recents.isNotEmpty()) {
+                    concatAdapter.apply {
+                        addAdapter(recentSubsHeaderListAdapter)
+                        addAdapter(recentsListAdapter)
+                    }
+                    recentsListAdapter.submitList(recents)
                 }
             }
-        }
 
-        launchIO {
-            recentAndJoinedSubredditPair.second.collectLatest { list ->
-                withUIContext {
-                    if(list.isEmpty()) {
-                        concatAdapter.apply {
-                            removeAdapter(joinedSubsHeaderListAdapter)
-                            removeAdapter(joinedListAdapter)
-                        }
-                    }  else joinedListAdapter.submitList(list)
+            val joined = recentAndJoinedSubredditPair.second.first()
+
+            withUIContext {
+                if(joined.isNotEmpty()) {
+                    concatAdapter.apply {
+                        addAdapter(joinedSubsHeaderListAdapter)
+                        addAdapter(joinedListAdapter)
+                    }
+                    joinedListAdapter.submitList(joined)
                 }
             }
         }
