@@ -25,6 +25,7 @@ import name.lmj0011.holdup.helpers.util.withUIContext
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubmissionsFilterOptionsFragment
 import org.kodein.di.instance
+import java.lang.IllegalArgumentException
 import java.util.*
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
@@ -58,13 +59,17 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             val id = dataStoreHelper.getPublishScheduledSubmissionWorkerId().first()
 
             withUIContext {
-                WorkManager.getInstance(requireContext())
-                    .getWorkInfoByIdLiveData(UUID.fromString(id))
-                    .observe(viewLifecycleOwner) { workInfo: WorkInfo ->
-                        if (workInfo.state.isFinished) {
-                            refreshRecyclerView()
+                try{
+                    WorkManager.getInstance(requireContext())
+                        .getWorkInfoByIdLiveData(UUID.fromString(id))
+                        .observe(viewLifecycleOwner) { workInfo: WorkInfo ->
+                            if (workInfo.state.isFinished) {
+                                refreshRecyclerView()
+                            }
                         }
-                    }
+                } catch(ex: IllegalArgumentException) {
+                    // do nothing
+                }
             }
         }
     }
