@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity() {
                 aboutDialog.versionTextView.text = "v${BuildConfig.VERSION_NAME}"
                 if(BuildConfig.DEBUG) {
                     aboutDialog.appNameTextView.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.ic_baseline_bug_report_24, 0)
-                    aboutDialog.versionTextView.append(" (${BuildConfig.VERSION_CODE})")
+                    aboutDialog.versionTextView.append(" (${getString(R.string.git_commit_sha).take(8)})")
                 }
 
                 MaterialAlertDialogBuilder(this@MainActivity).setView(aboutDialog.root).show()
