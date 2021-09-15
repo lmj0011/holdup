@@ -444,20 +444,18 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
                                 enqueueUploadSubmissionMediaWorkerThenPublish(args.submission.alarmRequestCode)
                                 withUIContext { findNavController().navigateUp() }
                             } else -> {
-                            val responsePair = viewModel.postSubmission(kind)
+                                val responsePair = viewModel.postSubmission(kind)
 
-                            withUIContext {
                                 // Post was successful
                                 responsePair.first?.let { _ ->
-                                    findNavController().navigateUp()
+                                    viewModel.deleteSubmission(args.submission)
+                                    withUIContext { findNavController().navigateUp() }
                                 }
 
-                                // Post failed
                                 responsePair.second?.let { msg ->
-                                    showSnackBar(binding.root, msg)
+                                    withUIContext { showSnackBar(binding.root, msg) }
                                 }
                             }
-                        }
                         }
                     } catch(ex: HttpStatusException) {
                         showSnackBar(binding.root, requireContext().getString(R.string.reddit_api_http_error_msg, ex.statusCode, ex.message))
