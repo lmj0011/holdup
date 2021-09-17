@@ -72,10 +72,17 @@ android {
     }
 
     buildTypes.forEach {
-        it.resValue("string", "reddit_app_clientId", "${project.findProperty("reddit.app.clientId")}")
-        it.resValue("string", "reddit_app_redirectUri", "${project.findProperty("reddit.app.redirectUri")}")
-        it.resValue("string", "file_provider_authorities", "${android.defaultConfig.applicationId}.fileprovider")
+        if(it.name == "release") {
+            // reddit app credentials (release)
+            it.resValue("string", "reddit_app_clientId", "${project.findProperty("reddit.app.clientId")}")
+            it.resValue("string", "reddit_app_redirectUri", "${project.findProperty("reddit.app.redirectUri")}")
+        } else {
+            // reddit app credentials (for any other build type)
+            it.resValue("string", "reddit_app_clientId", "BBDkZM1qASiJTNpmQlMyYA")
+            it.resValue("string", "reddit_app_redirectUri", "https://localhost:8080/my_callback")
+        }
 
+        it.resValue("string", "file_provider_authorities", "${android.defaultConfig.applicationId}.fileprovider")
         it.resValue("string", "git_commit_count", getCommitCount())
         it.resValue("string", "git_commit_sha", getGitSha())
         it.resValue("string", "app_buildtime", getBuildTime())

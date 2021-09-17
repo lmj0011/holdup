@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -26,6 +25,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
+import name.lmj0011.holdup.Keys
 import name.lmj0011.holdup.MainActivity
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
@@ -209,7 +209,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                 .error(R.mipmap.ic_default_subreddit_icon_round)
                 .into(binding.chooseSubredditImageView)
 
-            reattachTabLayoutMediator(it)
+            reConfigureTabLayoutMediator(it)
 
             viewModel.setSubredditPostRequirements(it)
 
@@ -383,27 +383,28 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     override fun setupBinding(view: View) {
         binding = FragmentSubmissionBinding.bind(view)
         binding.lifecycleOwner = viewLifecycleOwner
-        binding.submissionPager.adapter = TabCollectionAdapterDefault(this)
+        binding.submissionPager.adapter = TabCollectionAdapter(this)
         binding.submissionPager.isUserInputEnabled = false // prevent swiping navigation ref: https://stackoverflow.com/a/55193815/2445763
-        tabLayoutMediator = TabLayoutMediator(binding.submissionTabLayout, binding.submissionPager) { tab, position ->
+        binding.submissionPager.offscreenPageLimit = 4
+        tabLayoutMediator = TabLayoutMediator(binding.submissionTabLayout, binding.submissionPager, true, false) { tab, position ->
             when(position) {
-                0 -> {
+                Keys.LINK_TAB_POSITION -> {
                     tab.text = "Link"
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_link_24)
                 }
-                1 -> {
+                Keys.IMAGE_TAB_POSITION -> {
                     tab.text = "Image"
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_image_24)
                 }
-                2 -> {
+                Keys.VIDEO_TAB_POSITION -> {
                     tab.text = "Video"
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)
                 }
-                3 -> {
+                Keys.SELF_TAB_POSITION -> {
                     tab.text = "Self"
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)
                 }
-                4 -> {
+                Keys.POLL_TAB_POSITION -> {
                     tab.text = "Poll"
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_poll_24)
                 }
@@ -413,11 +414,11 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
         binding.submissionPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 val actionBarTitle = when(position) {
-                    0 -> "Link Submission"
-                    1 -> "Image Submission"
-                    2 -> "Video Submission"
-                    3 -> "Self Submission"
-                    4 -> "Poll Submission"
+                    Keys.LINK_TAB_POSITION -> "Link Submission"
+                    Keys.IMAGE_TAB_POSITION -> "Image Submission"
+                    Keys.VIDEO_TAB_POSITION -> "Video Submission"
+                    Keys.SELF_TAB_POSITION -> "Self Submission"
+                    Keys.POLL_TAB_POSITION -> "Poll Submission"
                     else -> ""
                 }
                 (requireActivity() as AppCompatActivity).supportActionBar?.title = actionBarTitle
@@ -475,43 +476,73 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
      * Reconfigures the TabLayout based on this Subreddit allowed Post types
      * - retains the selected Tab, if it's still available
      */
-    private fun reattachTabLayoutMediator(subreddit: Subreddit) {
-        val oldTabLayout = binding.submissionTabLayout
-        val tabCollection = getTabCollectionTriples(subreddit)
-        val oldSelectedTabText = oldTabLayout.getTabAt(oldTabLayout.selectedTabPosition)?.text
+    private fun reConfigureTabLayoutMediator(subreddit: Subreddit) {
+        val tabLayout = binding.submissionTabLayout
+        val allowedSubmissionKinds = getAllowedSubmissionKinds(subreddit)
+        val selectedTab = tabLayout.getTabAt(tabLayout.selectedTabPosition)
 
-        tabLayoutMediator.detach()
-        binding.submissionPager.adapter = TabCollectionAdapterDynamic(this, tabCollection)
-
-        tabLayoutMediator = TabLayoutMediator(oldTabLayout, binding.submissionPager) { tab, position ->
-            tab.text = tabCollection[position].first
-            tab.icon = tabCollection[position].second
+        // hide all tabs
+        for (i in 0..tabLayout.tabCount) {
+            tabLayout.getTabAt(i)?.view?.isVisible = false
         }
 
-        tabLayoutMediator.attach()
-
-        // try to retain the selected Tab, if it's still available
-        val newTabLayout = binding.submissionTabLayout
-        for (i in 0 until newTabLayout.tabCount) {
-            val tab = newTabLayout.getTabAt(i)
-
-            if (tab?.text == oldSelectedTabText) {
-                newTabLayout.selectTab(tab)
-                break
+        // shows tabs that should be shown for this subreddit
+        allowedSubmissionKinds.forEach { kind ->
+            when (kind) {
+                SubmissionKind.Link -> {
+                    tabLayout.getTabAt(Keys.LINK_TAB_POSITION)?.view?.isVisible = true
             }
+                SubmissionKind.Image -> {
+                    tabLayout.getTabAt(Keys.IMAGE_TAB_POSITION)?.view?.isVisible = true
+            }
+                SubmissionKind.Video, SubmissionKind.VideoGif -> {
+                    tabLayout.getTabAt(Keys.VIDEO_TAB_POSITION)?.view?.isVisible = true
+            }
+                SubmissionKind.Self -> {
+                    tabLayout.getTabAt(Keys.SELF_TAB_POSITION)?.view?.isVisible = true
+            }
+                SubmissionKind.Poll -> {
+                    tabLayout.getTabAt(Keys.POLL_TAB_POSITION)?.view?.isVisible = true
+            }
+            }
+        }
+
+        // set the selected Tab to the previously selected or the first available one
+        val kind = allowedSubmissionKinds.firstOrNull { kind ->
+            kind.kind == selectedTab?.text.toString().lowercase()
+        }
+
+        if (kind != null) {
+            when (kind) {
+                SubmissionKind.Link -> {
+                    tabLayout.selectTab(tabLayout.getTabAt(Keys.LINK_TAB_POSITION), true)
+                }
+                SubmissionKind.Image -> {
+                    tabLayout.selectTab(tabLayout.getTabAt(Keys.IMAGE_TAB_POSITION), true)
+                }
+                SubmissionKind.Video, SubmissionKind.VideoGif -> {
+                    tabLayout.selectTab(tabLayout.getTabAt(Keys.VIDEO_TAB_POSITION), true)
+                }
+                SubmissionKind.Self -> {
+                    tabLayout.selectTab(tabLayout.getTabAt(Keys.SELF_TAB_POSITION), true)
+                }
+                SubmissionKind.Poll -> {
+                    tabLayout.selectTab(tabLayout.getTabAt(Keys.POLL_TAB_POSITION), true)
+                }
+            }
+        } else {
+            tabLayout.selectTab(tabLayout.getTabAt(0), true)
         }
     }
 
-    private fun getTabCollectionTriples(subreddit: Subreddit): List<Triple<String, Drawable, Fragment>> {
-        var listOfTriples = mutableListOf<Triple<String, Drawable, Fragment>>()
+    /**
+     * Returns a list of [SubmissionKind] that reflects the allowed posts for the given [Subreddit]
+     *
+     */
+    private fun getAllowedSubmissionKinds(subreddit: Subreddit): List<SubmissionKind> {
+        val listOfKinds = mutableListOf<SubmissionKind>()
 
-        listOfTriples.add(
-            Triple(
-                "Link",
-                requireContext().getDrawable(R.drawable.ic_baseline_link_24)!!,
-                LinkSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-            )
-        )
+        listOfKinds.add(SubmissionKind.Link)
 
         /**
          * NSFW subs only allow media hosted from 3rd party sources apparently
@@ -520,45 +551,22 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
          * ref: https://www.reddit.com/r/help/comments/b0sd0x/posting_nsfw_images/
          */
         if (subreddit.allowImages && !subreddit.over18) {
-            listOfTriples.add(
-                Triple(
-                    "Image",
-                    requireContext().getDrawable(R.drawable.ic_baseline_image_24)!!,
-                    ImageSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                )
-            )
+            listOfKinds.add(SubmissionKind.Image)
 
         }
 
         if (subreddit.allowVideos && !subreddit.over18) {
-            listOfTriples.add(
-                Triple(
-                    "Video",
-                    requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)!!,
-                    VideoSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
-                ),
-            )
+            listOfKinds.add(SubmissionKind.Video)
+            listOfKinds.add(SubmissionKind.VideoGif)
         }
 
-        listOfTriples.add(
-            Triple(
-                "Self",
-                requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)!!,
-                TextSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-            ),
-        )
+        listOfKinds.add(SubmissionKind.Self)
 
         if (subreddit.allowPolls) {
-            listOfTriples.add(
-                Triple(
-                    "Poll",
-                    requireContext().getDrawable(R.drawable.ic_baseline_poll_24)!!,
-                    PollSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                ),
-            )
+            listOfKinds.add(SubmissionKind.Poll)
         }
 
-        return listOfTriples.toList()
+        return listOfKinds
     }
 
     override fun clearUserInputViews() {
@@ -706,42 +714,25 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             .show()
     }
 
-    inner class TabCollectionAdapterDefault(fragment: Fragment) : FragmentStateAdapter(fragment) {
+    inner class TabCollectionAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
+        private val linkFrag = LinkSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+        private val imageFrag = ImageSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+        private val videoFrag = VideoSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
+        private val textFrag = TextSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+        private val pollFrag = PollSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+
         override fun getItemCount(): Int = 5
 
         override fun createFragment(position: Int): Fragment {
             // Return a NEW fragment instance
             return when(position) {
-                0 -> {
-                    LinkSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                }
-                1 -> {
-                    ImageSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                }
-                2 -> {
-                    VideoSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
-                }
-                3 -> {
-                    TextSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                }
-                4 -> {
-                    PollSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                }
+                Keys.LINK_TAB_POSITION -> linkFrag
+                Keys.IMAGE_TAB_POSITION -> imageFrag
+                Keys.VIDEO_TAB_POSITION -> videoFrag
+                Keys.SELF_TAB_POSITION -> textFrag
+                Keys.POLL_TAB_POSITION -> pollFrag
                 else -> throw Exception("Unknown Tab Position!")
             }
-        }
-    }
-
-    inner class TabCollectionAdapterDynamic(
-        fragment: Fragment,
-        val tabCollection: List<Triple<String, Drawable, Fragment>>
-    ) : FragmentStateAdapter(fragment) {
-
-        override fun getItemCount(): Int = tabCollection.size
-
-        override fun createFragment(position: Int): Fragment {
-            // Return a NEW fragment instance
-            return tabCollection[position].third
         }
     }
 }
