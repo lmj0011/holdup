@@ -199,7 +199,11 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             if(::enableInboxReplies.isInitialized) enableInboxReplies.isChecked = it
         })
 
-        viewModel.getSubreddit().observe(viewLifecycleOwner, {
+        viewModel.subredditPostRequirements.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(getSelectedTabPositionSubmissionType())
+        })
+
+        viewModel.subreddit.observe(viewLifecycleOwner, {
             binding.chooseSubredditTextView.text = it.displayNamePrefixed
             Glide
                 .with(this)

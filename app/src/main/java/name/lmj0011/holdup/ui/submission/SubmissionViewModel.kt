@@ -67,8 +67,12 @@ class SubmissionViewModel(
     private var dataStoreHelper: DataStoreHelper = (application as App).kodein.instance()
 
     private var account = MutableLiveData<Account>()
-    private var subreddit = MutableLiveData<Subreddit>()
-    private var subredditPostRequirements = MutableLiveData<PostRequirements?>()
+
+    var subreddit = MutableLiveData<Subreddit>()
+        private set
+
+    var subredditPostRequirements = MutableLiveData<PostRequirements?>()
+        private set
 
     var submissionTitle = MutableLiveData<String?>()
         private set
@@ -229,9 +233,6 @@ class SubmissionViewModel(
         return account
     }
 
-    fun getSubreddit(): LiveData<Subreddit> {
-        return subreddit
-    }
 
     fun readyToPost(): LiveData<Boolean>{
         return readyToPost
@@ -302,7 +303,6 @@ class SubmissionViewModel(
                     }
                     SubmissionKind.Poll -> {
                         val form = getSubmissionForm(kind)
-                        Timber.d("form: $form")
                         readyToPost.postValue(submissionValidatorHelper.validate(form, reqs))
                     }
                 }

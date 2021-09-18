@@ -162,7 +162,11 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
             if(::enableInboxReplies.isInitialized) enableInboxReplies.isChecked = it
         })
 
-        viewModel.getSubreddit().observe(viewLifecycleOwner, {
+        viewModel.subredditPostRequirements.observe(viewLifecycleOwner, {
+            viewModel.validateSubmission(args.submission.kind!!)
+        })
+
+        viewModel.subreddit.observe(viewLifecycleOwner, {
             binding.chooseSubredditTextView.text = it.displayNamePrefixed
             Glide
                 .with(this)
