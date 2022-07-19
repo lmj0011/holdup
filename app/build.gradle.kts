@@ -58,12 +58,15 @@ android {
 
         /**
          * Debug with shrinking, obfuscation, and optimization applied
+         *
+         * Set "isDebuggable = false" to avoid dealing with signing keys and produce this build as
+         * if it were a "release" build.
          */
         create("debugR8") {
             initWith(getByName("debug"))
             isShrinkResources = true
             isMinifyEnabled = true
-            isDebuggable = false
+            isDebuggable = true
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
             ndk {
                 debugSymbolLevel = "FULL"
@@ -100,7 +103,7 @@ android {
          */
         create("preview") {
             dimension = "default"
-            applicationIdSuffix = "preview"
+            applicationIdSuffix = ".preview"
             versionNameSuffix = ".${getCommitCount()}"
             resValue("string", "app_name", "Holdup (preview)")
         }
@@ -130,22 +133,22 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${findProperty("kotlin.version")}")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect:${findProperty("kotlin.version")}")
-    implementation("androidx.core:core-ktx:1.3.2")
-    implementation("androidx.appcompat:appcompat:1.2.0")
+    implementation("androidx.core:core-ktx:1.8.0")
+    implementation("androidx.appcompat:appcompat:1.4.2")
 
     implementation ("com.google.android.material:material:1.3.0-alpha04") {
         exclude(group = "androidx.recyclerview",  module = "recyclerview")
         exclude(group = "androidx.recyclerview",   module = "recyclerview-selection")
     }
 
-    implementation("androidx.constraintlayout:constraintlayout:2.0.4")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.vectordrawable:vectordrawable:1.1.0")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.3.3")
-    implementation("androidx.navigation:navigation-ui-ktx:2.3.3")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.5.0")
+    implementation("androidx.navigation:navigation-ui-ktx:2.5.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("androidx.recyclerview:recyclerview:1.2.0-beta01")
+    implementation("androidx.recyclerview:recyclerview:1.2.1")
     implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
-    implementation("androidx.datastore:datastore-preferences:1.0.0-alpha06")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     val lifecycleVersion = "2.5.0"
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
@@ -156,10 +159,10 @@ dependencies {
 
     implementation(project(path = ":auth"))
 
-    testImplementation("junit:junit:4.13")
+    testImplementation("junit:junit:4.13.2")
 
-    androidTestImplementation("androidx.test.ext:junit:1.1.2")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.3")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
 
 
     // Room dependencies
@@ -178,21 +181,21 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
 
     // androidx.preference
-    implementation("androidx.preference:preference-ktx:1.1.1")
+    implementation("androidx.preference:preference-ktx:1.2.0")
 
     // dependency injection
     implementation("org.kodein.di:kodein-di:7.7.0")
 
     // An adaptation of the JSR-310 backport for Android.
-    implementation("com.jakewharton.threetenabp:threetenabp:1.2.1")
+    implementation("com.jakewharton.threetenabp:threetenabp:1.3.1")
 
     // Timber Logger
     implementation("com.jakewharton.timber:timber:4.7.1")
 
-    // Moshi
-    val moshiVersion = "1.12.0"
+    val moshiVersion = "1.13.0"
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVersion")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
+
 
     val okhttpVersion = "4.9.0"
     implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")

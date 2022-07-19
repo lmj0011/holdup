@@ -11,8 +11,10 @@ import android.text.TextWatcher
 import android.view.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatCheckedTextView
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -112,50 +114,54 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
         binding.spoilerChip.isChecked = args.submission.isSpoiler
 
         (requireActivity() as MainActivity).hideFab()
-    }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        optionsMenu = menu
-        optionsMenu?.clear()
-        inflater.inflate(R.menu.edit_submission, menu)
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        super.onPrepareOptionsMenu(menu)
-        optionsMenu = menu
-        viewModel.readyToPost().value!!.let {
-            menu.getItem(2).isEnabled = it
-        }
-
-
-        // Only show option to save Submission if it's been scheduled
-        if(args.submission.postAtMillis == Keys.UNIX_EPOCH_MILLIS) {
-            menu.getItem(0).isEnabled = false
-            menu.getItem(0).isVisible = false
-        }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_delete_submission -> {
-                showDeleteConfirmationDialog()
-                true
+        /**
+         * The new way of creating and handling menus
+         * ref: https://developer.android.com/jetpack/androidx/releases/activity#1.4.0-alpha01
+         */
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                optionsMenu = menu
+                optionsMenu?.clear()
+                menuInflater.inflate(R.menu.edit_submission, menu)
             }
-            R.id.action_save_submission -> {
-                saveSubmission()
-                true
+
+            override fun onPrepareMenu(menu: Menu) {
+                super.onPrepareMenu(menu)
+
+                optionsMenu = menu
+                viewModel.readyToPost().value!!.let {
+                    menu.getItem(2).isEnabled = it
+                }
+
+
+                // Only show option to save Submission if it's been scheduled
+                if(args.submission.postAtMillis == Keys.UNIX_EPOCH_MILLIS) {
+                    menu.getItem(0).isEnabled = false
+                    menu.getItem(0).isVisible = false
+                }
             }
-            R.id.action_post_submission -> {
-                showPostConfirmationDialog()
-                true
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_delete_submission -> {
+                        showDeleteConfirmationDialog()
+                        true
+                    }
+                    R.id.action_save_submission -> {
+                        saveSubmission()
+                        true
+                    }
+                    R.id.action_post_submission -> {
+                        showPostConfirmationDialog()
+                        true
+                    }
+                    else -> false
+                }
             }
-            else -> super.onOptionsItemSelected(item)
-        }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
+
 
     override fun setupObservers() {
         viewModel.sendReplies.observe(viewLifecycleOwner, {

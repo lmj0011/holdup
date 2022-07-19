@@ -44,7 +44,7 @@ dependencies {
 
     implementation(fTree)
 
-    implementation("androidx.core:core-ktx:1.3.2")
+    implementation("androidx.core:core-ktx:1.8.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${findProperty("kotlin.version")}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${findProperty("kotlin.version")}")
 
@@ -56,7 +56,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
     implementation("com.squareup.retrofit2:converter-moshi:$retrofitVersion")
 
-    val moshiVersion = "1.12.0"
+    val moshiVersion = "1.13.0"
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVersion")
     kapt           ("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
 }

@@ -109,6 +109,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
         }
     }
 
+    @Deprecated("Deprecated in Java")
     @Suppress("BlockingMethodInNonBlockingContext")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

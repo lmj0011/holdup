@@ -6,7 +6,9 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.work.WorkInfo
@@ -46,8 +48,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         )
         redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
         dataStoreHelper = (requireContext().applicationContext as App).kodein.instance()
-
-        setHasOptionsMenu(true)
     }
 
     override fun onResume() {
@@ -81,30 +81,35 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         setupBinding(view)
         setupRecyclerView()
         setupObservers()
         setupSwipeToRefresh()
-    }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.home, menu)
-    }
-
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_filer_posts -> {
-                bottomSheetSubmissionsFilterOptionsFragment
-                    .show(childFragmentManager, "BottomSheetSubmissionsFilterOptionsFragment")
-                true
+        /**
+         * The new way of creating and handling menus
+         * ref: https://developer.android.com/jetpack/androidx/releases/activity#1.4.0-alpha01
+         */
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.home, menu)
             }
-            else -> super.onOptionsItemSelected(item)
-        }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_filer_posts -> {
+                        bottomSheetSubmissionsFilterOptionsFragment
+                            .show(childFragmentManager, "BottomSheetSubmissionsFilterOptionsFragment")
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
+
     }
 
     private fun setupBinding(view: View) {

@@ -65,7 +65,7 @@ object NotificationHelper {
 
     fun showSubmissionPublishedNotification(subreddit: Subreddit, account: Account, form: SubmissionValidatorHelper.SubmissionForm, postUrl: String?) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.reddit.com/user/${account.name.substring(2)}/?sort=new"))
-        val defaultContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+        val defaultContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT)
 
         val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_app_notification_icon)
@@ -77,7 +77,7 @@ object NotificationHelper {
 
         postUrl?.let { url ->
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            val customContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+            val customContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT)
 
             notification.setContentIntent(customContentPendingIntent)
         }

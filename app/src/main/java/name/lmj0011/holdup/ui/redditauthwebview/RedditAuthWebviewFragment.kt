@@ -3,18 +3,17 @@ package name.lmj0011.holdup.ui.redditauthwebview
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import com.kirkbushman.auth.errors.AccessDeniedException
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +52,6 @@ class RedditAuthWebviewFragment : Fragment() {
         var username = ""
         redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
         redditApiHelper = (requireContext().applicationContext as App).kodein.instance()
-        setHasOptionsMenu(true)
 
         browser.webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
@@ -154,10 +152,25 @@ class RedditAuthWebviewFragment : Fragment() {
         return root
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        super.onPrepareOptionsMenu(menu)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        menu.findItem(R.id.action_manage_accounts)?.isVisible = false
+        /**
+         * The new way of creating and handling menus
+         * ref: https://developer.android.com/jetpack/androidx/releases/activity#1.4.0-alpha01
+         */
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
+
+            override fun onPrepareMenu(menu: Menu) {
+                super.onPrepareMenu(menu)
+                menu.findItem(R.id.action_manage_accounts)?.isVisible = false
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return false
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
 }

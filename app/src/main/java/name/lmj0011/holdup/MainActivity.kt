@@ -3,12 +3,14 @@ package name.lmj0011.holdup
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.webkit.CookieManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.view.MenuProvider
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -31,7 +33,6 @@ import name.lmj0011.holdup.helpers.factories.ViewModelFactory
 import name.lmj0011.holdup.helpers.services.PattonService
 import name.lmj0011.holdup.helpers.util.*
 import name.lmj0011.holdup.ui.accounts.AccountsViewModel
-import org.json.JSONObject
 import org.kodein.di.instance
 import timber.log.Timber
 
@@ -60,6 +61,17 @@ class MainActivity : AppCompatActivity() {
         binding.navView.setupWithNavController(navController)
         binding.navView.visibility = View.GONE
         setupNavigationListener()
+
+        addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                this@MainActivity.createMenu(menu, menuInflater)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return this@MainActivity.menuItemSelected(menuItem)
+            }
+
+        })
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -141,14 +153,22 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.main, menu)
-        if(BuildConfig.DEBUG) menuInflater.inflate(R.menu.main_debug, menu)
-        return true
+    fun createMenu(menu: Menu, inflater: MenuInflater) {
+        // Inflate the main menu
+        inflater.inflate(R.menu.main, menu)
+
+        // Add experimental menu items depending on this app build
+        when {
+            (BuildConfig.DEBUG) -> {
+                inflater.inflate(R.menu.main_debug, menu)
+            }
+            (BuildConfig.FLAVOR == "preview") -> {
+                inflater.inflate(R.menu.main_preview, menu)
+            }
+        }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    fun menuItemSelected(item: MenuItem): Boolean {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -188,9 +208,15 @@ class MainActivity : AppCompatActivity() {
             R.id.action_about -> {
                 val aboutDialog = DialogAboutBinding.inflate(layoutInflater)
                 aboutDialog.versionTextView.text = "v${BuildConfig.VERSION_NAME}"
-                if(BuildConfig.DEBUG) {
-                    aboutDialog.appNameTextView.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.ic_baseline_bug_report_24, 0)
-                    aboutDialog.versionTextView.append(" (${getString(R.string.git_commit_sha).take(8)})")
+
+                when {
+                    (BuildConfig.DEBUG) -> {
+                        aboutDialog.appNameTextView.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.ic_baseline_bug_report_24, 0)
+                        aboutDialog.versionTextView.append(" (${getString(R.string.git_commit_sha).take(8)})")
+                    }
+                    (BuildConfig.FLAVOR == "preview") -> {
+                        aboutDialog.versionTextView.append(" (${getString(R.string.git_commit_sha).take(8)})")
+                    }
                 }
 
                 MaterialAlertDialogBuilder(this@MainActivity).setView(aboutDialog.root).show()
@@ -218,7 +244,7 @@ class MainActivity : AppCompatActivity() {
                 navController.navigate(R.id.testingFragment)
                 true
             }
-            else -> super.onOptionsItemSelected(item)
+            else -> false
         }
     }
 

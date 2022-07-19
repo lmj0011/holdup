@@ -87,6 +87,7 @@ class TestHelper(val context: Context) {
 
                     submissions.add(sub)
                 }
+                else -> {}
             }
         }
 

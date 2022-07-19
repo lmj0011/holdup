@@ -1,12 +1,11 @@
 package name.lmj0011.holdup.ui.patton
 
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.view.forEach
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,7 +14,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayout
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
@@ -27,7 +25,6 @@ import name.lmj0011.holdup.helpers.util.*
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetAccountsFragment
 import org.json.JSONObject
 import org.kodein.di.instance
-import org.kodein.di.subDI
 import timber.log.Timber
 
 class PattonFragment: Fragment(R.layout.fragment_patton), BaseFragmentInterface {
@@ -48,8 +45,6 @@ class PattonFragment: Fragment(R.layout.fragment_patton), BaseFragmentInterface 
         )
 
         dataStoreHelper = (requireContext().applicationContext as App).kodein.instance()
-
-        setHasOptionsMenu(true)
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -114,6 +109,23 @@ class PattonFragment: Fragment(R.layout.fragment_patton), BaseFragmentInterface 
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
+
+        /**
+         * The new way of creating and handling menus
+         * ref: https://developer.android.com/jetpack/androidx/releases/activity#1.4.0-alpha01
+         */
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
+
+            override fun onPrepareMenu(menu: Menu) {
+                super.onPrepareMenu(menu)
+                menu.findItem(R.id.action_patton)?.isVisible = false
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return false
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     override fun onDestroy() {

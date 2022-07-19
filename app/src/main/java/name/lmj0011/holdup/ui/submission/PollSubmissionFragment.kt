@@ -5,6 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.EditText
@@ -12,8 +15,10 @@ import android.widget.ImageView
 import android.widget.TableRow
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import name.lmj0011.holdup.FullscreenTextEntryActivity
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
@@ -67,6 +72,23 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
             restoreOptions(it)
             binding.pollDurationSpinner.setSelection(it.pollDuration - 1)
         }
+
+        /**
+         * The new way of creating and handling menus
+         * ref: https://developer.android.com/jetpack/androidx/releases/activity#1.4.0-alpha01
+         */
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
+
+            override fun onPrepareMenu(menu: Menu) {
+                super.onPrepareMenu(menu)
+                menu.findItem(R.id.action_manage_accounts)?.isVisible = false
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return false
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     override fun onResume() {
@@ -75,6 +97,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
         viewModel.validateSubmission(SubmissionKind.Poll)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 

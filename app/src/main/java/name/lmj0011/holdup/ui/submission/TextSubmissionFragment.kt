@@ -62,6 +62,7 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
         viewModel.validateSubmission(SubmissionKind.Self)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 

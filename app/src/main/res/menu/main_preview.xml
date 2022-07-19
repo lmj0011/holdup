@@ -13,8 +13,4 @@
         android:title="Manage Accounts"
         android:orderInCategory="6"
         app:showAsAction="never"/>
-    <item android:id="@+id/action_testing"
-        android:title="Testing"
-        android:orderInCategory="7"
-        app:showAsAction="never"/>
 </menu>

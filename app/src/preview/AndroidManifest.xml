@@ -18,6 +18,7 @@
 
     <application
         android:name="name.lmj0011.holdup.App"
+        android:usesCleartextTraffic="true"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher_alt"
         android:label="@string/app_name"
@@ -26,8 +27,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="name.lmj0011.holdup.MainActivity"
+            android:label="@string/app_name"
             android:theme="@style/AppTheme"
-            android:launchMode="singleTask"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,26 +37,10 @@
         </activity>
 
         <activity
-            android:name="name.lmj0011.holdup.PattonActivity"
-            android:theme="@style/AppTheme"
-            android:launchMode="singleTask"
-            android:exported="true">
-            <intent-filter android:label="Submit to Patton">
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
-        </activity>
-
-        <activity
             android:name="name.lmj0011.holdup.FullscreenTextEntryActivity"
             android:theme="@style/AppThemeNoActionBar"
             android:exported="false">
         </activity>
-
-        <service
-            android:name=".helpers.services.PattonService"
-            android:exported="false"/>
 
         <receiver
             android:name="name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver"
@@ -69,12 +54,6 @@
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
         </receiver>
-
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            tools:node="remove">
-        </provider>
 
         <provider
             android:name="androidx.core.content.FileProvider"

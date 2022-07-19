@@ -63,6 +63,7 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
                 SubmissionKind.Poll -> {
                     binding.submissionKindIconImageView.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_baseline_poll_24))
                 }
+                else -> {}
             }
 
             Glide

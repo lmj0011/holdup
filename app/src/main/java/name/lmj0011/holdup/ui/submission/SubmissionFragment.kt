@@ -13,8 +13,10 @@ import android.view.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatCheckedTextView
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
@@ -160,38 +162,40 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
         super.onViewCreated(view, savedInstanceState)
         setupBinding(view)
         setupObservers()
-    }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        optionsMenu = menu
-        optionsMenu?.clear()
-        inflater.inflate(R.menu.submission, menu)
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        super.onPrepareOptionsMenu(menu)
-        optionsMenu = menu
-        viewModel.readyToPost().value!!.let {
-            menu.getItem(0).isEnabled = it
-        }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_post_submission -> {
-                val layout = binding.submissionTabLayout
-
-                layout.getTabAt(layout.selectedTabPosition)?.let {
-                    showPostConfirmationDialog(it.text.toString())
-                }
-                true
+        /**
+         * The new way of creating and handling menus
+         * ref: https://developer.android.com/jetpack/androidx/releases/activity#1.4.0-alpha01
+         */
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                optionsMenu = menu
+                optionsMenu?.clear()
+                menuInflater.inflate(R.menu.submission, menu)
             }
-            else -> super.onOptionsItemSelected(item)
-        }
+
+            override fun onPrepareMenu(menu: Menu) {
+                super.onPrepareMenu(menu)
+                optionsMenu = menu
+                viewModel.readyToPost().value!!.let {
+                    menu.getItem(0).isEnabled = it
+                }
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_post_submission -> {
+                        val layout = binding.submissionTabLayout
+
+                        layout.getTabAt(layout.selectedTabPosition)?.let {
+                            showPostConfirmationDialog(it.text.toString())
+                        }
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     override fun setupObservers() {
