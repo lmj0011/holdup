@@ -12,20 +12,62 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/pager"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:id="@+id/chooseAccountLinearLayout"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/parentContainer">
+
+            <TextView
+                android:id="@+id/votingAsTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text=" voting as: "
+                android:textAlignment="center" />
+
+            <ImageView
+                android:id="@+id/chooseAccountImageView"
+                android:layout_width="25dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                app:srcCompat="@drawable/ic_baseline_image_24" />
+
+            <TextView
+                android:id="@+id/chooseAccountTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:text="Choose an account" />
+
+            <ImageView
+                android:id="@+id/chooseAccountPickerImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:srcCompat="@drawable/ic_baseline_arrow_drop_down_24" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/LogTextView"
+            android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            app:layout_constraintBottom_toTopOf="@+id/submissionTabLayout"
+            android:text="log message.......\nlog message......\nlog message......\nlog message......\nlog message......\nlog message......\nlog message......\nlog message......\nlog message......"
+            app:layout_constraintBottom_toTopOf="@+id/pattonTabLayout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/chooseAccountLinearLayout" />
 
         <com.google.android.material.tabs.TabLayout
-            android:id="@+id/submissionTabLayout"
+            android:id="@+id/pattonTabLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/LogTextView"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>

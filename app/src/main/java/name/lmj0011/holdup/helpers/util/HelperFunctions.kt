@@ -1,33 +1,33 @@
 package name.lmj0011.holdup.helpers.util
 
 import android.annotation.SuppressLint
-import name.lmj0011.holdup.R
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
-import androidx.datastore.preferences.core.Preferences
 import android.os.PowerManager
 import android.util.Patterns
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.FileProvider
 import androidx.core.view.children
+import androidx.datastore.preferences.core.Preferences
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.RequestManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import name.lmj0011.holdup.BuildConfig
 import name.lmj0011.holdup.Keys
+import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.SharedDao
 import name.lmj0011.holdup.helpers.models.Image
 import name.lmj0011.holdup.helpers.models.Video
 import org.jsoup.Jsoup
-import java.util.UUID
-import java.util.TimeZone
-import java.util.Locale
+import java.util.*
 
 
 /**
@@ -222,4 +222,10 @@ fun getVideoSourceCompat(video: Video): Uri {
     return if (video.url.isBlank()) {
         Uri.parse(video.sourceUri)
     } else Uri.parse(video.url)
+}
+
+fun getFileProviderAuthorities(context: Context): String {
+    val component = ComponentName(context, FileProvider::class.java)
+    val info = context.packageManager.getProviderInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+    return info.authority
 }

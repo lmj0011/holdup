@@ -143,7 +143,7 @@ class SubmissionViewModel(
             val acct = when {
                 lastSelected.isNotEmpty() -> lastSelected.first()
                 accounts.isNotEmpty() -> accounts.first()
-                else -> throw Exception("There's no signed in Reddit Accounts")
+                else -> throw Exception("There are no signed in Reddit Accounts")
             }
 
             account.postValue(acct)
@@ -443,8 +443,8 @@ class SubmissionViewModel(
      */
     fun populateFromSubmissionThenPost(sub: Submission, postNow: Boolean = true): Pair<JSONObject?, String?>? {
 
-        account.postValue(sub.account)
-        subreddit.postValue(sub.subreddit)
+        sub.account?.let { acct ->  account.postValue(acct) }
+        sub.subreddit?.let { subr ->  subreddit.postValue(subr) }
         submissionTitle.postValue(sub.title)
         subredditFlair.postValue(sub.subredditFlair)
         submissionLinkText.postValue(sub.url)

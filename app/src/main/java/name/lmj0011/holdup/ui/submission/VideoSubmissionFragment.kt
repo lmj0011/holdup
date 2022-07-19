@@ -26,11 +26,7 @@ import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.holdup.helpers.models.Video
-import name.lmj0011.holdup.helpers.util.getVideoSourceCompat
-import name.lmj0011.holdup.helpers.util.launchIO
-import name.lmj0011.holdup.helpers.util.launchUI
-import name.lmj0011.holdup.helpers.util.showSnackBar
-import name.lmj0011.holdup.helpers.util.withUIContext
+import name.lmj0011.holdup.helpers.util.*
 import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
@@ -156,7 +152,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
 
                         val thumbNailUri = FileProvider.getUriForFile(
                             requireContext(),
-                            requireContext().getString(R.string.file_provider_authorities),
+                            getFileProviderAuthorities(requireContext()),
                             file
                         )
 

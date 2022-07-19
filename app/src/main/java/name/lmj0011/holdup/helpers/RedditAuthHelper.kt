@@ -15,7 +15,7 @@ class RedditAuthHelper(val context: Context) {
             context.getString(R.string.reddit_app_redirectUri)
         )
         // the api enpoints scopes this client will need
-        .setScopes(arrayOf("submit", "read", "mysubreddits", "history", "flair"))
+        .setScopes(arrayOf("submit", "read", "mysubreddits", "history", "flair", "vote"))
 
     init {
 

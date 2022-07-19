@@ -21,10 +21,7 @@ import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
 import name.lmj0011.holdup.helpers.models.Image
-import name.lmj0011.holdup.helpers.util.launchIO
-import name.lmj0011.holdup.helpers.util.launchUI
-import name.lmj0011.holdup.helpers.util.showSnackBar
-import name.lmj0011.holdup.helpers.util.withUIContext
+import name.lmj0011.holdup.helpers.util.*
 import org.jsoup.HttpStatusException
 
 class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
@@ -106,7 +103,7 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
 
         footerAdapter = AddImageListAdapter(
             AddImageListAdapter.AddImageClickListener {
-                BottomSheetImagePicker.Builder(getString(R.string.file_provider_authorities))
+                BottomSheetImagePicker.Builder(getFileProviderAuthorities(requireContext()))
                     .cameraButton(ButtonType.None)
                     .galleryButton(ButtonType.Button)
                     .singleSelectTitle(R.string.image_picker_pick_single)

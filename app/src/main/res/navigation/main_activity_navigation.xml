@@ -49,4 +49,8 @@
             android:name="submission"
             app:argType="name.lmj0011.holdup.database.models.Submission" />
     </fragment>
+    <fragment
+        android:id="@+id/pattonFragment"
+        android:name="name.lmj0011.holdup.ui.patton.PattonFragment"
+        android:label="Patton" />
 </navigation>

@@ -159,9 +159,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     @SuppressLint("NotifyDataSetChanged")
     private fun setupObservers() {
-        homeViewModel.submissions.observe(viewLifecycleOwner, { submissions ->
+        homeViewModel.submissions.observe(viewLifecycleOwner) { submissions ->
             listAdapter.submitList(submissions)
             listAdapter.notifyDataSetChanged()
-        })
+        }
     }
 }

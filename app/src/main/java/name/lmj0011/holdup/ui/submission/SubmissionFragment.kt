@@ -270,7 +270,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
         })
 
 
-        viewModel.getAccount().observe(viewLifecycleOwner, {
+        viewModel.getAccount().observe(viewLifecycleOwner) {
             binding.chooseAccountTextView.text = it.name
             launchIO { dataStoreHelper.setSelectedAccountUsername(it.name) }
 
@@ -290,7 +290,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                     viewModel.getJoinedSubredditListFlow()
                 )
             )
-        })
+        }
 
 
         binding.titleEditTextView.addTextChangedListener(object : TextWatcher {

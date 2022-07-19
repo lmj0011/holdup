@@ -153,13 +153,106 @@ class RedditApiHelper(val context: Context) {
                     )
                     subredditSet.add(sub)
                 } catch(ex: JSONException) {
-                    // fahgettaboudit
+                    Timber.e(ex)
                 }
 
             }
         }
 
         return subredditSet.toList()
+    }
+
+    private fun parseThing3ListingResponse(json: JSONObject): List<Thing3> {
+        var thing3Set = mutableSetOf<Thing3>()
+
+        val redditMixedEntityArray =
+            json.getJSONObject("data").getJSONArray("children")
+
+        for (i in 0 until redditMixedEntityArray.length()) {
+            val obj = redditMixedEntityArray.getJSONObject(i)
+
+            /**
+             * t3 represents a Link/Post type
+             * refer to the "overview" section https://www.reddit.com/dev/api
+             */
+            if (obj.getString("kind") == "t3") {
+                try {
+
+                    val dataObj = obj.getJSONObject("data")
+
+                    val sub = Thing3(
+                        subreddit = dataObj.getString("subreddit"),
+                        likes = if(dataObj.isNull("likes")) false else dataObj.getBoolean("likes"),
+                        authorFullname =  if(dataObj.isNull("author_fullname"))  "" else dataObj.getString("author_fullname"),
+                        title = dataObj.getString("title"),
+                        subredditNamePrefixed = dataObj.getString("subreddit_name_prefixed"),
+                        downs = dataObj.getInt("downs"),
+                        name = dataObj.getString("name"),
+                        upvoteRatio = dataObj.getDouble("upvote_ratio"),
+                        ups = dataObj.getInt("ups"),
+                        score = dataObj.getInt("score"),
+                        thumbnail = dataObj.getString("thumbnail"),
+                        isSelf = dataObj.getBoolean("is_self"),
+                        subredditType = dataObj.getString("subreddit_type"),
+                        over18 = dataObj.getBoolean("over_18"),
+                        subredditId = dataObj.getString("subreddit_id"),
+                        author = dataObj.getString("author"),
+                        permalink = dataObj.getString("permalink")
+                    )
+                    thing3Set.add(sub)
+                } catch(ex: JSONException) {
+                    Timber.e(ex)
+                    Timber.d(obj.getJSONObject("data").toString())
+                }
+
+            }
+        }
+
+        return thing3Set.toList()
+    }
+
+    private fun parseThing1ListingResponse(json: JSONObject): List<Thing1> {
+        var thing1Set = mutableSetOf<Thing1>()
+
+        val redditMixedEntityArray =
+            json.getJSONObject("data").getJSONArray("children")
+
+        for (i in 0 until redditMixedEntityArray.length()) {
+            val obj = redditMixedEntityArray.getJSONObject(i)
+
+            /**
+             * t1 represents a Comment type
+             * refer to the "overview" section https://www.reddit.com/dev/api
+             */
+            if (obj.getString("kind") == "t1") {
+                try {
+
+                    val dataObj = obj.getJSONObject("data")
+
+                    val thing = Thing1(
+                        subreddit = dataObj.getString("subreddit"),
+                        likes = if(dataObj.isNull("likes")) false else dataObj.getBoolean("likes"),
+                        authorFullname = if(dataObj.isNull("author_fullname"))  "" else dataObj.getString("author_fullname"),
+                        subredditNamePrefixed = dataObj.getString("subreddit_name_prefixed"),
+                        downs = dataObj.getInt("downs"),
+                        name = dataObj.getString("name"),
+                        ups = dataObj.getInt("ups"),
+                        score = dataObj.getInt("score"),
+                        subredditType = dataObj.getString("subreddit_type"),
+                        subredditId = dataObj.getString("subreddit_id"),
+                        author = dataObj.getString("author"),
+                        permalink = dataObj.getString("permalink")
+                    )
+                    thing1Set.add(thing)
+                } catch(ex: JSONException) {
+                    Timber.e(ex)
+                    Timber.d(obj.getJSONObject("data").toString())
+                }
+
+            }
+        }
+
+        return thing1Set.toList()
     }
 
     fun getPostRequirements(subreddit: Subreddit, oauthToken: String): PostRequirements? {
@@ -251,6 +344,54 @@ class RedditApiHelper(val context: Context) {
             oauthToken)
 
         return parseSubredditListingResponse(JSONObject(res.body!!.source().readUtf8()))
+    }
+
+    /**
+     * fetches a Post by id
+     *
+     * [fullName]: t3_vqfm29
+     * [oauthToken]: 1234585724870-velC4Oe6RURtyhmUIPrCWER-o6Y_rF
+     */
+    fun getPostById(fullName: String, oauthToken: String): Thing3 {
+        val apiPath = "by_id/${fullName}"
+        val res = get(apiPath, oauthToken)
+
+        return parseThing3ListingResponse(JSONObject(res.body!!.source().readUtf8())).first()
+    }
+
+    /**
+     * fetches a Comment by id
+     *
+     * [fullName]: t1_ieoxp6v
+     * [subredditNamePrefixed]: r/webdev
+     * [oauthToken]: 1234585724870-velC4Oe6RURtyhmUIPrCWER-o6Y_rF
+     */
+    fun getCommentById(fullName: String, subredditNamePrefixed: String, oauthToken: String): Thing1 {
+        val apiPath = "${subredditNamePrefixed}/api/info?id=${fullName}"
+        val res = get(apiPath, oauthToken)
+
+        return parseThing1ListingResponse(JSONObject(res.body!!.source().readUtf8())).first()
+    }
+
+
+    /**
+     * Cast a vote on a thing.
+     * ref: https://www.reddit.com/dev/api/#POST_api_vote
+     *
+     * [fullName]: t3_vqfm29
+     * [dir]: 1
+     * [oauthToken]: 1234585724870-velC4Oe6RURtyhmUIPrCWER-o6Y_rF
+     */
+    fun castVote(fullName: String, dir: Int, oauthToken: String): Response {
+        val apiPath = "api/vote"
+        val builder = FormBody.Builder()
+
+        builder.add("id", fullName)
+        builder.add("dir", dir.toString())
+
+        val formBody = builder.build()
+
+        return post(apiPath, oauthToken, formBody)
     }
 
     /**

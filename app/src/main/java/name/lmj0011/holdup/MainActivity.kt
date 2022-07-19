@@ -1,5 +1,6 @@
 package name.lmj0011.holdup
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -27,14 +28,10 @@ import name.lmj0011.holdup.databinding.DialogFeedbackBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.factories.ViewModelFactory
-import name.lmj0011.holdup.helpers.util.getDebugDump
-import name.lmj0011.holdup.helpers.util.isIgnoringBatteryOptimizations
-import name.lmj0011.holdup.helpers.util.launchIO
-import name.lmj0011.holdup.helpers.util.launchUI
-import name.lmj0011.holdup.helpers.util.sendBugReport
-import name.lmj0011.holdup.helpers.util.sendGeneralFeedback
-import name.lmj0011.holdup.helpers.util.showSnackBar
+import name.lmj0011.holdup.helpers.services.PattonService
+import name.lmj0011.holdup.helpers.util.*
 import name.lmj0011.holdup.ui.accounts.AccountsViewModel
+import org.json.JSONObject
 import org.kodein.di.instance
 import timber.log.Timber
 
@@ -65,6 +62,12 @@ class MainActivity : AppCompatActivity() {
         setupNavigationListener()
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+        handleIntent(intent)
+    }
+
     override fun onResume() {
         mediaPlayer = SimpleExoPlayer.Builder(this).build()
 
@@ -73,6 +76,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         super.onResume()
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        when(intent?.action) {
+            /**
+             * Safe to assume PattonService is sending this Intent; no need to check if Service is
+             * already running
+             */
+            PattonService.ACTION_NAV_TO_PATTON_SERVICE -> {
+                navController.currentDestination?.let { navDestination ->
+                    if((navDestination.id == R.id.pattonFragment).not())   {
+                        navController.navigate(R.id.pattonFragment)
+                    }
+                }
+
+            }
+            else -> {
+                Timber.e("No matching intent.action")
+            }
+        }
     }
 
     private fun setupNavigationListener(){
@@ -89,16 +112,7 @@ class MainActivity : AppCompatActivity() {
                                     if (accountsSize > 0) {
                                         navController.navigate(R.id.action_homeFragment_to_submissionFragment)
                                     } else {
-                                        MaterialAlertDialogBuilder(this@MainActivity)
-                                            .setMessage("Log into your Reddit account to start scheduling Submissions")
-                                            .setNeutralButton("Cancel") {dialog, _ ->
-                                                dialog.dismiss()
-                                            }
-                                            .setNegativeButton("") {_, _ -> }
-                                            .setPositiveButton("Log In") { _, _ ->
-                                                navController.navigate(R.id.redditAuthWebviewFragment)
-                                            }
-                                            .show()
+                                        showRedditLoginMessage()
                                     }
                                 },
                                 R.drawable.ic_baseline_edit_24
@@ -182,6 +196,20 @@ class MainActivity : AppCompatActivity() {
                 MaterialAlertDialogBuilder(this@MainActivity).setView(aboutDialog.root).show()
                 true
             }
+            R.id.action_patton -> {
+                launchIO {
+                    val accountsSize = viewModel.getAccounts().size
+
+                    withContext(Dispatchers.Main) {
+                        if (accountsSize > 0) {
+                            navController.navigate(R.id.pattonFragment)
+                        } else {
+                            showRedditLoginMessage()
+                        }
+                    }
+                }
+                true
+            }
             R.id.action_manage_accounts -> {
                 navController.navigate(R.id.accountsFragment)
                 true
@@ -204,6 +232,19 @@ class MainActivity : AppCompatActivity() {
             it.setImageResource(imgSrcId)
             it.show()
         }
+    }
+
+    fun showRedditLoginMessage() {
+        MaterialAlertDialogBuilder(this@MainActivity)
+            .setMessage("Log into your Reddit account to start scheduling Submissions")
+            .setNeutralButton("Cancel") {dialog, _ ->
+                dialog.dismiss()
+            }
+            .setNegativeButton("") {_, _ -> }
+            .setPositiveButton("Log In") { _, _ ->
+                navController.navigate(R.id.redditAuthWebviewFragment)
+            }
+            .show()
     }
 
     fun hideFab() {

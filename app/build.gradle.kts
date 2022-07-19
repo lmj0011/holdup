@@ -14,13 +14,13 @@ plugins {
 }
 
 android {
-    compileSdk = 30
+    compileSdk = 31
     ndkVersion = "21.3.6528147"
 
     defaultConfig {
         applicationId = "name.lmj0011.holdup"
         minSdk = 28
-        targetSdk = 30
+        targetSdk = 31
         versionCode = 57
         versionName = "0.2.2"
 
@@ -82,7 +82,6 @@ android {
             it.resValue("string", "reddit_app_redirectUri", "https://localhost:8080/my_callback")
         }
 
-        it.resValue("string", "file_provider_authorities", "${android.defaultConfig.applicationId}.fileprovider")
         it.resValue("string", "git_commit_count", getCommitCount())
         it.resValue("string", "git_commit_sha", getGitSha())
         it.resValue("string", "app_buildtime", getBuildTime())
@@ -101,6 +100,7 @@ android {
          */
         create("preview") {
             dimension = "default"
+            applicationIdSuffix = "preview"
             versionNameSuffix = ".${getCommitCount()}"
             resValue("string", "app_name", "Holdup (preview)")
         }
@@ -113,6 +113,7 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+        freeCompilerArgs = listOf("-Xjvm-default=all")
     }
 
     buildFeatures {
@@ -141,11 +142,17 @@ dependencies {
     implementation("androidx.vectordrawable:vectordrawable:1.1.0")
     implementation("androidx.navigation:navigation-fragment-ktx:2.3.3")
     implementation("androidx.navigation:navigation-ui-ktx:2.3.3")
-    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("androidx.recyclerview:recyclerview:1.2.0-beta01")
     implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0-alpha06")
+
+    val lifecycleVersion = "2.5.0"
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-common-java8:$lifecycleVersion")
 
     implementation(project(path = ":auth"))
 
@@ -162,7 +169,7 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
 
     // WorkManager
-    val workVersion = "2.5.0"
+    val workVersion = "2.7.1"
     implementation("androidx.work:work-runtime-ktx:$workVersion")
 
     // Coroutines
@@ -200,7 +207,10 @@ dependencies {
     implementation("com.google.android.exoplayer:exoplayer-dash:$exoPlayerVersion")
     implementation("com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion")
 
-    implementation(platform("com.google.firebase:firebase-bom:28.3.1"))
+    val ioSocketVersion = "2.0.1"
+    implementation("io.socket:socket.io-client:$ioSocketVersion")
+
+    implementation(platform("com.google.firebase:firebase-bom:30.2.0"))
     implementation ("com.google.firebase:firebase-crashlytics-ktx")
     implementation ("com.google.firebase:firebase-analytics-ktx")
 

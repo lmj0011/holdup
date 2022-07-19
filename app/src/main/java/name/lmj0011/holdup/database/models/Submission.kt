@@ -59,7 +59,7 @@ data class Submission (
     var subreddit: @RawValue Subreddit? = null, // the corresponding subreddit this submission belongs to
 
     @ColumnInfo(name = "account")
-    var account: @RawValue Account? = null, // the Reddit account assoicated with this Submission
+    var account: @RawValue Account? = null, // the Reddit account associated with this Submission
 
     @ColumnInfo(name = "subredditFlair")
     var subredditFlair: @RawValue SubredditFlair? = null,

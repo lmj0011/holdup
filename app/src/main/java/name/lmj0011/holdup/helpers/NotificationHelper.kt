@@ -1,10 +1,10 @@
 package name.lmj0011.holdup.helpers
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.text.Spanned
@@ -23,14 +23,17 @@ import org.kodein.di.instance
 import timber.log.Timber
 import java.net.URL
 
+@SuppressLint("UnspecifiedImmutableFlag")
 object NotificationHelper {
     const val SUBMISSION_PUBLISHED_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#submissionPublished"
     const val POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#scheduledSubmissionService"
     const val UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#uploadingSubmissionMediaService"
     const val BATTERY_OPTIMIZATION_INFO_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#batteryOptimizationInfo"
+    const val PATTON_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#pattonService"
     const val POSTING_SCHEDULED_SUBMISSION_SERVICE_NOTIFICATION_ID = 100
     const val BATTERY_OPTIMIZATION_INFO_NOTIFICATION_ID = 101
     const val UPLOADING_SUBMISSION_MEDIA_NOTIFICATION_ID = 102
+    const val PATTON_SERVICE_NOTIFICATION_ID = 103
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
     private lateinit var application: Application
 
@@ -43,18 +46,22 @@ object NotificationHelper {
 
         val chn1 = NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH)
 
-        val chn2 = NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_DEFAULT)
+        val chn2 = NotificationChannel(PATTON_SERVICE_CHANNEL_ID, "Patton Service", NotificationManager.IMPORTANCE_DEFAULT)
         chn2.setSound(null, null)
 
-        val chn3 = NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN)
+        val chn3 = NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_DEFAULT)
         chn3.setSound(null, null)
 
-        val chn4 = NotificationChannel(UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID, "Upload Submission Media Service", NotificationManager.IMPORTANCE_MIN)
+        val chn4 = NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN)
         chn4.setSound(null, null)
 
-        val list = mutableListOf(chn1, chn2, chn3, chn4)
+        val chn5 = NotificationChannel(UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID, "Upload Submission Media Service", NotificationManager.IMPORTANCE_MIN)
+        chn5.setSound(null, null)
+
+        val list = mutableListOf(chn1, chn2, chn3, chn4, chn5)
         NotificationManagerCompat.from(application).createNotificationChannels(list)
     }
+
 
     fun showSubmissionPublishedNotification(subreddit: Subreddit, account: Account, form: SubmissionValidatorHelper.SubmissionForm, postUrl: String?) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.reddit.com/user/${account.name.substring(2)}/?sort=new"))
@@ -97,7 +104,7 @@ object NotificationHelper {
     fun showSubmissionPublishedErrorNotification(submission: Submission, errorMessage: Spanned) {
 
         val pendingIntent = NavDeepLinkBuilder(application)
-            .setGraph(R.navigation.mobile_navigation)
+            .setGraph(R.navigation.main_activity_navigation)
             .setDestination(R.id.editSubmissionFragment)
             .setArguments(Bundle().apply {
                 putParcelable("submission", submission)
@@ -124,12 +131,12 @@ object NotificationHelper {
         val settingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
         }
-        val settingsPendingIntent = PendingIntent.getActivity(application, 0, settingsIntent, 0)
+        val settingsPendingIntent = PendingIntent.getActivity(application, 0, settingsIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val moreInfoIntent = Intent(Intent.ACTION_VIEW).apply {
             data = Uri.parse("https://developer.android.com/training/monitoring-device-state/doze-standby")
         }
-        val moreInfoPendingIntent = PendingIntent.getActivity(application, 0, moreInfoIntent, 0)
+        val moreInfoPendingIntent = PendingIntent.getActivity(application, 0, moreInfoIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification =  NotificationCompat.Builder(application, BATTERY_OPTIMIZATION_INFO_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_app_notification_icon)
@@ -151,7 +158,7 @@ object NotificationHelper {
 
     fun getPostingSubmissionForegroundServiceNotification(submission: Submission): Notification {
         val intent = Intent(application, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(application, 0, intent, 0)
+        val pendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val builder = NotificationCompat.Builder(application, POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID)
 
@@ -168,7 +175,7 @@ object NotificationHelper {
 
     fun getUploadingSubmissionMediaForegroundServiceNotification(progress: Int = 0): Notification {
         val intent = Intent(application, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(application, 0, intent, 0)
+        val pendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val builder = NotificationCompat.Builder(application, UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID)
 
@@ -188,7 +195,7 @@ object NotificationHelper {
 
     fun getReschedulingSubmissionsForegroundServiceNotification(): Notification {
         val intent = Intent(application, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(application, 0, intent, 0)
+        val pendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         return NotificationCompat.Builder(application, POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_app_notification_icon)
