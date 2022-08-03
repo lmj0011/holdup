@@ -11,7 +11,7 @@ import java.net.URISyntaxException
  */
 class PattonConnectivityHelper(val context: Context) {
     companion object {
-        const val SERVER_URL = "http://52.201.144.61:3000"
+        const val SERVER_URL = "https://patton-service.mo1s7ll9qdn64.us-east-1.cs.amazonlightsail.com"
     }
 
     val socket: Socket

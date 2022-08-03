@@ -59,7 +59,7 @@ android {
         /**
          * Debug with shrinking, obfuscation, and optimization applied
          *
-         * Set "isDebuggable = false" to avoid dealing with signing keys and produce this build as
+         * Set "isDebuggable = false" to produce this build as
          * if it were a "release" build.
          */
         create("debugR8") {
@@ -104,7 +104,7 @@ android {
         create("preview") {
             dimension = "default"
             applicationIdSuffix = ".preview"
-            versionNameSuffix = ".${getCommitCount()}"
+            versionNameSuffix = "+git.${getGitSha().take(7)}"
             resValue("string", "app_name", "Holdup (preview)")
         }
     }
