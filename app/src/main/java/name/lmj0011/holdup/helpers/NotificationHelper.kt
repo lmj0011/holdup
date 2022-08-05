@@ -30,10 +30,15 @@ object NotificationHelper {
     const val UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#uploadingSubmissionMediaService"
     const val BATTERY_OPTIMIZATION_INFO_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#batteryOptimizationInfo"
     const val PATTON_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#pattonService"
+    const val PATTON_SUBMISSION_MADE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#pattonSubmissionMade"
+
+    const val NOTIFICATION_PATTON_SERVICE_GROUP_KEY = "name.lmj0011.holdup.helpers.NotificationHelper.PattonService#notificationPattonServiceGroupKey"
+
     const val POSTING_SCHEDULED_SUBMISSION_SERVICE_NOTIFICATION_ID = 100
     const val BATTERY_OPTIMIZATION_INFO_NOTIFICATION_ID = 101
     const val UPLOADING_SUBMISSION_MEDIA_NOTIFICATION_ID = 102
     const val PATTON_SERVICE_NOTIFICATION_ID = 103
+    const val PATTON_SUBMISSION_SUMMARY_ID = 104
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
     private lateinit var application: Application
 
@@ -58,7 +63,9 @@ object NotificationHelper {
         val chn5 = NotificationChannel(UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID, "Upload Submission Media Service", NotificationManager.IMPORTANCE_MIN)
         chn5.setSound(null, null)
 
-        val list = mutableListOf(chn1, chn2, chn3, chn4, chn5)
+        val chn6 = NotificationChannel(PATTON_SUBMISSION_MADE_CHANNEL_ID, "Submitted to Patton", NotificationManager.IMPORTANCE_HIGH)
+
+        val list = mutableListOf(chn1, chn2, chn3, chn4, chn5, chn6)
         NotificationManagerCompat.from(application).createNotificationChannels(list)
     }
 

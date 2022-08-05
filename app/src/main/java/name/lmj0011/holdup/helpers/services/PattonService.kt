@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.GROUP_ALERT_CHILDREN
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.*
 import io.socket.client.Ack
@@ -12,15 +13,11 @@ import io.socket.client.Socket
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.MainActivity
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.models.Account
-import name.lmj0011.holdup.helpers.NotificationHelper
-import name.lmj0011.holdup.helpers.PattonConnectivityHelper
-import name.lmj0011.holdup.helpers.RedditApiHelper
-import name.lmj0011.holdup.helpers.RedditAuthHelper
+import name.lmj0011.holdup.helpers.*
 import name.lmj0011.holdup.helpers.models.Thing1
 import name.lmj0011.holdup.helpers.models.Thing3
 import name.lmj0011.holdup.helpers.util.launchIO
@@ -363,7 +360,45 @@ class PattonService : LifecycleService() {
         }
 
         socket.on("log") { args ->
-            (args[0] as? String)?.let { _messages.tryEmit(it) }
+            (args[0] as? String)?.let {
+                _messages.tryEmit(it)
+
+                launchIO {
+                    /**
+                     * TODO
+                     * this is very likely to break in the future, needs a better solution
+                     *
+                     * All that's happening here, is showing the user a notification whenever a
+                     * submitted link has been accepted by the Patton service
+                     */
+                    val isSuccessMsg = it.contains("(?=.*(Your) (Post|Comment) (\\w+)(, was submitted successfully))".toRegex())
+
+                    if (isSuccessMsg) {
+                        val requestCodeHelper: UniqueRuntimeNumberHelper = (application as App).kodein.instance()
+
+                        val notif = NotificationCompat.Builder(this@PattonService, NotificationHelper.PATTON_SUBMISSION_MADE_CHANNEL_ID)
+                            .setSmallIcon(R.drawable.ic_app_notification_icon)
+                            .setContentTitle("Patton Submission")
+                            .setContentText(it)
+                            .setGroup(NotificationHelper.NOTIFICATION_PATTON_SERVICE_GROUP_KEY)
+                            .build()
+
+                        val notifSummary = NotificationCompat.Builder(this@PattonService, NotificationHelper.PATTON_SUBMISSION_MADE_CHANNEL_ID)
+                            .setSmallIcon(R.drawable.ic_app_notification_icon)
+                            .setContentTitle("Submitted to Patton")
+                            .setContentText(it)
+                            .setGroup(NotificationHelper.NOTIFICATION_PATTON_SERVICE_GROUP_KEY)
+                            .setGroupAlertBehavior(GROUP_ALERT_CHILDREN)
+                            .setGroupSummary(true)
+                            .build()
+
+                        NotificationManagerCompat.from(this@PattonService).apply {
+                            notify(requestCodeHelper.nextInt(), notif)
+                            notify(NotificationHelper.PATTON_SUBMISSION_SUMMARY_ID, notifSummary)
+                        }
+                    }
+                }
+            }
         }
     }
     /** */
