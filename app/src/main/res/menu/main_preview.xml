@@ -13,4 +13,13 @@
         android:title="Manage Accounts"
         android:orderInCategory="6"
         app:showAsAction="never"/>
+    <item android:id="@+id/action_open_discord"
+        android:title="Discord"
+        android:orderInCategory="7"
+        app:showAsAction="never"/>
+    <item android:id="@+id/action_testing"
+        android:title="Testing"
+        android:visible="false"
+        android:orderInCategory="8"
+        app:showAsAction="never"/>
 </menu>

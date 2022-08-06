@@ -22,7 +22,7 @@ android {
         minSdk = 28
         targetSdk = 31
         versionCode = 57
-        versionName = "0.2.2"
+        versionName = "0.3.0-beta.1"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -104,7 +104,7 @@ android {
         create("preview") {
             dimension = "default"
             applicationIdSuffix = ".preview"
-            versionNameSuffix = "+git.${getGitSha().take(7)}"
+            versionNameSuffix = "+${getGitSha().take(7)}"
             resValue("string", "app_name", "Holdup (preview)")
         }
     }

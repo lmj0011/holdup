@@ -21,4 +21,5 @@
     <string name="dev_email" translatable="false">holdupapp@protonmail.com</string>
     <string name="submissions_display_option_compact_list">Compact List</string>
     <string name="submissions_display_option_full_list">Full List</string>
+    <string name="holdup_discord_open_testing_channel_invite_url" translatable="false">https://discord.gg/6GxDSkFu7t</string>
 </resources>

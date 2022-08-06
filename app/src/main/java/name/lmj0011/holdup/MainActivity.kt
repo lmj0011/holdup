@@ -157,12 +157,12 @@ class MainActivity : AppCompatActivity() {
         // Inflate the main menu
         inflater.inflate(R.menu.main, menu)
 
-        // Add experimental menu items depending on this app build
+        // Add experimental menu items depending on this app build or versionName
         when {
-            (BuildConfig.DEBUG) -> {
-                inflater.inflate(R.menu.main_debug, menu)
-            }
-            (BuildConfig.FLAVOR == "preview") -> {
+            ((BuildConfig.DEBUG)
+                    ||(BuildConfig.FLAVOR == "preview")
+                    || BuildConfig.VERSION_NAME.contains("(alpha|beta)".toRegex())
+                    ) -> {
                 inflater.inflate(R.menu.main_preview, menu)
             }
         }
@@ -229,6 +229,12 @@ class MainActivity : AppCompatActivity() {
                             showRedditLoginMessage()
                         }
                     }
+                }
+                true
+            }
+            R.id.action_open_discord -> {
+                launchUI {
+                    openUrlInWebBrowser(this@MainActivity, resources.getString(R.string.holdup_discord_open_testing_channel_invite_url))
                 }
                 true
             }
