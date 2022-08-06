@@ -14,14 +14,14 @@ plugins {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 32
     ndkVersion = "21.3.6528147"
 
     defaultConfig {
         applicationId = "name.lmj0011.holdup"
         minSdk = 28
-        targetSdk = 31
-        versionCode = 57
+        targetSdk = 32
+        versionCode = 58
         versionName = "0.3.0-beta.1"
 
         vectorDrawables {
