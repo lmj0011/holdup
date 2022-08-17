@@ -23,6 +23,7 @@ import org.json.JSONObject
 import org.jsoup.HttpStatusException
 import timber.log.Timber
 import java.io.File
+import java.net.URL
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -344,6 +345,29 @@ class RedditApiHelper(val context: Context) {
             oauthToken)
 
         return parseSubredditListingResponse(JSONObject(res.body!!.source().readUtf8()))
+    }
+
+    /**
+     * fetches the icon_img from `/api/v1/me`
+     *
+     */
+    fun getAccountImageUrl(oauthToken: String): String {
+        val apiPath = "api/v1/me"
+        val res = get(apiPath, oauthToken)
+
+        val data = JSONObject(res.body!!.source().readUtf8())
+
+        return when {
+            data.getString("icon_img").isNullOrBlank().not() -> {
+                val img = data.getString("icon_img").split("?")[0]
+                URL(img).toString()
+            }
+            data.getString("snoovatar_img").isNullOrBlank().not() -> {
+                val img = data.getString("snoovatar_img").split("?")[0]
+                URL(img).toString()
+            }
+            else -> ""
+        }
     }
 
     /**

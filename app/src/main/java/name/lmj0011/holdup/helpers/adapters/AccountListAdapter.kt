@@ -28,7 +28,7 @@ class AccountListAdapter(
             Glide
                 .with(context)
                 .load(account.iconImage)
-                .apply(RequestOptions().override(100))
+                .apply(RequestOptions().override(256))
                 .circleCrop()
                 .error(R.drawable.ic_baseline_image_24)
                 .into(binding.iconImageView)

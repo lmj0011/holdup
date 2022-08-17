@@ -30,4 +30,5 @@ object Keys {
 
     // String Tags
     const val UPLOAD_SUBMISSION_MEDIA_WORKER_TAG = "name.lmj0011.holdup.UPLOAD_SUBMISSION_MEDIA_WORKER_TAG"
+    const val REFRESH_ACCOUNT_IMAGE_WORKER_TAG = "name.lmj0011.holdup.REFRESH_ACCOUNT_IMAGE_WORKER_TAG"
 }

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import name.lmj0011.holdup.database.models.Account
 import name.lmj0011.holdup.helpers.*
 import name.lmj0011.holdup.helpers.services.PattonService
+import name.lmj0011.holdup.helpers.workers.RefreshAccountImageWorker
 import name.lmj0011.holdup.helpers.workers.RefreshAlarmsWorker
 import name.lmj0011.holdup.helpers.workers.UploadSubmissionMediaWorker
 import org.kodein.di.DI
@@ -110,6 +111,9 @@ class App: Application(), Configuration.Provider {
     private fun enqueuePeriodicWorkers() {
         val workManager = WorkManager.getInstance(applicationContext)
 
+        /**
+         * checks Submissions for media that need to be uploaded; every 15 minutes
+         */
         val uploadSubmissionMediaWorkRequest = PeriodicWorkRequestBuilder<UploadSubmissionMediaWorker>(
             PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS, TimeUnit.MILLISECONDS, // run every 15 minutes
             PeriodicWorkRequest.MIN_PERIODIC_FLEX_MILLIS, TimeUnit.MILLISECONDS
@@ -118,6 +122,17 @@ class App: Application(), Configuration.Provider {
             .build()
 
         workManager.enqueueUniquePeriodicWork(Keys.UPLOAD_SUBMISSION_MEDIA_WORKER_TAG, ExistingPeriodicWorkPolicy.REPLACE, uploadSubmissionMediaWorkRequest)
+
+        /**
+         * fetches Account icon images every 12 hours
+         */
+        val refreshAccountImageWorker = PeriodicWorkRequestBuilder<RefreshAccountImageWorker>(
+            12, TimeUnit.HOURS, // run every 12 hours
+            )
+            .addTag(Keys.REFRESH_ACCOUNT_IMAGE_WORKER_TAG)
+            .build()
+
+        workManager.enqueueUniquePeriodicWork(Keys.REFRESH_ACCOUNT_IMAGE_WORKER_TAG, ExistingPeriodicWorkPolicy.REPLACE, refreshAccountImageWorker)
     }
 
     private fun enqueueOneTimeWorkers() {
