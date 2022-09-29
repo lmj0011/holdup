@@ -14,6 +14,10 @@ import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.App
@@ -43,6 +47,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
     override val actionBarTitle: String = "Video Submission"
     override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
     lateinit var mediaPlayer: SimpleExoPlayer
+    override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
     private lateinit var binding: FragmentVideoSubmissionBinding
     private lateinit var dataStoreHelper: DataStoreHelper
@@ -96,6 +101,14 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
             }
         }
         viewModel.validateSubmission(SubmissionKind.Video)
+
+
+        // [START set_current_screen]
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+            param(FirebaseAnalytics.Param.SCREEN_NAME, actionBarTitle)
+            param(FirebaseAnalytics.Param.SCREEN_CLASS, "SubmissionFragment")
+        }
+        // [END set_current_screen]
     }
 
     override fun onStop() {

@@ -25,6 +25,10 @@ import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
 import name.lmj0011.holdup.Keys
@@ -68,6 +72,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     override lateinit var dataStoreHelper: DataStoreHelper
     private lateinit var alarmMgr: AlarmManager
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
+    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
@@ -708,6 +713,13 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                         }
 
                         enqueueUploadSubmissionMediaWorker()
+
+                        // [START custom_event]
+                        firebaseAnalytics.logEvent("hol_post_scheduled") {
+                            param("sr", viewModel.subreddit.value?.displayName.toString())
+                            param("post_type", kind)
+                        }
+                        // [END custom_event]
 
                         launchUI {
                             if(!isIgnoringBatteryOptimizations(requireContext())) {

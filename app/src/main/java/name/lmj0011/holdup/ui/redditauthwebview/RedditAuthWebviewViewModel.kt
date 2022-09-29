@@ -34,6 +34,10 @@ class RedditAuthWebviewViewModel(
     fun updateAccount(acct: Account) {
         database.update(acct)
     }
+    
+    fun totalAccounts(): Int {
+        return database.accountsRowCount()
+    }
 
     fun deleteAccount(account: Account): Int {
         // TODO - also all relations; ie.) delete all associated and sharedPrefs created by reddit-oauth client

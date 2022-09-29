@@ -21,6 +21,10 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import name.lmj0011.holdup.App
@@ -66,6 +70,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
     private lateinit var alarmMgr: AlarmManager
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
     private val args: EditSubmissionFragmentArgs by navArgs()
+    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
@@ -99,6 +104,13 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
                 viewModel.validateSubmission(args.submission.kind!!)
             }
         }
+
+        // [START set_current_screen]
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+            param(FirebaseAnalytics.Param.SCREEN_NAME, "Edit Submission")
+            param(FirebaseAnalytics.Param.SCREEN_CLASS, "EditSubmissionFragment")
+        }
+        // [END set_current_screen]
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

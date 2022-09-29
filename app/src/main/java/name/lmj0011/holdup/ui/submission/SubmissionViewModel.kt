@@ -7,6 +7,10 @@ import androidx.annotation.MainThread
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharedFlow
@@ -65,6 +69,7 @@ class SubmissionViewModel(
     private var redditApiHelper: RedditApiHelper = (application as App).kodein.instance()
     private var submissionValidatorHelper: SubmissionValidatorHelper = (application as App).kodein.instance()
     private var dataStoreHelper: DataStoreHelper = (application as App).kodein.instance()
+    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
     private var account = MutableLiveData<Account>()
 
@@ -361,6 +366,21 @@ class SubmissionViewModel(
                 }
             }
             isSubmissionSuccessful.postValue(true)
+
+            // [START custom_event]
+            firebaseAnalytics.logEvent("hol_post_successful") {
+                param("sr", form.sr)
+                param("post_type", form.kind)
+            }
+            // [END custom_event]
+        } else {
+            // [START custom_event]
+            firebaseAnalytics.logEvent("hol_post_failed") {
+                param("sr", form.sr)
+                param("post_type", form.kind)
+                param("error_msg", responsePair.second.toString())
+            }
+            // [END custom_event]
         }
 
         return responsePair

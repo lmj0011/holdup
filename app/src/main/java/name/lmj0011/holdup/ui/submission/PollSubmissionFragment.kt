@@ -19,6 +19,10 @@ import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import name.lmj0011.holdup.FullscreenTextEntryActivity
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
@@ -35,6 +39,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
     override var submission: Submission? = null
     override val actionBarTitle: String = "Poll Submission"
     override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
+    override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
     private lateinit var binding: FragmentPollSubmissionBinding
     private val defaultSpinnerPosition = 2
@@ -95,6 +100,13 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
         super.onResume()
         updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Poll)
+
+        // [START set_current_screen]
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+            param(FirebaseAnalytics.Param.SCREEN_NAME, actionBarTitle)
+            param(FirebaseAnalytics.Param.SCREEN_CLASS, "SubmissionFragment")
+        }
+        // [END set_current_screen]
     }
 
     @Deprecated("Deprecated in Java")

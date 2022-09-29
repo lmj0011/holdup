@@ -6,6 +6,10 @@ import android.text.TextWatcher
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
@@ -27,6 +31,7 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
     override var submission: Submission? = null
     override val actionBarTitle: String = "Link Submission"
     override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
+    override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
     private lateinit var binding: FragmentLinkSubmissionBinding
     private lateinit var redditAuthHelper: RedditAuthHelper
@@ -67,6 +72,13 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
         super.onResume()
         updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Link)
+
+        // [START set_current_screen]
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+            param(FirebaseAnalytics.Param.SCREEN_NAME, actionBarTitle)
+            param(FirebaseAnalytics.Param.SCREEN_CLASS, "SubmissionFragment")
+        }
+        // [END set_current_screen]
     }
 
 

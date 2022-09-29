@@ -15,6 +15,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import com.kirkbushman.auth.errors.AccessDeniedException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,6 +39,7 @@ class RedditAuthWebviewFragment : Fragment() {
 
     private lateinit var redditAuthHelper: RedditAuthHelper
     private lateinit var redditApiHelper: RedditApiHelper
+    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
     private val  viewModel by viewModels<RedditAuthWebviewViewModel> {
         ViewModelFactory(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
@@ -108,6 +113,12 @@ class RedditAuthWebviewFragment : Fragment() {
                                   viewModel.updateAccount(account)
                               }
                           }
+
+                            // [START custom_event]
+                            firebaseAnalytics.logEvent("hol_account_added") {
+                                param("total_accounts", viewModel.totalAccounts().toString())
+                            }
+                            // [END custom_event]
                         } catch (ex: AccessDeniedException) {
                             account?.let {
                                 redditAuthHelper.authClient(it).getSavedBearer().revokeToken()

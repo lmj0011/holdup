@@ -1,12 +1,14 @@
 package name.lmj0011.holdup.ui.submission
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.EditText
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import name.lmj0011.holdup.FullscreenTextEntryActivity
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
@@ -24,6 +26,7 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
     override var submission: Submission? = null
     override val actionBarTitle: String = "Self Submission"
     override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
+    override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
     private lateinit var binding: FragmentTextSubmissionBinding
 
@@ -60,6 +63,13 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
         super.onResume()
         updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Self)
+
+        // [START set_current_screen]
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+            param(FirebaseAnalytics.Param.SCREEN_NAME, actionBarTitle)
+            param(FirebaseAnalytics.Param.SCREEN_CLASS, "SubmissionFragment")
+        }
+        // [END set_current_screen]
     }
 
     @Deprecated("Deprecated in Java")

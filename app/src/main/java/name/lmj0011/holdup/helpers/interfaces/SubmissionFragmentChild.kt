@@ -1,6 +1,6 @@
 package name.lmj0011.holdup.helpers.interfaces
 
-import android.content.Context
+import com.google.firebase.analytics.FirebaseAnalytics
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.ui.submission.SubmissionViewModel
 
@@ -10,6 +10,7 @@ interface SubmissionFragmentChild {
      const val CREATE_AND_EDIT_MODE = 1 // the default
     }
 
+    val firebaseAnalytics: FirebaseAnalytics
     val viewModel:  SubmissionViewModel
     val submission: Submission?
     val actionBarTitle: String?
