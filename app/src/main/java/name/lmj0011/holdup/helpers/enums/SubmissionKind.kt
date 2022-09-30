@@ -17,8 +17,15 @@ enum class SubmissionKind(val kind: String) : Parcelable {
 
     // :prayer_hands: https://stackoverflow.com/a/34625163/2445763
     companion object {
-        fun from(findKind: String): SubmissionKind = values().first { it.kind == findKind.lowercase(
-            Locale.getDefault()
-        ) }
+        fun from(findKind: String): SubmissionKind {
+            val first: SubmissionKind = values().first {
+                val kind =
+                    if (findKind.lowercase(Locale.getDefault()) == "text") Self.kind else findKind.lowercase(
+                        Locale.getDefault()
+                    )
+                it.kind == kind
+            }
+            return first
+        }
     }
 }

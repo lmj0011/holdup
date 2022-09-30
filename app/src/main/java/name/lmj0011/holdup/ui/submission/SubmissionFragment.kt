@@ -414,7 +414,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_videocam_24)
                 }
                 Keys.SELF_TAB_POSITION -> {
-                    tab.text = "Self"
+                    tab.text = "Text"
                     tab.icon = requireContext().getDrawable(R.drawable.ic_baseline_text_snippet_24)
                 }
                 Keys.POLL_TAB_POSITION -> {
@@ -430,7 +430,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                     Keys.LINK_TAB_POSITION -> "Link Submission"
                     Keys.IMAGE_TAB_POSITION -> "Image Submission"
                     Keys.VIDEO_TAB_POSITION -> "Video Submission"
-                    Keys.SELF_TAB_POSITION -> "Self Submission"
+                    Keys.SELF_TAB_POSITION -> "Text Submission"
                     Keys.POLL_TAB_POSITION -> "Poll Submission"
                     else -> ""
                 }
@@ -614,7 +614,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             "Video" -> {
                 SubmissionKind.Video
             }
-            "Self" -> {
+            "Text" -> {
                 SubmissionKind.Self
             }
             "Poll" -> {
@@ -704,7 +704,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                             "Video" -> {
                                 viewModel.saveSubmission(SubmissionKind.Video, cal.timeInMillis, alarmRequestCode)
                             }
-                            "Self" -> {
+                            "Text" -> {
                                 viewModel.saveSubmission(SubmissionKind.Self, cal.timeInMillis, alarmRequestCode)
                             }
                             "Poll" -> {

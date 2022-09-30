@@ -24,7 +24,7 @@ class TextSubmissionFragment: Fragment(R.layout.fragment_text_submission),
     BaseFragmentInterface, SubmissionFragmentChild {
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
-    override val actionBarTitle: String = "Self Submission"
+    override val actionBarTitle: String = "Text Submission"
     override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
     override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
