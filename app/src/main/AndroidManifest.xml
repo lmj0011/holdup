@@ -10,6 +10,8 @@
 
     <queries>
         <package android:name="com.discord" />
+        <package android:name="com.reddit.frontpage" />
+        <package android:name="com.google.android.youtube" />
 
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -43,6 +45,18 @@
             android:launchMode="singleTask"
             android:exported="true">
             <intent-filter android:label="Submit to Patton">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="name.lmj0011.holdup.ScheduleCommentActivity"
+            android:theme="@style/AppTheme"
+            android:launchMode="singleTask"
+            android:exported="true">
+            <intent-filter android:label="Comment">
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />

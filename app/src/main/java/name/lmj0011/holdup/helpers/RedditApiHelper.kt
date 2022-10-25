@@ -235,6 +235,7 @@ class RedditApiHelper(val context: Context) {
                         likes = if(dataObj.isNull("likes")) false else dataObj.getBoolean("likes"),
                         authorFullname = if(dataObj.isNull("author_fullname"))  "" else dataObj.getString("author_fullname"),
                         subredditNamePrefixed = dataObj.getString("subreddit_name_prefixed"),
+                        body = dataObj.getString("body"),
                         downs = dataObj.getInt("downs"),
                         name = dataObj.getString("name"),
                         ups = dataObj.getInt("ups"),
@@ -371,6 +372,31 @@ class RedditApiHelper(val context: Context) {
     }
 
     /**
+     * fetches the icon_img from `user/[userName]/about`
+     *
+     * Where [userName] is the redditor's username without the prefix eg.) eggheadSam25
+     *
+     */
+    fun getOtherUserImageUrl(userName: String, oauthToken: String): String {
+        val apiPath = "user/$userName/about"
+        val res = get(apiPath, oauthToken)
+
+        val data = JSONObject(res.body!!.source().readUtf8()).getJSONObject("data")
+
+        return when {
+            data.getString("icon_img").isNullOrBlank().not() -> {
+                val img = data.getString("icon_img").split("?")[0]
+                URL(img).toString()
+            }
+            data.getString("snoovatar_img").isNullOrBlank().not() -> {
+                val img = data.getString("snoovatar_img").split("?")[0]
+                URL(img).toString()
+            }
+            else -> ""
+        }
+    }
+
+    /**
      * fetches a Post by id
      *
      * [fullName]: t3_vqfm29
@@ -397,6 +423,41 @@ class RedditApiHelper(val context: Context) {
         return parseThing1ListingResponse(JSONObject(res.body!!.source().readUtf8())).first()
     }
 
+    /**
+     * fetches a Subreddit by id
+     *
+     * [fullName]: t5_2wwh3
+     * [oauthToken]: 1234585724870-velC4Oe6RURtyhmUIPrCWER-o6Y_rF
+     */
+    fun getSubredditById(fullName: String, oauthToken: String): Subreddit {
+        val apiPath = "api/info?id=${fullName}"
+        val res = get(apiPath, oauthToken)
+
+        return parseSubredditListingResponse(JSONObject(res.body!!.source().readUtf8())).first()
+    }
+
+
+    /**
+     * Submit a new comment in reply to a Post or Comment
+     * ref: https://www.reddit.com/dev/api/#POST_api_comment
+     *
+     * [fullNameOfParent]: t3_vqfm29
+     * [text]: "This is a comment"
+     * [oauthToken]: 1234585724870-velC4Oe6RURtyhmUIPrCWER-o6Y_rF
+     */
+    fun postComment(fullNameOfParent: String, text: String, oauthToken: String): Response {
+        val apiPath = "api/comment"
+        val builder = FormBody.Builder()
+
+        builder.add("api_type", "json")
+        builder.add("return_rtjson", "false")
+        builder.add("thing_id", fullNameOfParent)
+        builder.add("text", text)
+
+        val formBody = builder.build()
+
+        return post(apiPath, oauthToken, formBody)
+    }
 
     /**
      * Cast a vote on a thing.

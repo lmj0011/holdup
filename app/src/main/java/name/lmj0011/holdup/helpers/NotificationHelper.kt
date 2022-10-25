@@ -26,6 +26,7 @@ import java.net.URL
 @SuppressLint("UnspecifiedImmutableFlag")
 object NotificationHelper {
     const val SUBMISSION_PUBLISHED_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#submissionPublished"
+    const val COMMENT_SUBMISSION_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#commentSubmission"
     const val POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#scheduledSubmissionService"
     const val UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#uploadingSubmissionMediaService"
     const val BATTERY_OPTIMIZATION_INFO_CHANNEL_ID = "name.lmj0011.holdup.helpers.NotificationHelper#batteryOptimizationInfo"
@@ -49,24 +50,118 @@ object NotificationHelper {
         this.application = application
         requestCodeHelper = (application as App).kodein.instance()
 
-        val chn1 = NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH)
+        val audibleChannels = mutableListOf(
+            NotificationChannel(SUBMISSION_PUBLISHED_CHANNEL_ID, "Submission Published", NotificationManager.IMPORTANCE_HIGH),
+            NotificationChannel(PATTON_SUBMISSION_MADE_CHANNEL_ID, "Submitted to Patton", NotificationManager.IMPORTANCE_HIGH),
+            NotificationChannel(COMMENT_SUBMISSION_CHANNEL_ID, "Comment Submission", NotificationManager.IMPORTANCE_HIGH)
+        )
 
-        val chn2 = NotificationChannel(PATTON_SERVICE_CHANNEL_ID, "Patton Service", NotificationManager.IMPORTANCE_DEFAULT)
-        chn2.setSound(null, null)
+        val silentChannels = mutableListOf(
+            NotificationChannel(PATTON_SERVICE_CHANNEL_ID, "Patton Service", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                setSound(null, null)
+            },
+            NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                setSound(null, null)
+            },
+            NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN).apply {
+                setSound(null, null)
+            },
+            NotificationChannel(UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID, "Upload Submission Media Service", NotificationManager.IMPORTANCE_MIN).apply {
+                setSound(null, null)
+            }
+        )
 
-        val chn3 = NotificationChannel(BATTERY_OPTIMIZATION_INFO_CHANNEL_ID, "Battery Optimization info", NotificationManager.IMPORTANCE_DEFAULT)
-        chn3.setSound(null, null)
+        NotificationManagerCompat.from(application).createNotificationChannels(audibleChannels + silentChannels)
+    }
 
-        val chn4 = NotificationChannel(POSTING_SCHEDULED_SUBMISSION_SERVICE_CHANNEL_ID, "Scheduled Submission Service", NotificationManager.IMPORTANCE_MIN)
-        chn4.setSound(null, null)
+    fun showCommentPublishedNotification(commentPermalink: String, replyBody: String, account: Account) {
+        val uri = Uri.parse("https://reddit.com$commentPermalink")
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+        val defaultContentPendingIntent = PendingIntent.getActivity(application, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT)
 
-        val chn5 = NotificationChannel(UPLOADING_SUBMISSION_MEDIA_SERVICE_CHANNEL_ID, "Upload Submission Media Service", NotificationManager.IMPORTANCE_MIN)
-        chn5.setSound(null, null)
+        val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
+            .setAutoCancel(true)
+            .setContentTitle("Comment successfully published")
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText("${account.name}: $replyBody")
+            )
+            .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
+            .setContentIntent(defaultContentPendingIntent)
 
-        val chn6 = NotificationChannel(PATTON_SUBMISSION_MADE_CHANNEL_ID, "Submitted to Patton", NotificationManager.IMPORTANCE_HIGH)
 
-        val list = mutableListOf(chn1, chn2, chn3, chn4, chn5, chn6)
-        NotificationManagerCompat.from(application).createNotificationChannels(list)
+        launchIO {
+            try {
+                val image = BitmapFactory.decodeStream(
+                    URL(account.iconImage).openStream()
+                )
+
+                notification.setLargeIcon(image)
+            } catch (ex: Exception) {
+                Timber.e(ex)
+            }
+
+            NotificationManagerCompat.from(application)
+                .notify(requestCodeHelper.nextInt(), notification.build())
+        }
+    }
+
+    fun showCommentRetryDueToRateLimitNotification(errorMsg: String?, replyBody: String, account: Account) {
+        val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
+            .setAutoCancel(true)
+            .setContentTitle("Comment failed to publish")
+            .setContentText("${account.name}: $replyBody")
+            .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
+
+
+        launchIO {
+            try {
+                val image = BitmapFactory.decodeStream(
+                    URL(account.iconImage).openStream()
+                )
+
+                notification.setLargeIcon(image)
+                    .setStyle(NotificationCompat.BigTextStyle()
+                        .bigText(errorMsg)
+                    )
+
+            } catch (ex: Exception) {
+                Timber.e(ex)
+            }
+
+            NotificationManagerCompat.from(application)
+                .notify(requestCodeHelper.nextInt(), notification.build())
+        }
+    }
+
+    fun showCommentFailedToPublishNotification(errorMsg: String?, replyBody: String, account: Account) {
+        val notification = NotificationCompat.Builder(application, SUBMISSION_PUBLISHED_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_app_notification_icon)
+            .setAutoCancel(true)
+            .setContentTitle("Comment failed to publish")
+            .setContentText("${account.name}: $replyBody")
+            .setColor(ContextCompat.getColor(application, R.color.colorPrimary))
+
+
+        launchIO {
+            try {
+                val image = BitmapFactory.decodeStream(
+                    URL(account.iconImage).openStream()
+                )
+
+                notification.setLargeIcon(image)
+                    .setStyle(NotificationCompat.BigTextStyle()
+                        .bigText("$errorMsg was thrown")
+                    )
+
+            } catch (ex: Exception) {
+                Timber.e(ex)
+            }
+
+            NotificationManagerCompat.from(application)
+                .notify(requestCodeHelper.nextInt(), notification.build())
+        }
     }
 
 

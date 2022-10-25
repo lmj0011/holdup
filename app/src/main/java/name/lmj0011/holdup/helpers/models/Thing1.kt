@@ -16,6 +16,7 @@ data class Thing1 (
     val likes: Boolean,
     val authorFullname: String,
     val subredditNamePrefixed: String,
+    val body: String,
     val downs: Int,
     val name: String,
     val ups: Int,

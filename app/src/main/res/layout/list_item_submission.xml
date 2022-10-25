@@ -26,22 +26,24 @@
 
         <TextView
             android:id="@+id/subredditDisplayNameTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:paddingStart="5dp"
             android:paddingEnd="5dp"
             android:singleLine="true"
-            android:textAlignment="center"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="r/doordash" />
 
         <TextView
             android:id="@+id/submissionTitleTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:paddingStart="5dp"
             android:paddingEnd="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/subredditIconImageView"
             app:layout_constraintTop_toBottomOf="@+id/subredditDisplayNameTextView"
             tools:text="How to become the Top Dasher" />
@@ -58,10 +60,13 @@
 
         <TextView
             android:id="@+id/submissionPublishDateTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:paddingStart="5dp"
             android:paddingEnd="5dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/submissionKindIconImageView"
             app:layout_constraintTop_toBottomOf="@+id/submissionTitleTextView"
             tools:text="11/05/20 8:00am" />
@@ -78,12 +83,13 @@
 
         <TextView
             android:id="@+id/accountUsernameTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:paddingStart="5dp"
             android:paddingEnd="5dp"
             android:singleLine="true"
-            android:textAlignment="center"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/accountIconImageView"
             app:layout_constraintTop_toBottomOf="@+id/submissionKindIconImageView"
             tools:text="u/appleEater352" />
