@@ -3,7 +3,7 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/action_post_submission"
         android:title="POST"
-        android:icon="@drawable/ic_baseline_access_alarm_24"
+        android:icon="@drawable/ic_baseline_schedule_send_24"
         android:orderInCategory="1"
         app:showAsAction="ifRoom"/>
 </menu>

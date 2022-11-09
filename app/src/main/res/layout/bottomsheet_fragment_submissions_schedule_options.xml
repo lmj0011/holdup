@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:stretchColumns="1">
+
+            <TableRow
+                android:id="@+id/dateAndTimeOption1TableRow"
+                android:background="?attr/selectableItemBackground"
+                android:paddingTop="10dp"
+                android:paddingBottom="15dp">
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption1IconTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:drawableStart="@drawable/ic_baseline_access_time_24"
+                    android:gravity="center_vertical" />
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption1DescriptionTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical"
+                    android:text="Later Today" />
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption1DateTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical"
+                    android:text="6:00 PM" />
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/dateAndTimeOption2TableRow"
+                android:background="?attr/selectableItemBackground"
+                android:paddingTop="10dp"
+                android:paddingBottom="15dp">
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption2IconTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:drawableStart="@drawable/ic_baseline_access_time_24"
+                    android:gravity="center_vertical" />
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption2DescriptionTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical"
+                    android:text="Tomorrow morning" />
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption2DateTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical"
+                    android:text="8:00 AM" />
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/dateAndTimeOption3TableRow"
+                android:background="?attr/selectableItemBackground"
+                android:paddingTop="10dp"
+                android:paddingBottom="15dp">
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption3IconTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:drawableStart="@drawable/ic_baseline_access_time_24"
+                    android:gravity="center_vertical" />
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption3DescriptionTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical"
+                    android:text="Wednesday morning" />
+
+                <TextView
+                    android:id="@+id/dateAndTimeOption3DateTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical"
+                    android:text="8:00 AM" />
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/pickDateAndTimeIconTableRow"
+                android:background="?attr/selectableItemBackground"
+                android:paddingTop="10dp"
+                android:paddingBottom="15dp">
+
+                <TextView
+                    android:id="@+id/pickDateAndTimeIconTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:drawableStart="@drawable/ic_baseline_access_time_24"
+                    android:gravity="center_vertical" />
+
+                <TextView
+                    android:id="@+id/pickDateAndTimeDescriptionTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical"
+                    android:text="Pick a date &amp; time" />
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/postNowTableRow"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:paddingTop="15dp"
+                android:paddingBottom="15dp">
+
+                <TextView
+                    android:id="@+id/postNowTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:fontFamily="sans-serif-black"
+                    android:text="Post Now"
+                    android:textSize="16sp" />
+            </TableRow>
+        </TableLayout>
+
+    </LinearLayout>
+</layout>

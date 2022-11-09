@@ -11,7 +11,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 object Keys {
     const val UNIX_EPOCH_MILLIS = 0L
 
-
     // Datastore
     val SELECTED_ACCOUNT_USERNAME = stringPreferencesKey("pref_selected_account_username")
     val NEXT_RUNTIME_UNIQUE_INT = intPreferencesKey("pref_next_runtime_unique_int")
@@ -20,6 +19,7 @@ object Keys {
     val IS_MEDIA_PLAYER_MUTED = booleanPreferencesKey("pref_is_media_player_muted")
     val SUBMISSIONS_DISPLAY_OPTION = stringPreferencesKey("pref_submissions_display_option")
     val PUBLISH_SCHEDULED_SUBMISSION_WORKER_ID = stringPreferencesKey("pref_publish_scheduled_submission_worker_id")
+    val LAST_SELECTED_DATE_TIME_FROM_CALENDAR = longPreferencesKey("pref_last_selected_date_time_from_calendar")
 
     // tabLayout positions for SubmissionFragment
     const val LINK_TAB_POSITION = 0

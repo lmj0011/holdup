@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.work.*
-import com.jakewharton.threetenabp.AndroidThreeTen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -71,7 +70,6 @@ class App: Application(), Configuration.Provider {
         super.onCreate()
 
         Timber.plant(Timber.DebugTree())
-        AndroidThreeTen.init(this)
         NotificationHelper.init(this)
         enqueueOneTimeWorkers()
         enqueuePeriodicWorkers()

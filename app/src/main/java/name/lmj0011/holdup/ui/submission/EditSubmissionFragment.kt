@@ -27,6 +27,7 @@ import com.google.firebase.analytics.ktx.logEvent
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
 import name.lmj0011.holdup.Keys
@@ -53,12 +54,14 @@ import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.helpers.util.showSnackBar
 import name.lmj0011.holdup.helpers.util.withUIContext
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetAccountsFragment
+import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubmissionsScheduleOptionsFragment
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditFlairFragment
 import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditSearchFragment
 import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
 import java.lang.Exception
+import kotlin.properties.Delegates
 
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
@@ -72,6 +75,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
     private val args: EditSubmissionFragmentArgs by navArgs()
     private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
 
+    lateinit var bottomSheetSubmissionsScheduleOptionsFragment: BottomSheetSubmissionsScheduleOptionsFragment
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
     lateinit var bottomSheetSubredditSearchFragment: BottomSheetSubredditSearchFragment
     lateinit var bottomSheetSubredditFlairFragment: BottomSheetSubredditFlairFragment
@@ -331,6 +335,12 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
                 resetFlagsState()
             }
         })
+
+        launchUI {
+            dataStoreHelper.getLastSelectedDateTimeFromCalendar().collectLatest { millis ->
+                previousCalMillis = millis
+            }
+        }
     }
 
     private fun updateFlair(flair: SubredditFlair) {
@@ -447,46 +457,51 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
     }
 
     private fun showPostConfirmationDialog() {
-        val checkedItem = if(viewModel.sendReplies.value!!) 0 else -1
+        viewModel.sendReplies.postValue(true) // setting this to always be true since it's not being added as an option to the bottomSheet
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.when_would_you_like_to_post))
-            .setSingleChoiceItems(arrayOf(getString(R.string.enable_inbox_replies)), checkedItem) { dialog, which ->
-                enableInboxReplies = (dialog as AlertDialog).listView.getChildAt(which) as AppCompatCheckedTextView
-                viewModel.toggleSendReplies()
-            }
-            .setNeutralButton("Now") {_, _ ->
+        bottomSheetSubmissionsScheduleOptionsFragment = BottomSheetSubmissionsScheduleOptionsFragment(
+            { millis ->
                 launchIO {
-                    try {
+                    val sub = args.submission
 
-                        when (val kind = args.submission.kind!!) {
-                            SubmissionKind.Image, SubmissionKind.Video, SubmissionKind.VideoGif -> {
-                                args.submission.postAtMillis = System.currentTimeMillis()
-                                AppDatabase.getInstance(requireActivity().application).sharedDao.update(args.submission)
-                                enqueueUploadSubmissionMediaWorkerThenPublish(args.submission.alarmRequestCode)
-                                withUIContext { findNavController().navigateUp() }
-                            } else -> {
-                                val responsePair = viewModel.postSubmission(kind)
-
-                                // Post was successful
-                                responsePair.first?.let { _ ->
-                                    viewModel.deleteSubmission(args.submission)
-                                    withUIContext { findNavController().navigateUp() }
-                                }
-
-                                responsePair.second?.let { msg ->
-                                    withUIContext { showSnackBar(binding.root, msg) }
-                                }
-                            }
+                    withUIContext {
+                        val alarmIntent = Intent(context, PublishScheduledSubmissionReceiver::class.java).let { intent ->
+                            intent.action = sub.alarmRequestCode.toString()
+                            intent.putExtra("alarmRequestCode", sub.alarmRequestCode)
+                            PendingIntent.getBroadcast(
+                                context,
+                                sub.alarmRequestCode,
+                                intent,
+                                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                         }
-                    } catch(ex: HttpStatusException) {
-                        showSnackBar(binding.root, requireContext().getString(R.string.reddit_api_http_error_msg, ex.statusCode, ex.message))
+
+                        val futureElapsedTime = getElapsedTimeUntilFutureTime(millis)
+
+                        Timber.d("futureElapsedTime: $futureElapsedTime")
+
+                        alarmMgr.setExactAndAllowWhileIdle(
+                            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                            futureElapsedTime,
+                            alarmIntent
+                        )
+                        Timber.d("alarm set for Submission")
+                    }
+
+                    sub.postAtMillis = millis
+                    viewModel.updateSubmission(sub)
+
+                    enqueueUploadSubmissionMediaWorker()
+                    launchUI {
+                        if(!isIgnoringBatteryOptimizations(requireContext())) {
+                            NotificationHelper.showBatteryOptimizationInfoNotification()
+                        }
+
+                        findNavController().navigateUp()
                     }
                 }
-            }
-            .setNegativeButton("") {_, _ -> }
-            .setPositiveButton("Later") { _, _ ->
-                pickDateAndTime { cal ->
+            },
+            {
+                pickDateAndTime(previousCalMillis) { cal ->
                     launchIO {
                         val sub = args.submission
 
@@ -516,6 +531,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
                         sub.postAtMillis = cal.timeInMillis
                         viewModel.updateSubmission(sub)
 
+                        dataStoreHelper.setLastSelectedDateTimeFromCalendar(sub.postAtMillis)
                         enqueueUploadSubmissionMediaWorker()
                         launchUI {
                             if(!isIgnoringBatteryOptimizations(requireContext())) {
@@ -526,8 +542,43 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
                         }
                     }
                 }
+            },
+            {
+                launchIO {
+                    try {
+
+                        when (val kind = args.submission.kind!!) {
+                            SubmissionKind.Image, SubmissionKind.Video, SubmissionKind.VideoGif -> {
+                                args.submission.postAtMillis = System.currentTimeMillis()
+                                AppDatabase.getInstance(requireActivity().application).sharedDao.update(args.submission)
+                                enqueueUploadSubmissionMediaWorkerThenPublish(args.submission.alarmRequestCode)
+                                withUIContext { findNavController().navigateUp() }
+                            } else -> {
+                            val responsePair = viewModel.postSubmission(kind)
+
+                            // Post was successful
+                            responsePair.first?.let { _ ->
+                                viewModel.deleteSubmission(args.submission)
+                                withUIContext { findNavController().navigateUp() }
+                            }
+
+                            responsePair.second?.let { msg ->
+                                withUIContext { showSnackBar(binding.root, msg) }
+                            }
+                        }
+                        }
+                    } catch(ex: HttpStatusException) {
+                        bottomSheetSubmissionsScheduleOptionsFragment.dismiss()
+                        showSnackBar(binding.root, requireContext().getString(R.string.reddit_api_http_error_msg, ex.statusCode, ex.message))
+                    }
+                }
+            },
+            {
+
             }
-            .show()
+        )
+
+        bottomSheetSubmissionsScheduleOptionsFragment.show(childFragmentManager, "bottomSheetSubmissionsScheduleOptionsFragment")
     }
 
     inner class TabCollectionAdapterDefault(fragment: Fragment) : FragmentStateAdapter(fragment) {

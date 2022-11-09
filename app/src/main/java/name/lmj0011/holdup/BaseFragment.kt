@@ -13,20 +13,31 @@ import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.workers.PublishScheduledSubmissionWorker
 import name.lmj0011.holdup.helpers.workers.UploadSubmissionMediaWorker
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.properties.Delegates
 
 abstract class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
     protected abstract var dataStoreHelper: DataStoreHelper
+    var previousCalMillis by Delegates.notNull<Long>()
 
-    protected fun pickDateAndTime(callBack: (cal: Calendar) -> Unit) {
+    protected fun pickDateAndTime(previousCalMillis: Long, callBack: (cal: Calendar) -> Unit) {
         // see https://github.com/material-components/material-components-android/issues/882#issuecomment-638983598
         val cal = Calendar.getInstance()
         // ^ because the datepicker give us UTC time to convert ourselves
+
+        /**
+         * We're using the last date/time the user selected from the Calendar widget for
+         * pre-setting this Calendar's date/time
+         */
+        if(previousCalMillis > Keys.UNIX_EPOCH_MILLIS) {
+            cal.timeInMillis = previousCalMillis
+        }
 
         // big Up! https://stackoverflow.com/a/62080582/2445763
         val constraintBuilder = CalendarConstraints.Builder()
@@ -34,6 +45,7 @@ abstract class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
 
         val dateBuilder = MaterialDatePicker.Builder.datePicker()
         dateBuilder.setCalendarConstraints(constraintBuilder.build())
+        dateBuilder.setSelection(cal.timeInMillis)
         val datePicker = dateBuilder.build()
 
         datePicker.addOnPositiveButtonClickListener { millis ->
@@ -58,6 +70,8 @@ abstract class BaseFragment(contentLayoutId: Int): Fragment(contentLayoutId) {
         }
 
         val timePicker = MaterialTimePicker.Builder()
+            .setHour(cal.get(Calendar.HOUR_OF_DAY))
+            .setMinute(cal.get(Calendar.MINUTE))
             .setTimeFormat(clockFormat)
             .build()
 

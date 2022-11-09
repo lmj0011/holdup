@@ -70,6 +70,17 @@ class DataStoreHelper(val context: Context) {
         }
     }
 
+    fun getLastSelectedDateTimeFromCalendar(): Flow<Long> {
+        return dataStore.data.mapLatest { prefs ->
+            prefs[Keys.LAST_SELECTED_DATE_TIME_FROM_CALENDAR] ?: UniqueRuntimeNumberHelper.INITIAL_NEXT_LONG
+        }
+    }
+    suspend fun setLastSelectedDateTimeFromCalendar(millis: Long) {
+        dataStore.edit { prefs ->
+            prefs[Keys.LAST_SELECTED_DATE_TIME_FROM_CALENDAR] = millis
+        }
+    }
+
 
     /**
      * Submission filter options

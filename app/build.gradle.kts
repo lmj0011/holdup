@@ -21,8 +21,8 @@ android {
         applicationId = "name.lmj0011.holdup"
         minSdk = 28
         targetSdk = 32
-        versionCode = 58
-        versionName = "0.3.0-beta.1"
+        versionCode = 59
+        versionName = "0.3.0-beta.2"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -93,13 +93,16 @@ android {
     flavorDimensions.add("default")
 
     productFlavors {
-        create("main") {
+        /**
+         *  The "main" flavor
+         */
+        create("core") {
             dimension = "default"
             resValue("string", "app_name", "Holdup")
         }
 
         /**
-         *  A flavor intended for app testing distribution
+         *  A flavor (core + experimental features) intended for app testing distribution
          */
         create("preview") {
             dimension = "default"
@@ -160,7 +163,6 @@ dependencies {
     implementation(project(path = ":auth"))
 
     testImplementation("junit:junit:4.13.2")
-
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
 
@@ -185,9 +187,6 @@ dependencies {
 
     // dependency injection
     implementation("org.kodein.di:kodein-di:7.7.0")
-
-    // An adaptation of the JSR-310 backport for Android.
-    implementation("com.jakewharton.threetenabp:threetenabp:1.3.1")
 
     // Timber Logger
     implementation("com.jakewharton.timber:timber:4.7.1")
