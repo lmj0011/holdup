@@ -58,6 +58,7 @@ class App: Application(), Configuration.Provider {
 
     @ExperimentalCoroutinesApi
     val kodein: DirectDI = DI.direct {
+        bind<FirebaseAnalyticsHelper>() with singleton { FirebaseAnalyticsHelper(this@App) }
         bind<RedditApiHelper>() with singleton { RedditApiHelper(this@App) }
         bind<RedditAuthHelper>() with singleton { RedditAuthHelper(this@App) }
         bind<SubmissionValidatorHelper>() with singleton { SubmissionValidatorHelper(this@App) }

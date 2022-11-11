@@ -22,7 +22,7 @@ import name.lmj0011.holdup.databinding.ListItemSubmissionBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.DateTimeHelper.getPostAtDateForListLayout
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
-import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
 import name.lmj0011.holdup.helpers.util.launchUI
 import name.lmj0011.holdup.ui.submission.ImageSubmissionFragment
 import name.lmj0011.holdup.ui.submission.LinkSubmissionFragment
@@ -130,19 +130,19 @@ class SubmissionListAdapter(private val clickListener: ClickListener, private va
                     holder.binding.submission?.let{ submission ->
                         val fragment = when (submission.kind) {
                             SubmissionKind.Link -> {
-                                LinkSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
+                                LinkSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChildInterface.VIEW_MODE)
                             }
                             SubmissionKind.Image -> {
-                                ImageSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
+                                ImageSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChildInterface.VIEW_MODE)
                             }
                             SubmissionKind.Video, SubmissionKind.VideoGif  -> {
-                                VideoSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE, mediaPlayer)
+                                VideoSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChildInterface.VIEW_MODE, mediaPlayer)
                             }
                             SubmissionKind.Self -> {
-                                TextSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
+                                TextSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChildInterface.VIEW_MODE)
                             }
                             SubmissionKind.Poll -> {
-                                PollSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChild.VIEW_MODE)
+                                PollSubmissionFragment.newInstance(holder.binding.submission, SubmissionFragmentChildInterface.VIEW_MODE)
                             }
                             else -> throw Exception("invalid submission.kind!")
                         }

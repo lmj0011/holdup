@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatCheckedTextView
 import androidx.core.view.MenuProvider
@@ -22,14 +21,8 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.analytics.ktx.logEvent
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
 import name.lmj0011.holdup.Keys
@@ -39,13 +32,14 @@ import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.databinding.FragmentSubmissionBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.DateTimeHelper.getElapsedTimeUntilFutureTime
+import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.UniqueRuntimeNumberHelper
 import name.lmj0011.holdup.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.holdup.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
-import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
 import name.lmj0011.holdup.helpers.models.Subreddit
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.*
@@ -56,7 +50,6 @@ import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditSearchF
 import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
-import kotlin.properties.Delegates
 
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
@@ -68,7 +61,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     override lateinit var dataStoreHelper: DataStoreHelper
     private lateinit var alarmMgr: AlarmManager
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
-    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    private lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
 
     lateinit var bottomSheetSubmissionsScheduleOptionsFragment: BottomSheetSubmissionsScheduleOptionsFragment
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
@@ -87,6 +80,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 
         dataStoreHelper = (requireContext().applicationContext as App).kodein.instance()
         requestCodeHelper = (requireContext().applicationContext as App).kodein.instance()
+        firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
         alarmMgr = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         setHasOptionsMenu(true)
@@ -398,7 +392,6 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     @SuppressLint("UseCompatLoadingForDrawables")
     override fun setupBinding(view: View) {
         binding = FragmentSubmissionBinding.bind(view)
-        binding.lifecycleOwner = viewLifecycleOwner
         binding.submissionPager.adapter = TabCollectionAdapter(this)
         binding.submissionPager.isUserInputEnabled = false // prevent swiping navigation ref: https://stackoverflow.com/a/55193815/2445763
         binding.submissionPager.offscreenPageLimit = 4
@@ -430,11 +423,26 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
         binding.submissionPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 val actionBarTitle = when(position) {
-                    Keys.LINK_TAB_POSITION -> "Link Submission"
-                    Keys.IMAGE_TAB_POSITION -> "Image Submission"
-                    Keys.VIDEO_TAB_POSITION -> "Video Submission"
-                    Keys.SELF_TAB_POSITION -> "Text Submission"
-                    Keys.POLL_TAB_POSITION -> "Poll Submission"
+                    Keys.LINK_TAB_POSITION -> {
+                        firebaseAnalyticsHelper.logScreenViewByTabPosition(Keys.LINK_TAB_POSITION)
+                        getString(R.string.link_submission_action_bar_title)
+                    }
+                    Keys.IMAGE_TAB_POSITION -> {
+                        firebaseAnalyticsHelper.logScreenViewByTabPosition(Keys.IMAGE_TAB_POSITION)
+                        getString(R.string.image_submission_action_bar_title)
+                    }
+                    Keys.VIDEO_TAB_POSITION -> {
+                        firebaseAnalyticsHelper.logScreenViewByTabPosition(Keys.VIDEO_TAB_POSITION)
+                        getString(R.string.video_submission_action_bar_title)
+                    }
+                    Keys.SELF_TAB_POSITION -> {
+                        firebaseAnalyticsHelper.logScreenViewByTabPosition(Keys.SELF_TAB_POSITION)
+                        getString(R.string.self_submission_action_bar_title)
+                    }
+                    Keys.POLL_TAB_POSITION -> {
+                        firebaseAnalyticsHelper.logScreenViewByTabPosition(Keys.POLL_TAB_POSITION)
+                        getString(R.string.poll_submission_action_bar_title)
+                    }
                     else -> ""
                 }
                 (requireActivity() as AppCompatActivity).supportActionBar?.title = actionBarTitle
@@ -677,12 +685,9 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                     }
                     enqueueUploadSubmissionMediaWorker()
 
-                    // [START custom_event]
-                    firebaseAnalytics.logEvent("hol_post_scheduled") {
-                        param("sr", viewModel.subreddit.value?.displayName.toString())
-                        param("post_type", kind)
+                    viewModel.subreddit.value?.let { sub ->
+                        firebaseAnalyticsHelper.logPostScheduledEvent(sub.displayName, kind)
                     }
-                    // [END custom_event]
 
                     launchUI {
                         if(!isIgnoringBatteryOptimizations(requireContext())) {
@@ -741,12 +746,9 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                         dataStoreHelper.setLastSelectedDateTimeFromCalendar(cal.timeInMillis)
                         enqueueUploadSubmissionMediaWorker()
 
-                        // [START custom_event]
-                        firebaseAnalytics.logEvent("hol_post_scheduled") {
-                            param("sr", viewModel.subreddit.value?.displayName.toString())
-                            param("post_type", kind)
+                        viewModel.subreddit.value?.let { sub ->
+                            firebaseAnalyticsHelper.logPostScheduledEvent(sub.displayName, kind)
                         }
-                        // [END custom_event]
 
                         launchUI {
                             if(!isIgnoringBatteryOptimizations(requireContext())) {
@@ -801,11 +803,11 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     }
 
     inner class TabCollectionAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
-        private val linkFrag = LinkSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-        private val imageFrag = ImageSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-        private val videoFrag = VideoSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
-        private val textFrag = TextSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-        private val pollFrag = PollSubmissionFragment.newInstance(null, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+        private val linkFrag = LinkSubmissionFragment.newInstance(null, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
+        private val imageFrag = ImageSubmissionFragment.newInstance(null, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
+        private val videoFrag = VideoSubmissionFragment.newInstance(null, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
+        private val textFrag = TextSubmissionFragment.newInstance(null, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
+        private val pollFrag = PollSubmissionFragment.newInstance(null, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
 
         override fun getItemCount(): Int = 5
 
@@ -813,10 +815,10 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
             // Return a NEW fragment instance
             return when(position) {
                 Keys.LINK_TAB_POSITION -> linkFrag
-                Keys.IMAGE_TAB_POSITION -> imageFrag
-                Keys.VIDEO_TAB_POSITION -> videoFrag
-                Keys.SELF_TAB_POSITION -> textFrag
-                Keys.POLL_TAB_POSITION -> pollFrag
+                Keys.IMAGE_TAB_POSITION ->  imageFrag
+                Keys.VIDEO_TAB_POSITION ->  videoFrag
+                Keys.SELF_TAB_POSITION ->  textFrag
+                Keys.POLL_TAB_POSITION ->  pollFrag
                 else -> throw Exception("Unknown Tab Position!")
             }
         }

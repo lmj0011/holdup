@@ -26,9 +26,10 @@ import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentVideoSubmissionBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
+import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
-import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
 import name.lmj0011.holdup.helpers.models.Video
 import name.lmj0011.holdup.helpers.util.*
 import org.jsoup.HttpStatusException
@@ -41,13 +42,12 @@ import kotlin.Exception
 
 @ExperimentalCoroutinesApi
 class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
-    BaseFragmentInterface, SubmissionFragmentChild {
+    BaseFragmentInterface, SubmissionFragmentChildInterface {
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
-    override val actionBarTitle: String = "Video Submission"
-    override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
+    override var mode: Int = SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE
     lateinit var mediaPlayer: SimpleExoPlayer
-    override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    override lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
 
     private lateinit var binding: FragmentVideoSubmissionBinding
     private lateinit var dataStoreHelper: DataStoreHelper
@@ -69,6 +69,11 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
 
             return fragment
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -101,14 +106,6 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
             }
         }
         viewModel.validateSubmission(SubmissionKind.Video)
-
-
-        // [START set_current_screen]
-        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
-            param(FirebaseAnalytics.Param.SCREEN_NAME, actionBarTitle)
-            param(FirebaseAnalytics.Param.SCREEN_CLASS, "SubmissionFragment")
-        }
-        // [END set_current_screen]
     }
 
     override fun onStop() {
@@ -117,7 +114,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
         (binding.videoView.player as? SimpleExoPlayer)?.removeListener(localPlayerListener)
         binding.videoView.player = null
 
-        if(mode == SubmissionFragmentChild.VIEW_MODE) {
+        if(mode == SubmissionFragmentChildInterface.VIEW_MODE) {
             hideVideoUI()
         }
     }
@@ -253,7 +250,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
 
                 if (state == Player.STATE_ENDED) {
                     when(mode) {
-                        SubmissionFragmentChild.VIEW_MODE -> {
+                        SubmissionFragmentChildInterface.VIEW_MODE -> {
                             hideVideoUI()
                             binding.videoView.player = null
                         }
@@ -295,7 +292,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
                 .into(binding.videoViewArtworkImageView)
 
             when(mode) {
-                SubmissionFragmentChild.VIEW_MODE -> {
+                SubmissionFragmentChildInterface.VIEW_MODE -> {
                     binding.videoView.useController = false
                     hideVideoUI()
 
@@ -320,7 +317,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
                     }
                 }
 
-                SubmissionFragmentChild.CREATE_AND_EDIT_MODE -> {
+                SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE -> {
                     exoPlayer.setMediaItem(mediaItem)
                     exoPlayer.playWhenReady = true
                     binding.videoView.player = exoPlayer
@@ -366,10 +363,10 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
         binding.removeImageShapeableImageView.visibility = View.VISIBLE
 
         when(mode) {
-            SubmissionFragmentChild.VIEW_MODE -> {
+            SubmissionFragmentChildInterface.VIEW_MODE -> {
                 binding.removeImageShapeableImageView.visibility = View.GONE
             }
-            SubmissionFragmentChild.CREATE_AND_EDIT_MODE -> {
+            SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE -> {
                 binding.removeImageShapeableImageView.visibility = View.VISIBLE
             }
         }
@@ -381,11 +378,11 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
         binding.removeImageShapeableImageView.visibility = View.GONE
 
         when(mode) {
-            SubmissionFragmentChild.VIEW_MODE -> {
+            SubmissionFragmentChildInterface.VIEW_MODE -> {
                 binding.videoViewArtworkImageView.visibility = View.VISIBLE
                 binding.addVideoContainer.visibility = View.GONE
             }
-            SubmissionFragmentChild.CREATE_AND_EDIT_MODE -> {
+            SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE -> {
                 binding.videoViewArtworkImageView.visibility = View.GONE
                 binding.addVideoContainer.visibility = View.VISIBLE
             }

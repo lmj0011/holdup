@@ -31,6 +31,7 @@ import name.lmj0011.holdup.helpers.factories.ViewModelFactory
 import name.lmj0011.holdup.helpers.util.launchIO
 import name.lmj0011.holdup.helpers.util.showSnackBar
 import name.lmj0011.holdup.BuildConfig
+import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
 import org.json.JSONObject
 import org.kodein.di.instance
 import timber.log.Timber
@@ -39,7 +40,7 @@ class RedditAuthWebviewFragment : Fragment() {
 
     private lateinit var redditAuthHelper: RedditAuthHelper
     private lateinit var redditApiHelper: RedditApiHelper
-    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    private lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
     private val  viewModel by viewModels<RedditAuthWebviewViewModel> {
         ViewModelFactory(
             AppDatabase.getInstance(requireActivity().application).sharedDao,
@@ -57,6 +58,7 @@ class RedditAuthWebviewFragment : Fragment() {
         var username = ""
         redditAuthHelper = (requireContext().applicationContext as App).kodein.instance()
         redditApiHelper = (requireContext().applicationContext as App).kodein.instance()
+        firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
 
         browser.webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
@@ -114,11 +116,8 @@ class RedditAuthWebviewFragment : Fragment() {
                               }
                           }
 
-                            // [START custom_event]
-                            firebaseAnalytics.logEvent("hol_account_added") {
-                                param("total_accounts", viewModel.totalAccounts().toString())
-                            }
-                            // [END custom_event]
+                            firebaseAnalyticsHelper.logAccountAddedEvent(viewModel.totalAccounts())
+
                         } catch (ex: AccessDeniedException) {
                             account?.let {
                                 redditAuthHelper.authClient(it).getSavedBearer().revokeToken()

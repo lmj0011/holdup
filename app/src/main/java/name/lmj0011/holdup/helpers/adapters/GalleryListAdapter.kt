@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import name.lmj0011.holdup.databinding.ListItemImageBinding
-import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
 import name.lmj0011.holdup.helpers.models.Image
 import name.lmj0011.holdup.helpers.util.getGlideImageLoadSourceCompat
 import name.lmj0011.holdup.ui.submission.ImageSubmissionFragment
@@ -47,7 +47,7 @@ class GalleryListAdapter (
             private fun viewDataBindingFilter(parent: ViewGroup, dataBinding: ListItemImageBinding): ListItemImageBinding {
                 val frag = parent.findFragment<Fragment>() as ImageSubmissionFragment
 
-                if (frag.mode == SubmissionFragmentChild.VIEW_MODE) {
+                if (frag.mode == SubmissionFragmentChildInterface.VIEW_MODE) {
                     dataBinding.removeImageShapeableImageView.visibility = View.GONE
                 }
                 return dataBinding

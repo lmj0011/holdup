@@ -7,34 +7,32 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.analytics.ktx.logEvent
-import com.google.firebase.ktx.Firebase
 import com.kroegerama.imgpicker.BottomSheetImagePicker
 import com.kroegerama.imgpicker.ButtonType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentImageSubmissionBinding
+import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
 import name.lmj0011.holdup.helpers.adapters.AddImageListAdapter
 import name.lmj0011.holdup.helpers.adapters.GalleryListAdapter
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
-import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
 import name.lmj0011.holdup.helpers.models.Image
 import name.lmj0011.holdup.helpers.util.*
 import org.jsoup.HttpStatusException
+import org.kodein.di.instance
 
 class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
-    BaseFragmentInterface, SubmissionFragmentChild, BottomSheetImagePicker.OnImagesSelectedListener {
+    BaseFragmentInterface, SubmissionFragmentChildInterface, BottomSheetImagePicker.OnImagesSelectedListener {
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
-    override val actionBarTitle: String = "Image Submission"
-    override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
-    override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    override var mode: Int = SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE
+    override lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
 
     private lateinit var binding: FragmentImageSubmissionBinding
     private lateinit var listAdapter: GalleryListAdapter
@@ -53,6 +51,11 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
 
             return fragment
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -78,13 +81,6 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
         super.onResume()
         updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Image)
-
-        // [START set_current_screen]
-        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
-            param(FirebaseAnalytics.Param.SCREEN_NAME, actionBarTitle)
-            param(FirebaseAnalytics.Param.SCREEN_CLASS, "SubmissionFragment")
-        }
-        // [END set_current_screen]
     }
 
     override fun setupBinding(view: View) {
@@ -126,7 +122,7 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
         val decor = DividerItemDecoration(requireContext(), DividerItemDecoration.HORIZONTAL)
         binding.imageGalleryList.addItemDecoration(decor)
 
-        if (mode == SubmissionFragmentChild.VIEW_MODE) {
+        if (mode == SubmissionFragmentChildInterface.VIEW_MODE) {
             binding.imageGalleryList.adapter = ConcatAdapter(listAdapter)
         } else binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, footerAdapter)
 

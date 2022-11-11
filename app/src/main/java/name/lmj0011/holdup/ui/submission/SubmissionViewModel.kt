@@ -22,11 +22,7 @@ import name.lmj0011.holdup.App
 import name.lmj0011.holdup.database.SharedDao
 import name.lmj0011.holdup.database.models.Account
 import name.lmj0011.holdup.database.models.Submission
-import name.lmj0011.holdup.helpers.DataStoreHelper
-import name.lmj0011.holdup.helpers.NotificationHelper
-import name.lmj0011.holdup.helpers.RedditApiHelper
-import name.lmj0011.holdup.helpers.RedditAuthHelper
-import name.lmj0011.holdup.helpers.SubmissionValidatorHelper
+import name.lmj0011.holdup.helpers.*
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.models.Image
 import name.lmj0011.holdup.helpers.models.PostRequirements
@@ -69,7 +65,7 @@ class SubmissionViewModel(
     private var redditApiHelper: RedditApiHelper = (application as App).kodein.instance()
     private var submissionValidatorHelper: SubmissionValidatorHelper = (application as App).kodein.instance()
     private var dataStoreHelper: DataStoreHelper = (application as App).kodein.instance()
-    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    private var firebaseAnalyticsHelper: FirebaseAnalyticsHelper = (application as App).kodein.instance()
 
     private var account = MutableLiveData<Account>()
 
@@ -367,20 +363,10 @@ class SubmissionViewModel(
             }
             isSubmissionSuccessful.postValue(true)
 
-            // [START custom_event]
-            firebaseAnalytics.logEvent("hol_post_successful") {
-                param("sr", form.sr)
-                param("post_type", form.kind)
-            }
-            // [END custom_event]
+
+            firebaseAnalyticsHelper.logPostSuccessfulEvent(form.sr, form.kind)
         } else {
-            // [START custom_event]
-            firebaseAnalytics.logEvent("hol_post_failed") {
-                param("sr", form.sr)
-                param("post_type", form.kind)
-                param("error_msg", responsePair.second.toString())
-            }
-            // [END custom_event]
+            firebaseAnalyticsHelper.logPostFailedEvent(form.sr, form.kind, responsePair.second.toString())
         }
 
         return responsePair

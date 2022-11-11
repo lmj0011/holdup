@@ -15,23 +15,23 @@ import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentLinkSubmissionBinding
+import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
 import name.lmj0011.holdup.helpers.RedditApiHelper
 import name.lmj0011.holdup.helpers.RedditAuthHelper
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
-import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
 import name.lmj0011.holdup.helpers.util.openUrlInWebBrowser
 import org.kodein.di.instance
 import java.net.URL
 
 
 class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
-    BaseFragmentInterface, SubmissionFragmentChild {
+    BaseFragmentInterface, SubmissionFragmentChildInterface {
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
-    override val actionBarTitle: String = "Link Submission"
-    override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
-    override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    override var mode: Int = SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE
+    override lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
 
     private lateinit var binding: FragmentLinkSubmissionBinding
     private lateinit var redditAuthHelper: RedditAuthHelper
@@ -50,6 +50,11 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
 
             return fragment
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,13 +77,6 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
         super.onResume()
         updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Link)
-
-        // [START set_current_screen]
-        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
-            param(FirebaseAnalytics.Param.SCREEN_NAME, actionBarTitle)
-            param(FirebaseAnalytics.Param.SCREEN_CLASS, "SubmissionFragment")
-        }
-        // [END set_current_screen]
     }
 
 
@@ -91,7 +89,7 @@ class LinkSubmissionFragment: Fragment(R.layout.fragment_link_submission),
         val url = submission?.url
         val linkImageUrl = submission?.linkImageUrl
 
-        if (mode == SubmissionFragmentChild.VIEW_MODE) {
+        if (mode == SubmissionFragmentChildInterface.VIEW_MODE) {
             binding.linkTextView.visibility = View.GONE
         } else {
             binding.linkTextView.setText(url)

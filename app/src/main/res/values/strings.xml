@@ -25,4 +25,12 @@
     <string name="submissions_display_option_compact_list">Compact List</string>
     <string name="submissions_display_option_full_list">Full List</string>
     <string name="holdup_discord_open_testing_channel_invite_url" translatable="false">https://discord.gg/6GxDSkFu7t</string>
+
+
+    <!-- Action bar titles  -->
+    <string name="link_submission_action_bar_title">Link Submission</string>
+    <string name="image_submission_action_bar_title">Image Submission</string>
+    <string name="video_submission_action_bar_title">Video Submission</string>
+    <string name="self_submission_action_bar_title">Text Submission</string>
+    <string name="poll_submission_action_bar_title">Poll Submission</string>
 </resources>

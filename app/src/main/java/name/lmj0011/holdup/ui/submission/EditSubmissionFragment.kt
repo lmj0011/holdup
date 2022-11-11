@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatCheckedTextView
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
@@ -27,7 +26,6 @@ import com.google.firebase.analytics.ktx.logEvent
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.BaseFragment
 import name.lmj0011.holdup.Keys
@@ -37,13 +35,14 @@ import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.databinding.FragmentEditSubmissionBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.DateTimeHelper.getElapsedTimeUntilFutureTime
+import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.UniqueRuntimeNumberHelper
 import name.lmj0011.holdup.helpers.adapters.SubredditFlairListAdapter
 import name.lmj0011.holdup.helpers.adapters.SubredditSearchListAdapter
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
-import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
 import name.lmj0011.holdup.helpers.models.SubredditFlair
 import name.lmj0011.holdup.helpers.receivers.PublishScheduledSubmissionReceiver
 import name.lmj0011.holdup.helpers.util.buildOneColorStateList
@@ -61,7 +60,6 @@ import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
 import java.lang.Exception
-import kotlin.properties.Delegates
 
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
@@ -73,7 +71,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
     private lateinit var alarmMgr: AlarmManager
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
     private val args: EditSubmissionFragmentArgs by navArgs()
-    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
 
     lateinit var bottomSheetSubmissionsScheduleOptionsFragment: BottomSheetSubmissionsScheduleOptionsFragment
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
@@ -91,6 +89,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
 
         dataStoreHelper = (requireContext().applicationContext as App).kodein.instance()
         requestCodeHelper = (requireContext().applicationContext as App).kodein.instance()
+        firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
         alarmMgr = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         setHasOptionsMenu(true)
@@ -109,12 +108,7 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
             }
         }
 
-        // [START set_current_screen]
-        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
-            param(FirebaseAnalytics.Param.SCREEN_NAME, "Edit Submission")
-            param(FirebaseAnalytics.Param.SCREEN_CLASS, "EditSubmissionFragment")
-        }
-        // [END set_current_screen]
+        firebaseAnalyticsHelper.logScreenView(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -587,12 +581,12 @@ class EditSubmissionFragment: BaseFragment(R.layout.fragment_edit_submission), B
         override fun createFragment(position: Int): Fragment {
             // Return a NEW fragment instance
             return when (args.submission.kind) {
-                SubmissionKind.Link -> LinkSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                SubmissionKind.Image -> ImageSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                SubmissionKind.Video, SubmissionKind.VideoGif ->  VideoSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
-                SubmissionKind.Self -> TextSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                SubmissionKind.Poll -> PollSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
-                else ->  TextSubmissionFragment.newInstance(args.submission, SubmissionFragmentChild.CREATE_AND_EDIT_MODE)
+                SubmissionKind.Link -> LinkSubmissionFragment.newInstance(args.submission, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
+                SubmissionKind.Image -> ImageSubmissionFragment.newInstance(args.submission, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
+                SubmissionKind.Video, SubmissionKind.VideoGif ->  VideoSubmissionFragment.newInstance(args.submission, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE, (requireActivity() as MainActivity).mediaPlayer)
+                SubmissionKind.Self -> TextSubmissionFragment.newInstance(args.submission, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
+                SubmissionKind.Poll -> PollSubmissionFragment.newInstance(args.submission, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
+                else ->  TextSubmissionFragment.newInstance(args.submission, SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE)
             }
         }
     }

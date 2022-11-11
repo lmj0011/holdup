@@ -20,10 +20,6 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.analytics.ktx.logEvent
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -32,6 +28,7 @@ import name.lmj0011.holdup.databinding.ActivityMainBinding
 import name.lmj0011.holdup.databinding.DialogAboutBinding
 import name.lmj0011.holdup.databinding.DialogFeedbackBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
+import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
 import name.lmj0011.holdup.helpers.NotificationHelper
 import name.lmj0011.holdup.helpers.factories.ViewModelFactory
 import name.lmj0011.holdup.helpers.services.PattonService
@@ -43,7 +40,7 @@ import timber.log.Timber
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var dataStoreHelper: DataStoreHelper
-    private val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
     lateinit var navController: NavController
     lateinit var appBarConfiguration: AppBarConfiguration
     lateinit var mediaPlayer: SimpleExoPlayer
@@ -59,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         mediaPlayer = SimpleExoPlayer.Builder(this).build()
 
         dataStoreHelper = (applicationContext as App).kodein.instance()
+        firebaseAnalyticsHelper = (applicationContext as App).kodein.instance()
         navController = findNavController(R.id.nav_host_fragment)
         appBarConfiguration = AppBarConfiguration(setOf(R.id.homeFragment))
         setSupportActionBar(binding.toolbar)
@@ -178,13 +176,9 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
 
-        // [START custom_event]
         item.title?.let { title ->
-            firebaseAnalytics.logEvent("hol_dropmenu_item_selected") {
-                param("menu_item", title.toString())
-            }
+            firebaseAnalyticsHelper.logDropMenuItemSelectedEvent(title.toString())
         }
-        // [END custom_event]
 
         return when (item.itemId) {
             R.id.action_leave_feedback -> {

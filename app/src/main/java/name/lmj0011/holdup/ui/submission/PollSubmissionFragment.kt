@@ -1,6 +1,5 @@
 package name.lmj0011.holdup.ui.submission
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -19,27 +18,25 @@ import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.analytics.ktx.logEvent
-import com.google.firebase.ktx.Firebase
+import name.lmj0011.holdup.App
 import name.lmj0011.holdup.FullscreenTextEntryActivity
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
 import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentPollSubmissionBinding
+import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
 import name.lmj0011.holdup.helpers.SubmissionValidatorHelper.Companion.MAX_POLL_OPTIONS
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
-import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChild
+import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
+import org.kodein.di.instance
 
 class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
-    BaseFragmentInterface, SubmissionFragmentChild {
+    BaseFragmentInterface, SubmissionFragmentChildInterface {
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
-    override val actionBarTitle: String = "Poll Submission"
-    override var mode: Int = SubmissionFragmentChild.CREATE_AND_EDIT_MODE
-    override val firebaseAnalytics: FirebaseAnalytics = Firebase.analytics
+    override var mode: Int = SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE
+    override lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
 
     private lateinit var binding: FragmentPollSubmissionBinding
     private val defaultSpinnerPosition = 2
@@ -57,6 +54,11 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
 
             return fragment
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -100,13 +102,6 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
         super.onResume()
         updateActionBarTitle()
         viewModel.validateSubmission(SubmissionKind.Poll)
-
-        // [START set_current_screen]
-        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
-            param(FirebaseAnalytics.Param.SCREEN_NAME, actionBarTitle)
-            param(FirebaseAnalytics.Param.SCREEN_CLASS, "SubmissionFragment")
-        }
-        // [END set_current_screen]
     }
 
     @Deprecated("Deprecated in Java")
@@ -131,7 +126,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
 
         binding.pollDurationSpinner.setSelection(defaultSpinnerPosition) // 3 Days
 
-        if (mode == SubmissionFragmentChild.VIEW_MODE) {
+        if (mode == SubmissionFragmentChildInterface.VIEW_MODE) {
             binding.pollEditTextTextMultiLine
                 .setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.edit_text_no_disabled_selector))
             binding.pollEditTextTextMultiLine.isEnabled = false
@@ -228,7 +223,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
                 val editText = tableRowView.findViewWithTag<EditText>("optionEditText")
                 editText.setText(option)
 
-                if (mode == SubmissionFragmentChild.VIEW_MODE) {
+                if (mode == SubmissionFragmentChildInterface.VIEW_MODE) {
                     editText
                         .setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.edit_text_no_disabled_selector))
                     editText.isEnabled = false
@@ -242,7 +237,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
             val editText = tableRowView.findViewWithTag<EditText>("optionEditText")
             editText.setText(option)
 
-            if (mode == SubmissionFragmentChild.VIEW_MODE) {
+            if (mode == SubmissionFragmentChildInterface.VIEW_MODE) {
                 editText
                     .setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.edit_text_no_disabled_selector))
                 editText.isEnabled = false
@@ -305,7 +300,7 @@ class PollSubmissionFragment: Fragment(R.layout.fragment_poll_submission),
             view = binding.pollOptionsTableLayout.getChildAt(idx)
         }
 
-        if(position > MAX_POLL_OPTIONS || mode == SubmissionFragmentChild.VIEW_MODE) {
+        if(position > MAX_POLL_OPTIONS || mode == SubmissionFragmentChildInterface.VIEW_MODE) {
             binding.addOptionImageButton.visibility = View.GONE
         } else binding.addOptionImageButton.visibility = View.VISIBLE
     }
