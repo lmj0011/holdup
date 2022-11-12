@@ -29,7 +29,12 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# ref: https://stackoverflow.com/a/46333633/2445763
--keep class org.kodein.type.TypeReference
+# ref: https://stackoverflow.com/a/46333633/2445763, https://github.com/kosi-libs/Kodein/issues/309#issuecomment-845541127
+-keep, allowobfuscation, allowoptimization class org.kodein.type.TypeReference
+-keep, allowobfuscation, allowoptimization class org.kodein.type.JVMAbstractTypeToken$Companion$WrappingTest
+
+-keep, allowobfuscation, allowoptimization class * extends org.kodein.type.TypeReference
+-keep, allowobfuscation, allowoptimization class * extends org.kodein.type.JVMAbstractTypeToken$Companion$WrappingTest
+
 -keepclasseswithmembernames class * { @org.kodein.type.TypeReference <methods>; }
 -keepclasseswithmembernames class * { @org.kodein.type.TypeReference <fields>; }

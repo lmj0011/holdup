@@ -21,7 +21,7 @@ android {
         applicationId = "name.lmj0011.holdup"
         minSdk = 28
         targetSdk = 32
-        versionCode = 59
+        versionCode = 60
         versionName = "0.3.0-beta.2"
 
         vectorDrawables {
@@ -64,8 +64,8 @@ android {
          */
         create("debugR8") {
             initWith(getByName("debug"))
-            isShrinkResources = true
             isMinifyEnabled = true
+            isShrinkResources = true
             isDebuggable = true
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"))
             ndk {
