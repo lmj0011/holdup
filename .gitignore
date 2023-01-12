@@ -4,6 +4,7 @@
 /.idea/**
 .DS_Store
 /build
+/app/core
 /app/release
 /app/debug
 /app/preview
