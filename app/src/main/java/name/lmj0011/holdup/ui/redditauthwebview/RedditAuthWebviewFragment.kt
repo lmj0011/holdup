@@ -157,7 +157,11 @@ class RedditAuthWebviewFragment : Fragment() {
         }
 
         browser.settings.javaScriptEnabled = true
-        browser.loadUrl(redditAuthHelper.authClient().provideAuthorizeUrl())
+
+        val oldRedditUrl = redditAuthHelper.authClient().provideAuthorizeUrl()
+            .replace("https://www.reddit.com", "https://old.reddit.com")
+
+        browser.loadUrl(oldRedditUrl)
 
         return root
     }
