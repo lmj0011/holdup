@@ -5,13 +5,17 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatCheckedTextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -50,6 +54,7 @@ import name.lmj0011.holdup.ui.submission.bottomsheet.BottomSheetSubredditSearchF
 import org.jsoup.HttpStatusException
 import org.kodein.di.instance
 import timber.log.Timber
+import java.util.jar.Manifest
 
 /**
  * Serves as the ParentFragment for other *SubmissionFragment
@@ -62,6 +67,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
     private lateinit var alarmMgr: AlarmManager
     private lateinit var requestCodeHelper: UniqueRuntimeNumberHelper
     private lateinit var firebaseAnalyticsHelper: FirebaseAnalyticsHelper
+    private lateinit var requestPostNotificationPermissionLauncher: ActivityResultLauncher<String>
 
     lateinit var bottomSheetSubmissionsScheduleOptionsFragment: BottomSheetSubmissionsScheduleOptionsFragment
     lateinit var bottomSheetAccountsFragment: BottomSheetAccountsFragment
@@ -82,6 +88,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
         requestCodeHelper = (requireContext().applicationContext as App).kodein.instance()
         firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
         alarmMgr = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        requestPostNotificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
         setHasOptionsMenu(true)
     }
@@ -182,6 +189,12 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
                 return when (menuItem.itemId) {
                     R.id.action_post_submission -> {
                         val layout = binding.submissionTabLayout
+
+                        if(ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS)
+                            != PackageManager.PERMISSION_GRANTED) {
+                            requestPostNotificationPermissionLauncher
+                                .launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                        }
 
                         layout.getTabAt(layout.selectedTabPosition)?.let {
                             showPostConfirmationDialog(it.text.toString())
@@ -781,6 +794,7 @@ class SubmissionFragment: BaseFragment(R.layout.fragment_submission), BaseFragme
 
                                 // Post failed
                                 responsePair.second?.let { msg ->
+                                    bottomSheetSubmissionsScheduleOptionsFragment.dismiss()
                                     showSnackBar(binding.root, msg)
                                 }
                             }
