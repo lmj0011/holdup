@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
+import android.os.SystemClock
 import android.util.Patterns
 import android.view.View
 import android.view.ViewGroup
@@ -79,6 +80,19 @@ fun buildOneColorStateList(color: Int /* Color.parseColor("#FFFF") */): ColorSta
  */
 fun Snackbar.allowInfiniteLines(): Snackbar {
     return apply { (view.findViewById<View?>(com.google.android.material.R.id.snackbar_text) as? TextView?)?.isSingleLine = false }
+}
+
+fun View.setOnClickWithDebounceListener(debounceTime: Long = 500L, action: () -> Unit) {
+    this.setOnClickListener(object : View.OnClickListener {
+        private var lastClickTime: Long = 0
+
+        override fun onClick(v: View) {
+            if (SystemClock.elapsedRealtime() - lastClickTime < debounceTime) return
+            else action()
+
+            lastClickTime = SystemClock.elapsedRealtime()
+        }
+    })
 }
 
 /**

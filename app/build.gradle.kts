@@ -21,8 +21,8 @@ android {
         applicationId = "name.lmj0011.holdup"
         minSdk = 28
         targetSdk = 33
-        versionCode = 64
-        versionName = "0.3.0-beta.4"
+        versionCode = 66
+        versionName = "0.4.0-beta.1"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -131,11 +131,11 @@ android {
 dependencies {
     val fTree = fileTree("lib")
     fTree.include("*.jar")
-
     implementation(fTree)
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${findProperty("kotlin.version")}")
 
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:${findProperty("kotlin.version")}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${findProperty("kotlin.version")}")
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:${findProperty("kotlin.version")}"))
     implementation("androidx.core:core-ktx:1.8.0")
     implementation("androidx.appcompat:appcompat:1.4.2")
 
@@ -144,6 +144,7 @@ dependencies {
         exclude(group = "androidx.recyclerview",   module = "recyclerview-selection")
     }
 
+    implementation("androidx.activity:activity-ktx:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.vectordrawable:vectordrawable:1.1.0")
     implementation("androidx.navigation:navigation-fragment-ktx:2.5.0")
@@ -153,7 +154,7 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    val lifecycleVersion = "2.5.0"
+    val lifecycleVersion = "2.5.1"
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
@@ -217,7 +218,6 @@ dependencies {
     implementation ("com.google.firebase:firebase-analytics-ktx")
 
     implementation("org.jsoup:jsoup:1.13.1")
-    implementation("com.kroegerama:bottomsheet-imagepicker:1.1.2")
     implementation("com.github.javafaker:javafaker:1.0.2")
 }
 

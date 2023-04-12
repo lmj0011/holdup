@@ -6,14 +6,14 @@ plugins {
 }
 
 android {
+    compileSdk = 33
     // TODO - commit note: declare vars directly in app's build.gradle to enable
     // importing this library module to another project without  build error
     // https://developer.android.com/studio/projects/android-library#AddDependency
-    compileSdk = 30
 
     defaultConfig {
         minSdk = 19
-        targetSdk = 30
+        targetSdk = 33
     }
 
     sourceSets {

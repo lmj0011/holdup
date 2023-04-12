@@ -5,10 +5,14 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.ConcatAdapter
 import com.bumptech.glide.Glide
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.MediaItem
@@ -18,8 +22,10 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.ktx.logEvent
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import name.lmj0011.holdup.App
 import name.lmj0011.holdup.R
 import name.lmj0011.holdup.database.AppDatabase
@@ -27,9 +33,11 @@ import name.lmj0011.holdup.database.models.Submission
 import name.lmj0011.holdup.databinding.FragmentVideoSubmissionBinding
 import name.lmj0011.holdup.helpers.DataStoreHelper
 import name.lmj0011.holdup.helpers.FirebaseAnalyticsHelper
+import name.lmj0011.holdup.helpers.adapters.AddImageListAdapter
 import name.lmj0011.holdup.helpers.enums.SubmissionKind
 import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
+import name.lmj0011.holdup.helpers.models.Image
 import name.lmj0011.holdup.helpers.models.Video
 import name.lmj0011.holdup.helpers.util.*
 import org.jsoup.HttpStatusException
@@ -53,9 +61,9 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
     private lateinit var dataStoreHelper: DataStoreHelper
     private lateinit var localPlayerListener: Player.Listener
 
-    companion object {
-        const val GET_VIDEO_REQUEST_CODE = 100
+    private lateinit var pickVideoRequest: ActivityResultLauncher<PickVisualMediaRequest>
 
+    companion object {
         fun newInstance(submission: Submission?, mode: Int, mediaPlayer: SimpleExoPlayer): VideoSubmissionFragment {
             val fragment = VideoSubmissionFragment()
             fragment.mediaPlayer = mediaPlayer
@@ -73,6 +81,7 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pickVideoRequest = getPickVideoActivityResult()
         firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
     }
 
@@ -119,102 +128,13 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    @Suppress("BlockingMethodInNonBlockingContext")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        when(requestCode) {
-            GET_VIDEO_REQUEST_CODE -> {
-                binding.progressBar.isIndeterminate = true
-                binding.progressBar.isVisible = true
-                mediaPlayer = SimpleExoPlayer.Builder(requireContext()).build()
-
-                val uri = data?.data
-
-                val vid = Video(
-                    sourceUri = uri.toString(),
-                    mediaId = "",
-                    url = "",
-                    posterUrl = ""
-                )
-
-                Timber.d("vid: $vid")
-
-                launchIO {
-                    try {
-                        requireContext().contentResolver.takePersistableUriPermission(uri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
-                        /**
-                         * Generate a video thumbnail
-                         */
-                        val thumbNail = Glide.with(requireContext())
-                            .asBitmap().thumbnail(0.5F)
-                            .load(uri).submit().get()
-
-                        val file = File.createTempFile("${randomUUID()}", ".png", requireContext().cacheDir)
-                        file.createNewFile()
-
-                        val fileOut = FileOutputStream(file)
-
-                        thumbNail.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
-                        fileOut.flush()
-                        fileOut.close()
-
-                        val thumbNailUri = FileProvider.getUriForFile(
-                            requireContext(),
-                            getFileProviderAuthorities(requireContext()),
-                            file
-                        )
-
-                        vid.posterUrl = thumbNailUri.toString()
-                        /**
-                         *
-                         */
-                    }
-                    catch(ex: HttpStatusException) {
-                        showSnackBar(binding.root, requireContext().getString(R.string.reddit_upload_media_error_msg, ex.statusCode, ex.message))
-                        Timber.e(ex)
-                    }
-                    catch(ex: ImageDecoder.DecodeException) {
-                        vid.posterUrl = requireContext().getString(R.string.default_video_thumbnail_url)
-                        showSnackBar(binding.root, ex.message.toString())
-                        Timber.e(ex)
-                    }
-                    catch (ex: Exception) {
-                        showSnackBar(binding.root, ex.message.toString())
-                        Timber.e(ex)
-                    }
-                    finally {
-                        withUIContext{
-                            binding.progressBar.isVisible = false
-                            initializePlayer(vid)
-                            viewModel.submissionVideo.postValue(vid)
-                            viewModel.validateSubmission(SubmissionKind.Video)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     override fun setupBinding(view: View) {
         binding = FragmentVideoSubmissionBinding.bind(view)
         binding.lifecycleOwner = viewLifecycleOwner
 
-        binding.addVideoContainer.setOnClickListener {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                // Filter to only show results that can be "opened", such as
-                // a file (as opposed to a list of contacts or timezones).
-                addCategory(Intent.CATEGORY_OPENABLE)
-
-                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
-
-                type = "video/*"
-            }
-
+        binding.addVideoContainer.setOnClickWithDebounceListener(1000L) {
             submission?.video = null // so we don't trigger a playback error with the previous video
-            startActivityForResult(intent, GET_VIDEO_REQUEST_CODE)
+            pickVideoRequest.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         }
 
         binding.removeImageShapeableImageView.setOnClickListener {
@@ -226,18 +146,16 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
     }
 
     override fun setupObservers() {
-        viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner, {
+        viewModel.isSubmissionSuccessful.observe(viewLifecycleOwner) {
             if (it) {
                 clearUserInputViews()
             }
-        })
+        }
     }
 
     override fun setupRecyclerView() {}
 
-    override fun clearUserInputViews() {
-//        viewModel.submissionVideo.postValue(null)
-    }
+    override fun clearUserInputViews() {}
 
     override fun updateActionBarTitle() {}
 
@@ -386,6 +304,85 @@ class VideoSubmissionFragment: Fragment(R.layout.fragment_video_submission),
                 binding.videoViewArtworkImageView.visibility = View.GONE
                 binding.addVideoContainer.visibility = View.VISIBLE
             }
+        }
+    }
+
+    private fun getPickVideoActivityResult(): ActivityResultLauncher<PickVisualMediaRequest> {
+        return registerForActivityResult(ActivityResultContracts.PickVisualMedia())
+        { videoUri ->
+            videoUri?.let { uri ->
+                binding.progressBar.isIndeterminate = true
+                binding.progressBar.isVisible = true
+                mediaPlayer = SimpleExoPlayer.Builder(requireContext()).build()
+
+                val vid = Video(
+                    sourceUri = uri.toString(),
+                    mediaId = "",
+                    url = "",
+                    posterUrl = ""
+                )
+
+                requireContext().contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+                launchIO {
+                    try {
+                        /**
+                         * Generate a video thumbnail
+                         */
+                        val thumbNail = Glide.with(requireContext())
+                            .asBitmap().thumbnail(0.5F)
+                            .load(uri).submit().get()
+
+                        val file = File.createTempFile("${randomUUID()}", ".png", requireContext().cacheDir)
+                        file.createNewFile()
+
+                        val fileOut = FileOutputStream(file)
+
+                        thumbNail.compress(Bitmap.CompressFormat.PNG, 100, fileOut)
+                        fileOut.flush()
+                        fileOut.close()
+
+                        withUIContext{
+                            val thumbNailUri = FileProvider.getUriForFile(
+                                requireContext(),
+                                getFileProviderAuthorities(requireContext()),
+                                file
+                            )
+
+                            vid.posterUrl = thumbNailUri.toString()
+                        }
+
+                    }
+                    catch(ex: HttpStatusException) {
+                        withUIContext{
+                            showSnackBar(binding.root, requireContext().getString(R.string.reddit_upload_media_error_msg, ex.statusCode, ex.message))
+                            Timber.e(ex)
+                        }
+                    }
+                    catch(ex: ImageDecoder.DecodeException) {
+                        withUIContext{
+                            vid.posterUrl = requireContext().getString(R.string.default_video_thumbnail_url)
+                            showSnackBar(binding.root, ex.message.toString())
+                            Timber.e(ex)
+                        }
+                    }
+                    catch (ex: Exception) {
+                        withUIContext{
+                            showSnackBar(binding.root, ex.message.toString())
+                            Timber.e(ex)
+                        }
+                    }
+                    finally {
+                        withUIContext{
+                            binding.progressBar.isVisible = false
+                            initializePlayer(vid)
+                            viewModel.submissionVideo.postValue(vid)
+                            viewModel.validateSubmission(SubmissionKind.Video)
+                        }
+                    }
+                }
+            }
+
         }
     }
 

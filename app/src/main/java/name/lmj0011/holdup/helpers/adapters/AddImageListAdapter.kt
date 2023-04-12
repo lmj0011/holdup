@@ -1,6 +1,7 @@
 package name.lmj0011.holdup.helpers.adapters
 
 import android.content.Context
+import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -32,8 +33,14 @@ class AddImageListAdapter (
 
 
     class AddImageClickListener(val clickListener: () -> Unit) {
+        private var lastClickTime: Long = 0
 
-        fun onClick() = clickListener()
+        fun onClick() {
+            if (SystemClock.elapsedRealtime() - lastClickTime < 1000L) return
+            else clickListener()
+
+            lastClickTime = SystemClock.elapsedRealtime()
+        }
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

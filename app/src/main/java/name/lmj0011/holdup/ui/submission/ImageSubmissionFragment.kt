@@ -1,14 +1,16 @@
 package name.lmj0011.holdup.ui.submission
 
-import android.net.Uri
+
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.DividerItemDecoration
-import com.kroegerama.imgpicker.BottomSheetImagePicker
-import com.kroegerama.imgpicker.ButtonType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import name.lmj0011.holdup.App
@@ -24,11 +26,11 @@ import name.lmj0011.holdup.helpers.interfaces.BaseFragmentInterface
 import name.lmj0011.holdup.helpers.interfaces.SubmissionFragmentChildInterface
 import name.lmj0011.holdup.helpers.models.Image
 import name.lmj0011.holdup.helpers.util.*
-import org.jsoup.HttpStatusException
 import org.kodein.di.instance
+import timber.log.Timber
 
 class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
-    BaseFragmentInterface, SubmissionFragmentChildInterface, BottomSheetImagePicker.OnImagesSelectedListener {
+    BaseFragmentInterface, SubmissionFragmentChildInterface {
     override lateinit var viewModel: SubmissionViewModel
     override var submission: Submission? = null
     override var mode: Int = SubmissionFragmentChildInterface.CREATE_AND_EDIT_MODE
@@ -37,6 +39,8 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
     private lateinit var binding: FragmentImageSubmissionBinding
     private lateinit var listAdapter: GalleryListAdapter
     private lateinit var footerAdapter: AddImageListAdapter
+
+    private lateinit var pickMultipleImagesRequest: ActivityResultLauncher<PickVisualMediaRequest>
 
     companion object {
         fun newInstance(submission: Submission?, mode: Int): ImageSubmissionFragment {
@@ -55,6 +59,7 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pickMultipleImagesRequest = getPickMultipleImagesActivityResult()
         firebaseAnalyticsHelper = (requireContext().applicationContext as App).kodein.instance()
     }
 
@@ -111,11 +116,7 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
 
         footerAdapter = AddImageListAdapter(
             AddImageListAdapter.AddImageClickListener {
-                BottomSheetImagePicker.Builder(getFileProviderAuthorities(requireContext()))
-                    .cameraButton(ButtonType.None)
-                    .galleryButton(ButtonType.Button)
-                    .singleSelectTitle(R.string.image_picker_pick_single)
-                    .show(childFragmentManager)
+                pickMultipleImagesRequest.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }
         )
 
@@ -137,55 +138,6 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
         updateImageGallery(emptyList)
     }
 
-    override fun onImagesSelected(uris: List<Uri>, tag: String?) {
-        launchIO {
-
-            withContext(Dispatchers.Main) {
-                binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, AddImageListAdapter(
-                    AddImageListAdapter.AddImageClickListener {
-                        showSnackBar(binding.root, "Busy uploading images..")
-                    }
-                ))
-
-                binding.imageGalleryList.adapter?.let {
-                    binding.imageGalleryList.scrollToPosition(it.itemCount - 1)
-                }
-
-                binding.progressBar.isIndeterminate = true
-                binding.progressBar.isVisible = true
-            }
-
-            uris.forEach {
-                try {
-                    val img = Image(
-                        sourceUri = it.toString(),
-                        mediaId = "",
-                        url = "",
-                        caption = "",
-                        outboundUrl = ""
-                    )
-
-                    val list = listAdapter.currentList.toMutableList()
-                    list.add(img)
-
-                    withUIContext {
-                        updateImageGallery(list)
-                        viewModel.submissionImageGallery.postValue(list)
-                        viewModel.validateSubmission(SubmissionKind.Image)
-                    }
-                } catch(ex: HttpStatusException) {
-                    showSnackBar(binding.root, requireContext().getString(R.string.reddit_upload_media_error_msg, ex.statusCode, ex.message))
-                }
-
-            }
-
-
-            withContext(Dispatchers.Main) {
-                binding.progressBar.isVisible = false
-                binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, footerAdapter)
-            }
-        }
-    }
 
     override fun updateActionBarTitle() {}
 
@@ -196,6 +148,64 @@ class ImageSubmissionFragment: Fragment(R.layout.fragment_image_submission),
             // scroll to end of List
             binding.imageGalleryList.adapter?.let {
                 binding.imageGalleryList.scrollToPosition(it.itemCount - 1)
+            }
+        }
+    }
+
+    private fun getPickMultipleImagesActivityResult(): ActivityResultLauncher<PickVisualMediaRequest> {
+
+        return registerForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(20))
+        { uris ->
+            launchIO {
+
+                withContext(Dispatchers.Main) {
+                    binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, AddImageListAdapter(
+                        AddImageListAdapter.AddImageClickListener {
+                            showSnackBar(binding.root, "Uploading images..")
+                        }
+                    ))
+
+                    binding.imageGalleryList.adapter?.let {
+                        binding.imageGalleryList.scrollToPosition(it.itemCount - 1)
+                    }
+
+                    binding.progressBar.isIndeterminate = true
+                    binding.progressBar.isVisible = true
+                }
+
+                Timber.d(uris.toString())
+
+                val list: MutableList<Image> = mutableListOf()
+
+                uris.forEach { uri ->
+                    requireContext().contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    val img = Image(
+                        sourceUri = uri.toString(),
+                        mediaId = "",
+                        url = "",
+                        caption = "",
+                        outboundUrl = ""
+                    )
+
+                    list.add(img)
+                }
+
+
+                withContext(Dispatchers.Main) {
+                    val oldList = listAdapter.currentList.toMutableList()
+                    val currentList = oldList + list
+
+                    val finalList = if(currentList.size > 20) {
+                        showSnackBar(binding.root, "max allowed images reached!")
+                        currentList.slice(0..19).toMutableList()
+                    } else currentList.toMutableList()
+
+                    updateImageGallery(finalList)
+                    viewModel.submissionImageGallery.postValue(finalList)
+                    viewModel.validateSubmission(SubmissionKind.Image)
+                    binding.progressBar.isVisible = false
+                    binding.imageGalleryList.adapter = ConcatAdapter(listAdapter, footerAdapter)
+                }
             }
         }
     }
